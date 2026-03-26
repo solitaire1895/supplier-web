@@ -3,7 +3,26 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+.nav-icon {
+  @apply w-10 h-10 flex items-center justify-center rounded-full text-gray-400 transition;
+}
 
+.nav-icon:hover {
+  @apply text-red-500;
+  box-shadow: 0 0 12px rgba(239,68,68,0.7);
+}
+
+.nav-icon.active {
+  @apply bg-white text-black;
+}
+
+.dropdown-item {
+  @apply flex items-center gap-3 px-3 py-2 rounded-lg 
+  bg-white/5 border border-white/10
+  hover:border-red-500 
+  hover:shadow-[0_0_15px_rgba(239,68,68,0.4)]
+  transition;
+}
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: var(--font-sans);
