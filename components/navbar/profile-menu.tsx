@@ -1,44 +1,29 @@
-"use client"
+"use client";
 
-import { Settings, Heart, Activity, LogOut } from "lucide-react"
+import ProfileDropdown from "./profile-dropdown";
+import { motion } from "framer-motion";
 
 export default function ProfileMenu({ close }: { close: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-xl z-50 flex justify-center items-center">
+    <div
+      className="
+      fixed inset-0 z-50
+      bg-black/70 backdrop-blur-xl
+      flex items-center justify-center px-4
+    "
+    >
+      {/* CLICK OUTSIDE TO CLOSE */}
+      <div className="absolute inset-0" onClick={close} />
 
-      <div className="
-        w-full max-w-sm
-        bg-white/5 backdrop-blur-2xl
-        border border-white/10
-        rounded-2xl p-6
-      ">
-
-        <h2 className="text-white mb-4">My Account</h2>
-
-        <div className="space-y-3 text-gray-300">
-
-          <button className="menu-item">
-            <Settings size={16} /> Settings
-          </button>
-
-          <button className="menu-item">
-            <Activity size={16} /> Activity
-          </button>
-
-          <button className="menu-item">
-            <Heart size={16} /> Favorite Suppliers
-          </button>
-
-          <button className="menu-item text-red-500">
-            <LogOut size={16} /> Logout
-          </button>
-
-        </div>
-
-        <button onClick={close} className="mt-4 text-sm text-gray-400">
-          Close
-        </button>
-      </div>
+      {/* SAME DROPDOWN UI */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative z-10 w-full max-w-sm"
+      >
+        <ProfileDropdown />
+      </motion.div>
     </div>
-  )
+  );
 }
