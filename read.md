@@ -12,22 +12,12 @@ This guide explains how to deploy the Nexusply MVP on Hostinger using GitHub for
 
 ### 1. Push Project to GitHub
 
-If you haven't already, initialize a git repository and push your code:
+Your code is now on GitHub. Whenever you make changes locally:
 
 ```bash
-# Initialize git (if not already done)
-git init
-
-# Add all files (ensure .env.local is ignored by .gitignore)
 git add .
-git commit -m "Initial commit for deployment"
-
-# Link to your GitHub repo
-git remote add origin https://github.com/solitaire1895/supplier-web.git
-
-# Push the code
-git branch -M main
-git push -u origin main
+git commit -m "Your description"
+git push origin main
 ```
 
 ### 2. Clone on Hostinger Server
