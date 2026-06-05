@@ -1,0 +1,267 @@
+{
+  "profile": {
+    "contacts": "Fournisseurs contactés",
+    "favoritesProducts": "Produits favoris",
+    "favoritesSuppliers": "Fournisseurs favoris",
+    "settings": "Paramètres du compte",
+    "plan": "Abonnement et facturation",
+    "subtitle": "Gérez vos préférences et vos données.",
+    "activity": "Activité",
+    "logout": "Déconnexion"
+  },
+  "settings": {
+    "account": "Compte",
+    "language": "Langue",
+    "notifications": "Notifications",
+    "currency": "Devise",
+    "localization": "Localisation",
+    "alerts": "Alertes et notifications",
+    "username": "Nom d'utilisateur",
+    "email": "Adresse e-mail",
+    "push": "Notifications push"
+  },
+  "common": {
+    "search": "Recherche",
+    "filter": "Filtrer",
+    "close": "Fermer",
+    "back": "Retour",
+    "loading": "Chargement...",
+    "upgrade": "Améliorer",
+    "hot": "Top",
+    "recommended": "Recommandé",
+    "loadMore": "Plus de fournisseurs",
+    "sortBy": "Trier par",
+    "results": "Résultats",
+    "justNow": "À l'instant",
+    "daysAgo": "jours",
+    "weekAgo": "semaine"
+  },
+  "navbar": {
+    "home": "Accueil",
+    "winning": "Tendances",
+    "profile": "Profil",
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "about": "À propos",
+    "login": "Connexion",
+    "getStarted": "Démarrer"
+  },
+  "dashboard": {
+    "title": "Intelligence Fournisseurs",
+    "subtitle": "Découvrez les produits gagnants, analysez la rentabilité et connectez-vous instantanément avec des fabricants vérifiés.",
+    "stats": {
+      "suppliers": "Total Fournisseurs",
+      "favorites": "Favoris enregistrés",
+      "avgMoq": "MOQ moyen plateforme",
+      "topCategory": "Niche tendance"
+    },
+    "upgrade": "Améliorer le plan",
+    "searchPlaceholder": "Rechercher par niche, produit ou nom...",
+    "discoveryGrid": "Grille de découverte",
+    "lockedTitle": "Contacts directs verrouillés",
+    "lockedDesc": "Passez au plan Importateur pour débloquer les numéros de téléphone et WeChat des fabricants.",
+    "lockedSupplier": "Fournisseur verrouillé",
+    "lockedSupplierDesc": "Améliorez votre plan pour voir les contacts directs premium."
+  },
+  "hero": {
+    "intro": "Présentation de Nexusply Intelligence",
+    "title": "Le futur de l'intelligence fournisseur :",
+    "subtitle": "Données & Profit Combinés",
+    "description": "Découvrez des fournisseurs gagnants, optimisez vos marges et développez votre entreprise grâce à des analyses propulsées par l'IA et des données de marché en temps réel.",
+    "explore": "Explorer les fonctionnalités",
+    "getStarted": "Commencer gratuitement"
+  },
+  "heroCarousel": {
+    "intro": "Nexusply Intelligence",
+    "slides": [
+      {
+        "title": "Sourcing mondial simplifié",
+        "desc": "Connectez-vous aux fabricants les plus fiables au monde en quelques clics."
+      },
+      {
+        "title": "Découvrez des produits gagnants",
+        "desc": "Nos analyses propulsées par l'IA révèlent les prochaines tendances avant qu'elles n'explosent."
+      },
+      {
+        "title": "Réseau de fournisseurs vérifiés",
+        "desc": "Échangez en toute confiance. Chaque fournisseur sur Nexusply est rigoureusement contrôlé."
+      },
+      {
+        "title": "Intelligence de marché d'élite",
+        "desc": "Décisions basées sur les données pour les importateurs modernes et les entrepreneurs e-commerce."
+      }
+    ],
+    "cta": {
+      "getStarted": "Commencer gratuitement",
+      "learnMore": "En savoir plus"
+    }
+  },
+  "features": {
+    "badge": "Fonctionnalités de la plateforme",
+    "title": "Le centre de",
+    "highlight": "Commande Fournisseur Complet",
+    "description": "Tout ce dont vous avez besoin pour découvrir, analyser et dominer les marchés de fournisseurs.",
+    "items": {
+      "discovery": {
+        "title": "Moteur de découverte de fournisseurs",
+        "desc": "Trouvez les meilleurs fournisseurs du monde entier grâce à un filtrage intelligent par IA, un classement et un ciblage de niche."
+      },
+      "profiles": {
+        "title": "Profils des fournisseurs",
+        "desc": "Accédez à des données détaillées sur les fournisseurs, notamment les niveaux de prix, les délais de livraison, les avis et les scores de fiabilité."
+      },
+      "winning": {
+        "title": "Produits gagnants",
+        "desc": "Identifiez les produits tendance à forte demande avec de solides marges en utilisant des données en temps réel."
+      },
+      "comparison": {
+        "title": "Comparaison de prix",
+        "desc": "Comparez instantanément les prix des fournisseurs, les frais d'expédition et les marges bénéficiaires entre plusieurs vendeurs."
+      },
+      "simulator": {
+        "title": "Simulateur de profit",
+        "desc": "Calculez le ROI, les points mort et les marges bénéficiaires avant de prendre vos décisions d'approvisionnement."
+      },
+      "affiliate": {
+        "title": "Système d'affiliation et de partenariat",
+        "desc": "Monétisez votre réseau avec des liens de parrainage, des commissions et des analyses avancées des partenaires."
+      },
+      "advisor": {
+        "title": "Conseiller fournisseur IA",
+        "desc": "Obtenez des recommandations intelligentes basées sur votre budget, votre niche et votre marché cible."
+      },
+      "autosourcing": {
+        "title": "Mode Auto Sourcing",
+        "desc": "Décrivez un produit et laissez l'IA trouver, comparer et recommander instantanément les meilleurs fournisseurs."
+      },
+      "trust": {
+        "title": "Score de confiance et de risque",
+        "desc": "Évitez les fournisseurs peu fiables grâce à la détection de fraude par l'IA et au score de confiance."
+      }
+    }
+  },
+  "about": {
+    "badge": "À propos de Nexusply",
+    "title": "Redéfinir",
+    "highlight": "l'intelligence fournisseur",
+    "description1": "Nexusply est une plateforme d'intelligence fournisseur de nouvelle génération conçue pour aider les entrepreneurs à découvrir des fournisseurs performants, identifier des produits gagnants et maximiser les marges bénéficiaires grâce à des analyses basées sur l'IA.",
+    "description2": "Au lieu de deviner, vous opérez avec des données. Au lieu de tester à l'aveugle, vous exécutez avec précision.",
+    "stats": {
+      "suppliers": {
+        "value": "10K+",
+        "label": "Fournisseurs analysés"
+      },
+      "profit": {
+        "value": "+45%",
+        "label": "Augmentation moyenne du profit"
+      },
+      "ai": {
+        "value": "IA",
+        "label": "Moteur de sourcing intelligent"
+      },
+      "global": {
+        "value": "Global",
+        "label": "Réseau de fournisseurs"
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "Comment Nexusply",
+    "highlight": "Fonctionne",
+    "description": "Nous avons simplifié le monde complexe du sourcing mondial en un processus rationalisé en 4 étapes, alimenté par l'intelligence des données avancée.",
+    "step1": {
+      "title": "1. Connectez les sources de données",
+      "desc": "Nexusply agrège les données en direct des places de marché mondiales comme Alibaba, 1688 et CJ Dropshipping, vous offrant un tableau de bord unifié."
+    },
+    "step2": {
+      "title": "2. Analyser et comparer",
+      "desc": "Utilisez notre moteur d'IA pour comparer instantanément les MOQ, les délais de livraison et les scores de fiabilité de milliers de fabricants vérifiés."
+    },
+    "step3": {
+      "title": "3. Identifier les gagnants",
+      "desc": "Notre simulateur de profit calcule les marges réelles, vous aidant à repérer les produits tendance avec une forte demande et une faible concurrence."
+    },
+    "step4": {
+      "title": "4. Développer avec l'IA",
+      "desc": "Recevez des recommandations quotidiennes basées sur l'IA sur les niveaux de stock, les ajustements de prix et les nouvelles opportunités de sourcing pour dominer votre niche."
+    }
+  },
+  "pricing": {
+    "title": "Tarifs",
+    "plans": {
+      "basic": {
+        "title": "Plan Basique",
+        "price": "9,99 $",
+        "features": [
+          "Accès à la base de données fournisseurs",
+          "Aperçus de base sur les produits",
+          "Favoris et notes",
+          "Analyses limitées"
+        ],
+        "cta": "Commencer"
+      },
+      "standard": {
+        "title": "Plan Standard",
+        "price": "19,99 $",
+        "features": [
+          "Comparaison complète des prix",
+          "Accès aux produits gagnants",
+          "Système d'affiliation (5 %)",
+          "Filtres avancés",
+          "Analyses par l'IA"
+        ],
+        "cta": "Commencer"
+      },
+      "premium": {
+        "title": "Plan Premium",
+        "price": "39,99 $",
+        "features": [
+          "Programme partenaire (10 %)",
+          "Analyses avancées",
+          "Assistant de négociation par IA",
+          "Comparaison en masse",
+          "Fournisseurs privés"
+        ],
+        "cta": "Commencer"
+      }
+    }
+  },
+  "footer": {
+    "cta": {
+      "title": "Continuez votre",
+      "highlight": "succès",
+      "description": "Rejoignez des milliers d'entrepreneurs utilisant Nexusply pour trouver des fournisseurs gagnants et maximiser leurs profits.",
+      "placeholder": "votre@email.com",
+      "button": "Commencer",
+      "note": "Pas de spam. Uniquement des informations précieuses."
+    },
+    "brand": {
+      "desc": "Transformer les données fournisseurs en décisions profitables."
+    },
+    "sections": {
+      "product": "Produit",
+      "resources": "Ressources",
+      "company": "Entreprise",
+      "support": "Support"
+    },
+    "links": {
+      "dashboard": "Tableau de bord",
+      "winningProducts": "Produits gagnants",
+      "aiInsights": "Analyses IA",
+      "features": "Fonctionnalités",
+      "pricing": "Tarifs",
+      "howItWorks": "Comment ça marche",
+      "about": "À propos",
+      "terms": "Conditions",
+      "privacy": "Confidentialité",
+      "helpCenter": "Centre d'aide",
+      "contactUs": "Contactez-nous"
+    },
+    "bottom": {
+      "rights": "© 2026 Nexusply. Tous droits réservés.",
+      "privacy": "Confidentialité",
+      "terms": "Conditions",
+      "security": "Sécurité"
+    }
+  }
+}

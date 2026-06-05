@@ -1,37 +1,67 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { Star } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { 
+  Star, ChevronLeft, ShieldCheck, Box, Truck, 
+  TrendingUp, Activity, MessageSquare, Award, Lock, Phone, MessageCircle, Mail
+} from "lucide-react";
+import { getPlanFeatures } from "@/lib/plans";
+import { getCurrentPlan } from "@/lib/settings";
+import { supabase } from "@/lib/supabase/client";
+import Link from "next/link";
+import Navbar from "@/components/navbar/navbar";
 
 export default function SupplierPage() {
-  const params = useSearchParams();
+  const { id } = useParams();
+  const router = useRouter();
+  const [plan, setPlan] = useState("Free");
+  const [supplier, setSupplier] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const supplier = {
-    name: params.get("name") || "Shenzhen Tech Co.",
-    platform: params.get("platform") || "Alibaba",
-    category: params.get("category") || "Electronics",
-    moq: Number(params.get("moq")) || 100,
-    rating: 4.5,
-    reviewsCount: 120,
-    description:
-      "High-performance supplier specializing in consumer electronics and scalable production. Known for consistent quality, fast fulfillment cycles, and competitive pricing. Ideal for dropshipping and bulk sourcing strategies.",
-  };
+  useEffect(() => {
+    setPlan(getCurrentPlan());
 
+    async function fetchSupplier() {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error || !data) {
+        console.error("Error fetching supplier:", error);
+        setLoading(false);
+        return;
+      }
+
+      setSupplier({
+        ...data,
+        rating: 4.8,
+        reviewsCount: 124,
+        description: data.description || "High-performance analyzed supplier specializing in scalable production and consistent quality."
+      });
+      setLoading(false);
+    }
+
+    if (id) fetchSupplier();
+  }, [id]);
+
+  const features = getPlanFeatures(plan);
   const ratingStats = [92, 75, 55, 30, 12];
 
   const [reviews, setReviews] = useState([
     {
       name: "Charlotte Hanlin",
       rating: 5,
-      comment:
-        "Amazing supplier. Fast delivery and great product quality 🔥",
+      date: "2 days ago",
+      comment: "Amazing supplier. Fast delivery and great product quality. The packaging was pristine and our customers are loving it. 🔥",
     },
     {
       name: "Alfonzo Schuessler",
       rating: 4,
-      comment:
-        "Good experience overall. Communication was smooth.",
+      date: "1 week ago",
+      comment: "Good experience overall. Communication was smooth, though shipping took one day longer than expected. Will order again.",
     },
   ]);
 
@@ -40,256 +70,245 @@ export default function SupplierPage() {
 
   const addReview = () => {
     if (!newComment) return;
-
-    setReviews([
-      { name: "You", rating: newRating, comment: newComment },
-      ...reviews,
-    ]);
-
+    setReviews([{ name: "You", rating: newRating, date: "Just now", comment: newComment }, ...reviews]);
     setNewComment("");
   };
 
+  if (loading) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+       <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  );
+
+  if (!supplier) return (
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+       <h1 className="text-2xl font-bold mb-4">Supplier Not Found</h1>
+       <button onClick={() => router.push('/dashboard')} className="px-6 py-2 bg-red-500 rounded-xl">Go Back</button>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30 pb-24">
+      <Navbar />
 
-        {/* LEFT */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="pt-28 px-4 md:px-8 max-w-[1400px] mx-auto animate-in fade-in duration-700">
+        
+        {/* NAVIGATION BAR */}
+        <button 
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-all group mb-8"
+        >
+          <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all">
+            <ChevronLeft size={16} />
+          </div>
+          Back to Results
+        </button>
 
-          {/* HEADER + CONTACT */}
-          <div className="
-            bg-white/5 border border-white/10 rounded-2xl p-6
-            flex flex-col lg:flex-row lg:justify-between gap-6
-          ">
-            
-            {/* INFO */}
+        {/* HERO HEADER */}
+        <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 md:p-10 overflow-hidden group mb-8">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-500/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-8">
             <div className="flex-1">
-
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-semibold">
+              <div className="flex flex-wrap items-center gap-4 mb-3">
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
                   {supplier.name}
                 </h1>
-
-                <span className="
-                  text-xs px-2 py-1 rounded-full
-                  bg-red-500/10 border border-red-500
-                  text-red-500
-                  shadow-[0_0_10px_rgba(239,68,68,0.6)]
-                ">
-                  🔥 Trending
+                <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                  <TrendingUp size={14} /> Trending Supplier
                 </span>
               </div>
 
-              <p className="text-gray-400 mt-1">
-                {supplier.platform} • {supplier.category}
+              <p className="text-gray-400 font-medium flex items-center gap-2">
+                <GlobeIcon /> {supplier.platform} <span className="text-gray-600">•</span> {supplier.category}
               </p>
 
-              <div className="flex flex-wrap gap-4 mt-4 text-sm text-gray-300">
-                <span>MOQ: {supplier.moq}</span>
-                <span>Verified Supplier</span>
-                <span>Fast Shipping</span>
+              <div className="flex flex-wrap gap-3 mt-6">
+                <Badge icon={<Box size={14} />} text={`MOQ: ${supplier.moq} Units`} />
+                <Badge icon={<ShieldCheck size={14} className="text-green-400" />} text="Verified Supplier" />
+                <Badge icon={<Truck size={14} />} text="Fast Fulfillment" />
               </div>
 
-              <p className="text-gray-300 mt-4 text-sm leading-relaxed max-w-2xl">
+              <p className="text-gray-300 mt-6 text-sm leading-relaxed max-w-3xl">
                 {supplier.description}
               </p>
             </div>
+          </div>
+        </div>
 
-            {/* CONTACT */}
-            <div className="
-              lg:w-64 w-full
-              bg-white/5 border border-white/10 rounded-xl p-4
-              flex flex-col gap-4
-            ">
-              <p className="text-sm text-gray-400">
-                MOQ: {supplier.moq}
-              </p>
+        {/* MAIN CONTENT GRID */}
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
 
-              <button
-                className="
-                w-full py-3 rounded-full text-sm font-medium
-                bg-red-500 text-white
-                shadow-[0_0_20px_rgba(239,68,68,0.6)]
-                hover:shadow-[0_0_40px_rgba(239,68,68,0.9)]
-                transition-all
-              "
-              >
+          {/* LEFT COLUMN (8 cols) */}
+          <div className="lg:col-span-8 space-y-8">
+            
+            {/* DIRECT CONTACT INFO (LOCKED) */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 relative overflow-hidden group">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="text-red-500" size={20} />
+                  <h2 className="text-lg font-semibold">Direct Factory Access</h2>
+                </div>
+                {!features.access.directContacts && (
+                  <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded-md border border-red-500/20 uppercase tracking-widest">Premium Only</span>
+                )}
+              </div>
+
+              {features.access.directContacts ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                   <ContactItem icon={<Phone size={18} />} label="WhatsApp / Phone" value={supplier.contact_info?.phone || "+86 158 XXXX XXXX"} />
+                   <ContactItem icon={<MessageCircle size={18} />} label="WeChat ID" value={supplier.contact_info?.wechat || "nexus_partner_01"} />
+                   <ContactItem icon={<Mail size={18} />} label="Enterprise Email" value={supplier.contact_info?.email || "sales@factory-direct.com"} />
+                </div>
+              ) : (
+                <div className="text-center py-10 relative">
+                  <div className="absolute inset-0 backdrop-blur-md bg-black/20 z-0 rounded-2xl"></div>
+                  <div className="relative z-10">
+                    <Lock className="mx-auto text-gray-600 mb-4" size={32} />
+                    <h3 className="text-xl font-bold mb-2">Unlock Direct Manufacturer Access</h3>
+                    <p className="text-sm text-gray-400 mb-8 max-w-md mx-auto">Skip the platform fees. Get direct contact details including WhatsApp, WeChat, and private emails for better pricing.</p>
+                    <Link href="/dashboard/profile?tab=plan" className="px-8 py-3 bg-white text-black rounded-xl text-sm font-bold hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                      Upgrade to Importateur
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* AI INSIGHTS */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              <div className="flex items-center gap-2 mb-6">
+                <Activity className="text-red-500" size={20} />
+                <h2 className="text-lg font-semibold">Nexus AI Insights</h2>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <InsightCard title="Profit Score" value="92" highlight={true} subtext="Excellent" />
+                <InsightCard title="Est. Margin" value="38%" subtext="Above Average" />
+                <InsightCard title="Reliability" value="High" subtext="99.8% Success" />
+                <InsightCard title="Delivery" value="5–7 days" subtext="Global Avg" />
+              </div>
+            </div>
+
+            {/* RATING & STATS */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              <div className="flex items-center gap-2 mb-8">
+                <Award className="text-gray-400" size={20} />
+                <h2 className="text-lg font-semibold">Ratings & Reliability</h2>
+              </div>
+
+              <div className="flex flex-col md:flex-row items-center gap-10">
+                <div className="text-center md:text-left flex flex-col items-center md:items-start">
+                  <span className="text-6xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500">
+                    {supplier.rating}
+                  </span>
+                  <div className="flex mt-2 mb-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${i < Math.round(supplier.rating) ? "text-red-500 fill-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "text-gray-700"}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-gray-400 text-sm font-medium">Based on {supplier.reviewsCount} reviews</p>
+                </div>
+
+                <div className="flex-1 w-full space-y-3">
+                  {ratingStats.map((value, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                      <div className="flex items-center gap-1 w-8 text-xs font-medium text-gray-400">
+                        {5 - i} <Star size={10} className="fill-gray-400" />
+                      </div>
+                      <div className="flex-1 h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/5">
+                        <div className="h-full bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.8)]" style={{ width: `${value}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN (4 cols) - STICKY */}
+          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 text-center shadow-2xl">
+              <div className="w-16 h-16 mx-auto bg-red-500/10 rounded-full flex items-center justify-center mb-4 border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+                <MessageSquare size={24} className="text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold mb-1">Ready to Source?</h3>
+              <p className="text-sm text-gray-400 mb-6">Connect directly to negotiate pricing and request samples.</p>
+              <div className="bg-black/50 rounded-xl p-4 mb-6 border border-white/5 flex justify-between items-center">
+                <span className="text-sm text-gray-400">Minimum Order</span>
+                <span className="font-bold text-white">{supplier.moq} Units</span>
+              </div>
+              <button className="w-full py-3.5 rounded-xl text-sm font-bold bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.8)] hover:bg-red-600 transition-all duration-300">
                 Contact Supplier
               </button>
             </div>
-          </div>
 
-          {/* AI INSIGHTS */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-sm text-gray-400 uppercase tracking-wide mb-4">
-              AI Insights
-            </h2>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-gray-400 text-xs">Profit Score</p>
-                <p className="text-red-500 font-semibold text-lg">92</p>
-                <div className="h-1 mt-2 bg-white/10 rounded-full">
-                  <div className="h-full bg-red-500 w-[92%]" />
-                </div>
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
+              <h3 className="text-md font-semibold mb-4">Rate your experience</h3>
+              <div className="flex gap-1.5 mb-5 justify-center bg-black/30 py-3 rounded-xl border border-white/5">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} onClick={() => setNewRating(i + 1)} className={`w-6 h-6 cursor-pointer transition-all hover:scale-110 ${i < newRating ? "text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "text-gray-600 hover:text-gray-400"}`} />
+                ))}
               </div>
-
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-gray-400 text-xs">Est. Margin</p>
-                <p className="text-white font-semibold">38%</p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-gray-400 text-xs">Reliability</p>
-                <p className="text-white font-semibold">High</p>
-              </div>
-
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                <p className="text-gray-400 text-xs">Delivery</p>
-                <p className="text-white font-semibold">5–7 days</p>
-              </div>
-
+              <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="How was the product quality and shipping time?" className="w-full p-4 rounded-xl bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-red-500/50 transition-all resize-none h-28 mb-4" />
+              <button onClick={addReview} disabled={!newComment} className="w-full py-3 rounded-xl text-sm font-semibold bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all">Submit Review</button>
             </div>
           </div>
-
-          {/* RATING */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center gap-6">
-              <span className="text-4xl font-semibold">
-                {supplier.rating}
-              </span>
-
-              <div>
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${
-                        i < Math.round(supplier.rating)
-                          ? "text-red-500 fill-red-500"
-                          : "text-gray-600"
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                <p className="text-gray-400 text-sm">
-                  {supplier.reviewsCount} reviews
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-2">
-              {ratingStats.map((value, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="text-xs w-6 text-gray-400">
-                    {5 - i}
-                  </span>
-
-                  <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-red-500"
-                      style={{ width: `${value}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* REVIEWS */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-lg font-semibold mb-6">
-              Reviews
-            </h2>
-
-            <div className="space-y-6">
-              {reviews.map((r, i) => (
-                <div key={i} className="flex gap-4">
-
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-sm">
-                    {r.name[0]}
-                  </div>
-
-                  <div className="flex-1">
-
-                    <div className="flex justify-between items-center">
-                      <p className="font-medium">{r.name}</p>
-
-                      <div className="flex">
-                        {[...Array(5)].map((_, j) => (
-                          <Star
-                            key={j}
-                            className={`w-4 h-4 ${
-                              j < r.rating
-                                ? "text-red-500 fill-red-500"
-                                : "text-gray-600"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <p className="text-gray-400 text-sm mt-2">
-                      {r.comment}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
-
-        {/* RIGHT (ONLY REVIEW FORM NOW) */}
-        <div className="space-y-6">
-
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-lg font-semibold mb-4">
-              Write a Review
-            </h2>
-
-            <div className="flex gap-2 mb-4">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  onClick={() => setNewRating(i + 1)}
-                  className={`w-5 h-5 cursor-pointer ${
-                    i < newRating
-                      ? "text-red-500 fill-red-500"
-                      : "text-gray-600"
-                  }`}
-                />
-              ))}
-            </div>
-
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Share your experience..."
-              className="
-              w-full p-3 rounded-xl
-              bg-white/5 border border-white/10
-              text-sm text-white
-            "
-            />
-
-            <button
-              onClick={addReview}
-              className="
-              mt-4 w-full py-2 rounded-full text-sm
-              bg-red-500 text-white
-              shadow-[0_0_20px_rgba(239,68,68,0.6)]
-            "
-            >
-              Submit Review
-            </button>
-          </div>
-
-        </div>
-
       </div>
     </div>
+  );
+}
+
+function ContactItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="bg-black/40 p-4 rounded-2xl border border-white/5 flex flex-col gap-2 group hover:border-red-500/30 transition-all">
+       <div className="flex items-center gap-2 text-gray-500 group-hover:text-red-500 transition-colors">
+          {icon}
+          <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
+       </div>
+       <p className="text-white font-mono text-sm break-all">{value}</p>
+    </div>
+  )
+}
+
+function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <span className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300">
+      {icon} {text}
+    </span>
+  );
+}
+
+function InsightCard({ title, value, subtext, highlight = false }: { title: string; value: string; subtext: string; highlight?: boolean }) {
+  return (
+    <div className="p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-white/10 transition-colors flex flex-col justify-between h-full">
+      <p className="text-gray-400 text-xs font-medium mb-2">{title}</p>
+      <div>
+        <p className={`font-bold text-2xl tracking-tight mb-1 ${highlight ? 'text-red-500' : 'text-white'}`}>
+          {value}
+        </p>
+        <p className="text-[10px] text-gray-500 uppercase tracking-wider">{subtext}</p>
+      </div>
+      {highlight && (
+        <div className="h-1 mt-3 bg-black rounded-full overflow-hidden">
+          <div className="h-full bg-red-500 w-[92%] shadow-[0_0_8px_rgba(239,68,68,1)]" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="2" cy="12" x2="22" y2="12"></line>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+    </svg>
   );
 }

@@ -1,10 +1,22 @@
 "use client"
 
 import { FireworksBackground } from "@/components/animate-ui/components/backgrounds/fireworks"
+import { useI18n } from "@/lib/i18n"
 
 export default function About() {
+  const { t } = useI18n()
+
+  if (!t) return null
+
+  const stats = [
+    { value: t.about?.stats?.suppliers?.value, label: t.about?.stats?.suppliers?.label },
+    { value: t.about?.stats?.profit?.value, label: t.about?.stats?.profit?.label },
+    { value: t.about?.stats?.ai?.value, label: t.about?.stats?.ai?.label },
+    { value: t.about?.stats?.global?.value, label: t.about?.stats?.global?.label },
+  ]
+
   return (
-    <section className="relative py-32 px-6 bg-black text-white overflow-hidden">
+    <section id="about" className="relative py-32 px-6 bg-black text-white overflow-hidden">
 
       {/* 🔥 FIREWORKS BACKGROUND */}
       <FireworksBackground className="absolute inset-0 z-0" />
@@ -18,37 +30,29 @@ export default function About() {
         {/* LEFT */}
         <div>
           <p className="text-red-500 mb-4 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]">
-            About Nexusply
+            {t.about?.badge}
           </p>
 
           <h2 className="text-4xl md:text-5xl font-bold leading-tight">
-            Redefining
+            {t.about?.title}
             <span className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,1)]">
-              {" "}Supplier Intelligence
+              {" "}{t.about?.highlight}
             </span>
           </h2>
 
           <p className="mt-6 text-gray-400 leading-relaxed">
-            Nexusply is a next-generation supplier intelligence platform built
-            to help entrepreneurs discover high-performing suppliers, identify
-            winning products, and maximize profit margins using AI-driven insights.
+            {t.about?.description1}
           </p>
 
           <p className="mt-4 text-gray-400 leading-relaxed">
-            Instead of guessing, you operate with data. Instead of testing blindly,
-            you execute with precision.
+            {t.about?.description2}
           </p>
         </div>
 
         {/* RIGHT STATS */}
         <div className="grid grid-cols-2 gap-6">
 
-          {[
-            { value: "10K+", label: "Suppliers analyzed" },
-            { value: "+45%", label: "Avg profit increase" },
-            { value: "AI", label: "Smart sourcing engine" },
-            { value: "Global", label: "Supplier network" },
-          ].map((item, i) => (
+          {stats.map((item, i) => (
             <div
               key={i}
               className="

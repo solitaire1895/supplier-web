@@ -310,7 +310,7 @@ function HoleBackground({
     });
   }, [initParticle]);
 
-  const tick = React.useCallback(() => {
+  const tick = React.useCallback(function animate() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -331,7 +331,7 @@ function HoleBackground({
 
     ctx.restore();
 
-    animationFrameIdRef.current = requestAnimationFrame(tick);
+    animationFrameIdRef.current = requestAnimationFrame(animate);
   }, [moveDiscs, moveParticles, drawDiscs, drawLines, drawParticles]);
 
   const init = React.useCallback(() => {

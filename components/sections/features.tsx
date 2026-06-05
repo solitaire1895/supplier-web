@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import FeatureCard from "./feature-card"
+import { useI18n } from "@/lib/i18n"
 import {
   Search,
   BarChart3,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react"
 
 export default function Features() {
+  const { t } = useI18n()
   const [offset, setOffset] = useState(0)
 
   useEffect(() => {
@@ -25,8 +27,10 @@ export default function Features() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  if (!t) return null
+
   return (
-    <section className="relative py-32 px-6 bg-black text-white overflow-hidden">
+    <section id="features" className="relative py-32 px-6 bg-black text-white overflow-hidden">
 
       {/* PARALLAX GLOW */}
       <div
@@ -41,18 +45,18 @@ export default function Features() {
       {/* TITLE */}
       <div className="max-w-4xl mx-auto text-center mb-20 relative z-10">
         <p className="text-sm mb-3 text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]">
-          Platform Features
+          {t.features?.badge}
         </p>
 
         <h2 className="text-4xl md:text-6xl font-bold leading-tight">
-          The Complete
+          {t.features?.title}
           <span className="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,1)]">
-            {" "}Supplier Command Center
+            {" "}{t.features?.highlight}
           </span>
         </h2>
 
         <p className="text-gray-400 mt-6 text-lg">
-          Everything you need to discover, analyze, and dominate supplier markets.
+          {t.features?.description}
         </p>
       </div>
 
@@ -61,56 +65,56 @@ export default function Features() {
 
         <FeatureCard
           icon={<Search />}
-          title="Supplier Discovery Engine"
-          description="Find the best suppliers worldwide with smart AI-powered filtering, ranking, and niche targeting."
+          title={t.features?.items?.discovery?.title}
+          description={t.features?.items?.discovery?.desc}
         />
 
         <FeatureCard
           icon={<Star />}
-          title="Supplier Profiles"
-          description="Access detailed supplier data including pricing tiers, delivery times, reviews, and reliability scores."
+          title={t.features?.items?.profiles?.title}
+          description={t.features?.items?.profiles?.desc}
         />
 
         <FeatureCard
           icon={<TrendingUp />}
-          title="Winning Products"
-          description="Identify trending, high-demand products with strong margins using real-time data insights."
+          title={t.features?.items?.winning?.title}
+          description={t.features?.items?.winning?.desc}
         />
 
         <FeatureCard
           icon={<BarChart3 />}
-          title="Price Comparison"
-          description="Compare supplier pricing, shipping costs, and profit margins instantly across multiple vendors."
+          title={t.features?.items?.comparison?.title}
+          description={t.features?.items?.comparison?.desc}
         />
 
         <FeatureCard
           icon={<DollarSign />}
-          title="Profit Simulator"
-          description="Calculate ROI, break-even points, and profit margins before making sourcing decisions."
+          title={t.features?.items?.simulator?.title}
+          description={t.features?.items?.simulator?.desc}
         />
 
         <FeatureCard
           icon={<Users />}
-          title="Affiliate & Partner System"
-          description="Monetize your network with referral links, commissions, and advanced partner analytics."
+          title={t.features?.items?.affiliate?.title}
+          description={t.features?.items?.affiliate?.desc}
         />
 
         <FeatureCard
           icon={<Brain />}
-          title="AI Supplier Advisor"
-          description="Get intelligent recommendations based on your budget, niche, and target market."
+          title={t.features?.items?.advisor?.title}
+          description={t.features?.items?.advisor?.desc}
         />
 
         <FeatureCard
           icon={<Zap />}
-          title="Auto Sourcing Mode"
-          description="Describe a product and let AI find, compare, and recommend the best suppliers instantly."
+          title={t.features?.items?.autosourcing?.title}
+          description={t.features?.items?.autosourcing?.desc}
         />
 
         <FeatureCard
           icon={<ShieldCheck />}
-          title="Trust & Risk Scoring"
-          description="Avoid unreliable suppliers with AI-powered fraud detection and trust scoring."
+          title={t.features?.items?.trust?.title}
+          description={t.features?.items?.trust?.desc}
         />
 
       </div>

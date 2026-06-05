@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase/client";
 
 export default function SignupForm() {
   const [email, setEmail] = useState("");
@@ -33,22 +34,18 @@ export default function SignupForm() {
     try {
       setLoading(true);
 
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
-        body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
-      }
+      if (authError) throw authError;
 
       // ✅ SUCCESS → redirect
-      router.push("/auth/login");
+      router.push("/auth/login?message=Check your email to confirm your account");
 
     } catch (err: any) {
       setError(err.message);
@@ -56,6 +53,21 @@ export default function SignupForm() {
       setLoading(false);
     }
   };
+
+  // ✅ HANDLE SOCIAL LOGIN
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      if (error) throw error
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
 
   return (
     <motion.div
@@ -143,9 +155,14 @@ export default function SignupForm() {
 
       {/* Social */}
       <div className="grid grid-cols-3 gap-3">
-        {[FaGoogle, FaFacebookF, FaApple].map((Icon, i) => (
+        {[
+          { icon: FaGoogle, provider: 'google' as const },
+          { icon: FaFacebookF, provider: 'facebook' as const },
+          { icon: FaApple, provider: 'apple' as const }
+        ].map(({ icon: Icon, provider }, i) => (
           <button
             key={i}
+            onClick={() => handleSocialLogin(provider)}
             className="
               bg-white/5 
               border border-white/10 

@@ -1,55 +1,46 @@
 "use client"
 
 import PricingCard from "./PricingCard"
+import { useI18n } from "@/lib/i18n"
 
 export default function Pricing() {
+  const { t } = useI18n()
+
+  if (!t) return null
+
+  const plans = [
+    { ...t.pricing?.plans?.basic, highlight: false },
+    { ...t.pricing?.plans?.standard, highlight: true },
+    { ...t.pricing?.plans?.premium, highlight: false },
+  ]
+
+  const priceIds = [
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_EXPLORER,
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_IMPORTER,
+    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PARTNER,
+  ]
+
   return (
-    <section className="relative py-32 px-6 bg-black text-white overflow-hidden">
+    <section id="pricing" className="relative py-32 px-6 bg-black text-white overflow-hidden">
 
       {/* BIG FADED TITLE */}
-      <h2 className="absolute top-10 left-1/2 -translate-x-1/2 text-[120px] font-bold text-rgba(239,68,68,1)/5 select-none">
-        Pricing
+      <h2 className="absolute top-10 left-1/2 -translate-x-1/2 text-[120px] font-bold text-red-500/5 select-none whitespace-nowrap">
+        {t.pricing?.title}
       </h2>
 
       {/* CARDS */}
       <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 relative z-10">
-
-        <PricingCard
-          title="Basic Plan"
-          price="$9.99"
-          features={[
-            "Access to supplier database",
-            "Basic product insights",
-            "Favorites & notes",
-            "Limited analytics",
-          ]}
-        />
-
-        <PricingCard
-          title="Standard Plan"
-          price="$19.99"
-          highlight
-          features={[
-            "Full price comparison",
-            "Winning products access",
-            "Affiliate system (5%)",
-            "Advanced filters",
-            "AI insights",
-          ]}
-        />
-
-        <PricingCard
-          title="Premium Plan"
-          price="$39.99"
-          features={[
-            "Partner program (10%)",
-            "Advanced analytics",
-            "AI negotiation assistant",
-            "Bulk comparison",
-            "Private suppliers",
-          ]}
-        />
-
+        {plans.map((plan, i) => (
+          <PricingCard
+            key={i}
+            title={plan.title}
+            price={plan.price}
+            features={plan.features}
+            highlight={plan.highlight}
+            ctaText={plan.cta}
+            priceId={priceIds[i]}
+          />
+        ))}
       </div>
 
     </section>

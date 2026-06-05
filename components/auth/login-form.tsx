@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { motion } from "framer-motion"
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa"
 import Link from "next/link"
+import { supabase } from "@/lib/supabase/client"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -28,30 +29,35 @@ export default function LoginForm() {
     try {
       setLoading(true)
 
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
 
-      const data = await res.json()
+      if (authError) throw authError
 
-      if (!res.ok) {
-        throw new Error(data.error || "Login failed")
-      }
-
-      // ✅ OPTIONAL: store token
-      localStorage.setItem("token", data.token)
-
-      // ✅ redirect to future dashboard
-      router.push("/dashboard")
+      // ✅ Use hard navigation to ensure cookies are sent to the server middleware
+      window.location.href = "/dashboard"
 
     } catch (err: any) {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // ✅ HANDLE SOCIAL LOGIN
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      if (error) throw error
+    } catch (err: any) {
+      setError(err.message)
     }
   }
 
@@ -73,7 +79,7 @@ export default function LoginForm() {
 
       {/* Form */}
       <div className="space-y-4">
-        
+
         {/* Email */}
         <div className="space-y-2">
           <Label className="text-gray-300">Email</Label>
@@ -130,9 +136,14 @@ export default function LoginForm() {
 
       {/* Social */}
       <div className="grid grid-cols-3 gap-3">
-        {[FaGoogle, FaFacebookF, FaApple].map((Icon, i) => (
+        {[
+          { icon: FaGoogle, provider: 'google' as const },
+          { icon: FaFacebookF, provider: 'facebook' as const },
+          { icon: FaApple, provider: 'apple' as const }
+        ].map(({ icon: Icon, provider }, i) => (
           <button
             key={i}
+            onClick={() => handleSocialLogin(provider)}
             className="
               bg-white/5 
               border border-white/10 

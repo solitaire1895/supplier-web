@@ -1,0 +1,267 @@
+{
+  "profile": {
+    "contacts": "Contacted Suppliers",
+    "favoritesProducts": "Favorite Products",
+    "favoritesSuppliers": "Favorite Suppliers",
+    "settings": "Account Settings",
+    "plan": "Subscription & Billing",
+    "subtitle": "Manage your preferences and platform data.",
+    "activity": "Activity",
+    "logout": "Logout"
+  },
+  "settings": {
+    "account": "Account",
+    "language": "Language",
+    "notifications": "Notifications",
+    "currency": "Currency",
+    "localization": "Localization",
+    "alerts": "Alerts & Notifications",
+    "username": "Username",
+    "email": "Email Address",
+    "push": "Push Notifications"
+  },
+  "common": {
+    "search": "Search",
+    "filter": "Filter",
+    "close": "Close",
+    "back": "Back",
+    "loading": "Loading...",
+    "upgrade": "Upgrade",
+    "hot": "Hot",
+    "recommended": "Recommended",
+    "loadMore": "Load More Suppliers",
+    "sortBy": "Sort by",
+    "results": "Results",
+    "justNow": "Just now",
+    "daysAgo": "days ago",
+    "weekAgo": "week ago"
+  },
+  "navbar": {
+    "home": "Home",
+    "winning": "Winning",
+    "profile": "Profile",
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "login": "Login",
+    "getStarted": "Get Started"
+  },
+  "dashboard": {
+    "title": "Supplier Intelligence",
+    "subtitle": "Discover winning products, analyze profitability, and instantly connect with high-quality, verified manufacturers.",
+    "stats": {
+      "suppliers": "Total Suppliers",
+      "favorites": "Saved Favorites",
+      "avgMoq": "Platform Avg. MOQ",
+      "topCategory": "Top Trending Niche"
+    },
+    "upgrade": "Upgrade Plan",
+    "searchPlaceholder": "Search by niche, product, or supplier name...",
+    "discoveryGrid": "Discovery Grid",
+    "lockedTitle": "Direct Contacts Locked",
+    "lockedDesc": "Upgrade to Importer to unlock direct manufacturer phone numbers and WeChat IDs.",
+    "lockedSupplier": "Locked Supplier",
+    "lockedSupplierDesc": "Upgrade to see premium direct contacts and manufacturers."
+  },
+  "hero": {
+    "intro": "Introducing Nexusply Intelligence",
+    "title": "The Future of Supplier Intelligence:",
+    "subtitle": "Data & Profit Combined",
+    "description": "Discover winning suppliers, optimize margins, and scale your business with AI-powered insights and real-time market data.",
+    "explore": "Explore Features",
+    "getStarted": "Get Started Free"
+  },
+  "heroCarousel": {
+    "intro": "Nexusply Intelligence",
+    "slides": [
+      {
+        "title": "Global Sourcing Simplified",
+        "desc": "Connect with the world's most reliable manufacturers in just a few clicks."
+      },
+      {
+        "title": "Discover Winning Products",
+        "desc": "Our AI-powered insights reveal the next big market trends before they explode."
+      },
+      {
+        "title": "Verified Supplier Network",
+        "desc": "Trade with confidence. Every supplier on Nexusply is thoroughly vetted for quality."
+      },
+      {
+        "title": "Elite Market Intelligence",
+        "desc": "Data-driven decisions for modern importers and e-commerce entrepreneurs."
+      }
+    ],
+    "cta": {
+      "getStarted": "Get Started Free",
+      "learnMore": "Learn More"
+    }
+  },
+  "features": {
+    "badge": "Platform Features",
+    "title": "The Complete",
+    "highlight": "Supplier Command Center",
+    "description": "Everything you need to discover, analyze, and dominate supplier markets.",
+    "items": {
+      "discovery": {
+        "title": "Supplier Discovery Engine",
+        "desc": "Find the best suppliers worldwide with smart AI-powered filtering, ranking, and niche targeting."
+      },
+      "profiles": {
+        "title": "Supplier Profiles",
+        "desc": "Access detailed supplier data including pricing tiers, delivery times, reviews, and reliability scores."
+      },
+      "winning": {
+        "title": "Winning Products",
+        "desc": "Identify trending, high-demand products with strong margins using real-time data insights."
+      },
+      "comparison": {
+        "title": "Price Comparison",
+        "desc": "Compare supplier pricing, shipping costs, and profit margins instantly across multiple vendors."
+      },
+      "simulator": {
+        "title": "Profit Simulator",
+        "desc": "Calculate ROI, break-even points, and profit margins before making sourcing decisions."
+      },
+      "affiliate": {
+        "title": "Affiliate & Partner System",
+        "desc": "Monetize your network with referral links, commissions, and advanced partner analytics."
+      },
+      "advisor": {
+        "title": "AI Supplier Advisor",
+        "desc": "Get intelligent recommendations based on your budget, niche, and target market."
+      },
+      "autosourcing": {
+        "title": "Auto Sourcing Mode",
+        "desc": "Describe a product and let AI find, compare, and recommend the best suppliers instantly."
+      },
+      "trust": {
+        "title": "Trust & Risk Scoring",
+        "desc": "Avoid unreliable suppliers with AI-powered fraud detection and trust scoring."
+      }
+    }
+  },
+  "about": {
+    "badge": "About Nexusply",
+    "title": "Redefining",
+    "highlight": "Supplier Intelligence",
+    "description1": "Nexusply is a next-generation supplier intelligence platform built to help entrepreneurs discover high-performing suppliers, identify winning products, and maximize profit margins using AI-driven insights.",
+    "description2": "Instead of guessing, you operate with data. Instead of testing blindly, you execute with precision.",
+    "stats": {
+      "suppliers": {
+        "value": "10K+",
+        "label": "Suppliers analyzed"
+      },
+      "profit": {
+        "value": "+45%",
+        "label": "Avg profit increase"
+      },
+      "ai": {
+        "value": "AI",
+        "label": "Smart sourcing engine"
+      },
+      "global": {
+        "value": "Global",
+        "label": "Supplier network"
+      }
+    }
+  },
+  "howItWorks": {
+    "title": "How Nexusply",
+    "highlight": "Functions",
+    "description": "We've simplified the complex world of global sourcing into a streamlined 4-step process powered by advanced data intelligence.",
+    "step1": {
+      "title": "1. Connect Data Sources",
+      "desc": "Nexusply aggregates live data from global marketplaces like Alibaba, 1688, and CJ Dropshipping, providing you with a unified dashboard."
+    },
+    "step2": {
+      "title": "2. Analyze & Compare",
+      "desc": "Use our AI engine to compare MOQ, shipping times, and reliability scores across thousands of verified manufacturers instantly."
+    },
+    "step3": {
+      "title": "3. Identify Winners",
+      "desc": "Our profit simulator calculates real margins, helping you spot trending products with high demand and low competition."
+    },
+    "step4": {
+      "title": "4. Scale With AI",
+      "desc": "Receive daily AI-driven recommendations on stock levels, price adjustments, and new sourcing opportunities to dominate your niche."
+    }
+  },
+  "pricing": {
+    "title": "Pricing",
+    "plans": {
+      "basic": {
+        "title": "Basic Plan",
+        "price": "$9.99",
+        "features": [
+          "Access to supplier database",
+          "Basic product insights",
+          "Favorites & notes",
+          "Limited analytics"
+        ],
+        "cta": "Get Started"
+      },
+      "standard": {
+        "title": "Standard Plan",
+        "price": "$19.99",
+        "features": [
+          "Full price comparison",
+          "Winning products access",
+          "Affiliate system (5%)",
+          "Advanced filters",
+          "AI insights"
+        ],
+        "cta": "Get Started"
+      },
+      "premium": {
+        "title": "Premium Plan",
+        "price": "$39.99",
+        "features": [
+          "Partner program (10%)",
+          "Advanced analytics",
+          "AI negotiation assistant",
+          "Bulk comparison",
+          "Private suppliers"
+        ],
+        "cta": "Get Started"
+      }
+    }
+  },
+  "footer": {
+    "cta": {
+      "title": "Continue Your",
+      "highlight": "Success Story",
+      "description": "Join thousands of entrepreneurs using Nexusply to find winning suppliers and maximize profits.",
+      "placeholder": "your@email.com",
+      "button": "Get Started",
+      "note": "No spam. Only valuable insights."
+    },
+    "brand": {
+      "desc": "Transforming supplier data into profitable decisions."
+    },
+    "sections": {
+      "product": "Product",
+      "resources": "Resources",
+      "company": "Company",
+      "support": "Support"
+    },
+    "links": {
+      "dashboard": "Dashboard",
+      "winningProducts": "Winning Products",
+      "aiInsights": "AI Insights",
+      "features": "Features",
+      "pricing": "Pricing",
+      "howItWorks": "How it Works",
+      "about": "About",
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "helpCenter": "Help Center",
+      "contactUs": "Contact Us"
+    },
+    "bottom": {
+      "rights": "© 2026 Nexusply. All rights reserved.",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "security": "Security"
+    }
+  }
+}

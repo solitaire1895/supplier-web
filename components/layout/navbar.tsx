@@ -3,10 +3,19 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import LanguageSwitcher from "./language-switcher"
+import { useI18n } from "@/lib/i18n"
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const { t } = useI18n()
+
+  const navItems = [
+    { label: t.navbar.features, href: "#features" },
+    { label: t.navbar.pricing, href: "#pricing" },
+    { label: t.navbar.about, href: "#about" },
+  ]
 
   return (
     <div className="fixed top-0 left-0 w-full z-50 bg-black/70 backdrop-blur-xl">
@@ -21,23 +30,24 @@ export default function Navbar() {
 
         {/* DESKTOP NAV */}
         <div className="hidden md:flex gap-10 text-base font-medium text-gray-300">
-          {["Features", "Pricing", "About"].map((item) => (
+          {navItems.map((item) => (
             <Link
-              key={item}
-              href="#"
+              key={item.label}
+              href={item.href}
               className="
                 relative transition duration-300
                 hover:text-red-500
                 hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]
               "
             >
-              {item}
+              {item.label}
             </Link>
           ))}
         </div>
 
         {/* ACTION BUTTONS */}
         <div className="hidden md:flex items-center gap-4">
+          <LanguageSwitcher />
 
           {/* LOGIN */}
           <Link
@@ -52,7 +62,7 @@ export default function Navbar() {
               }
             `}
           >
-            Login
+            {t.navbar.login}
           </Link>
 
           {/* GET STARTED → SIGNUP */}
@@ -68,20 +78,23 @@ export default function Navbar() {
               }
             `}
           >
-            Get Started
+            {t.navbar.getStarted}
           </Link>
 
         </div>
 
         {/* MOBILE TOGGLE */}
-        <button
-          onClick={() => setOpen(!open)}
-          className="md:hidden flex flex-col gap-1 group"
-        >
-          <span className="w-6 h-[2px] bg-white group-hover:bg-red-500 transition shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
-          <span className="w-6 h-[2px] bg-white group-hover:bg-red-500 transition shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
-          <span className="w-6 h-[2px] bg-white group-hover:bg-red-500 transition shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
-        </button>
+        <div className="md:hidden flex items-center gap-4">
+          <LanguageSwitcher />
+          <button
+            onClick={() => setOpen(!open)}
+            className="flex flex-col gap-1 group"
+          >
+            <span className="w-6 h-[2px] bg-white group-hover:bg-red-500 transition shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+            <span className="w-6 h-[2px] bg-white group-hover:bg-red-500 transition shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+            <span className="w-6 h-[2px] bg-white group-hover:bg-red-500 transition shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+          </button>
+        </div>
 
       </div>
 
@@ -93,10 +106,10 @@ export default function Navbar() {
           px-6 py-6 flex flex-col gap-6 text-lg
         ">
 
-          {["Features", "Pricing", "About"].map((item) => (
+          {navItems.map((item) => (
             <Link
-              key={item}
-              href="#"
+              key={item.label}
+              href={item.href}
               className="
                 text-gray-300
                 hover:text-red-500
@@ -105,7 +118,7 @@ export default function Navbar() {
               "
               onClick={() => setOpen(false)}
             >
-              {item}
+              {item.label}
             </Link>
           ))}
 
@@ -123,7 +136,7 @@ export default function Navbar() {
               }
             `}
           >
-            Login
+            {t.navbar.login}
           </Link>
 
           {/* GET STARTED */}
@@ -140,7 +153,7 @@ export default function Navbar() {
               }
             `}
           >
-            Get Started
+            {t.navbar.getStarted}
           </Link>
 
         </div>

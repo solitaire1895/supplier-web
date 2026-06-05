@@ -1,109 +1,136 @@
-"use client"
+"use client";
 
-import { Settings, LogOut, User, Heart, Activity } from "lucide-react"
+import { useRouter } from "next/navigation";
+import {
+  User,
+  Clock,
+  Star,
+  Settings,
+  LogOut,
+  Globe,
+  Check,
+} from "lucide-react";
+import { useI18n, Lang } from "@/lib/i18n";
+
+const languages = [
+  { code: "EN" as Lang, label: "English", flag: "🇺🇸" },
+  { code: "FR" as Lang, label: "Français", flag: "🇫🇷" },
+  { code: "CN" as Lang, label: "中文", flag: "🇨🇳" },
+];
 
 export default function ProfileDropdown() {
+  const router = useRouter();
+  const { t, lang, setLanguage } = useI18n();
+
   return (
     <div
       className="
-      w-80
-      bg-white/5 backdrop-blur-2xl
+      bg-black/80 backdrop-blur-xl
       border border-white/10
-      rounded-2xl p-3
-      shadow-[0_0_40px_rgba(239,68,68,0.15)]
+      rounded-2xl p-4
+      shadow-[0_0_30px_rgba(0,0,0,0.5)]
     "
     >
-      {/* USER CARD */}
-      <div
-        className="
-        flex items-center justify-between
-        p-4 rounded-xl
-        bg-white/5 border border-white/10
-        mb-3
-      "
-      >
-        <div>
-          <p className="text-white text-sm font-medium">
-            Nexus User
-          </p>
-          <p className="text-gray-400 text-xs">
-            user@email.com
-          </p>
-        </div>
+      {/* USER */}
+      <div className="mb-4 px-2">
+        <p className="text-white font-medium">Maixent</p>
+        <p className="text-gray-400 text-sm">
+          maixent@mail.com
+        </p>
+      </div>
 
-        <div
-          className="
-          w-12 h-12 rounded-full
-          bg-white/10 flex items-center justify-center
-        "
-        >
-          <User size={20} className="text-gray-300" />
+      <div className="border-t border-white/10 my-3" />
+
+      {/* LANGUAGE SELECTOR */}
+      <div className="mb-4">
+        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-2 px-2">
+          {t.settings.language}
+        </p>
+        <div className="grid grid-cols-3 gap-1">
+          {languages.map((l) => (
+            <button
+              key={l.code}
+              onClick={() => setLanguage(l.code)}
+              className={`
+                flex flex-col items-center justify-center p-2 rounded-xl border transition-all duration-300
+                ${
+                  lang === l.code
+                    ? "bg-red-500/10 border-red-500/30 text-red-500"
+                    : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
+                }
+              `}
+            >
+              <span className="text-lg mb-1">{l.flag}</span>
+              <span className="text-[10px] font-medium">{l.code}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* MENU LIST */}
-      <div className="space-y-1">
+      <div className="border-t border-white/10 my-3" />
 
-        <MenuItem icon={<User size={16} />} label="Profile" active />
-        <MenuItem icon={<Activity size={16} />} label="Activity" />
-        <MenuItem icon={<Heart size={16} />} label="Favorite Suppliers" />
-        <MenuItem icon={<Settings size={16} />} label="Settings" />
+      {/* MENU */}
+      <div className="space-y-1 text-sm">
+
+        <DropdownItem
+          icon={<User size={16} />}
+          label={t.navbar.profile}
+          onClick={() => router.push("/dashboard/profile")}
+        />
+
+        <DropdownItem
+          icon={<Clock size={16} />}
+          label={t.profile.activity}
+          onClick={() => console.log("activity")}
+        />
+
+        <DropdownItem
+          icon={<Star size={16} />}
+          label={t.profile.favoritesProducts}
+          onClick={() => router.push("/dashboard/profile")}
+        />
+
+        <DropdownItem
+          icon={<Settings size={16} />}
+          label={t.settings.account}
+          onClick={() => router.push("/dashboard/profile")}
+        />
+
+        <div className="border-t border-white/10 my-2" />
+
+        <DropdownItem
+          icon={<LogOut size={16} />}
+          label={t.profile.logout}
+          onClick={() => console.log("logout")}
+          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+        />
 
       </div>
-
-      {/* DIVIDER */}
-      <div className="my-3 h-px bg-white/10" />
-
-      {/* LOGOUT */}
-      <MenuItem
-        icon={<LogOut size={16} />}
-        label="Sign out"
-        danger
-      />
     </div>
-  )
+  );
 }
 
 /* ================= ITEM ================= */
 
-function MenuItem({
+function DropdownItem({
   icon,
   label,
-  active,
-  danger,
-}: {
-  icon: React.ReactNode
-  label: string
-  active?: boolean
-  danger?: boolean
-}) {
+  onClick,
+  className = "",
+}: any) {
   return (
-    <button
+    <div
+      onClick={onClick}
       className={`
-        w-full flex items-center gap-3
-        px-4 py-3 rounded-xl
-        text-sm transition-all
-
-        ${active
-          ? "bg-white text-black"
-          : "bg-transparent text-gray-300"}
-
-        ${danger && "text-red-500"}
-
-        hover:border-red-500
-        hover:shadow-[0_0_20px_rgba(239,68,68,0.4)]
-        border border-transparent
+        flex items-center gap-3 p-2.5 rounded-xl
+        text-gray-300 cursor-pointer
+        hover:text-white hover:bg-white/5
+        transition-all duration-200
+        ${className}
       `}
     >
-      <span
-        className={`
-        ${danger ? "text-red-500" : ""}
-      `}
-      >
-        {icon}
-      </span>
-
-      {label}
-    </button>
-  )
+      <div className="flex-shrink-0">{icon}</div>
+      <span className="font-medium">{label}</span>
+    </div>
+  );
 }

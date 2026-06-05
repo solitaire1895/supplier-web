@@ -1,8 +1,48 @@
 "use client"
 
 import { Mail } from "lucide-react"
+import Link from "next/link"
+import { useI18n } from "@/lib/i18n"
 
 export default function Footer() {
+  const { t } = useI18n()
+
+  if (!t) return null
+
+  const footerSections = [
+    {
+      title: t.footer?.sections?.product,
+      links: [
+        { label: t.footer?.links?.dashboard, href: "/dashboard" },
+        { label: t.footer?.links?.winningProducts, href: "/dashboard/winning-products" },
+        { label: t.footer?.links?.aiInsights, href: "/dashboard" },
+      ],
+    },
+    {
+      title: t.footer?.sections?.resources,
+      links: [
+        { label: t.footer?.links?.features, href: "#features" },
+        { label: t.footer?.links?.pricing, href: "#pricing" },
+        { label: t.footer?.links?.howItWorks, href: "#how-it-works" },
+      ],
+    },
+    {
+      title: t.footer?.sections?.company,
+      links: [
+        { label: t.footer?.links?.about, href: "#about" },
+        { label: t.footer?.links?.terms, href: "#" },
+        { label: t.footer?.links?.privacy, href: "#" },
+      ],
+    },
+    {
+      title: t.footer?.sections?.support,
+      links: [
+        { label: t.footer?.links?.helpCenter, href: "#" },
+        { label: t.footer?.links?.contactUs, href: "mailto:support@nexusply.com" },
+      ],
+    },
+  ]
+
   return (
     <footer className="relative px-6 pb-20 bg-black text-white">
 
@@ -24,14 +64,14 @@ export default function Footer() {
           <div className="text-center mb-16 relative z-10">
 
             <h2 className="text-3xl md:text-4xl font-bold">
-              Continue Your
+              {t.footer?.cta?.title}
               <span className="text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,1)]">
-                {" "}Success Story
+                {" "}{t.footer?.cta?.highlight}
               </span>
             </h2>
 
             <p className="text-gray-400 mt-4 max-w-xl mx-auto">
-              Join thousands of entrepreneurs using Nexusply to find winning suppliers and maximize profits.
+              {t.footer?.cta?.description}
             </p>
 
             {/* INPUT */}
@@ -46,25 +86,26 @@ export default function Footer() {
                 <Mail className="w-4 h-4 text-gray-400" />
                 <input
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder={t.footer?.cta?.placeholder}
                   className="bg-transparent outline-none text-sm"
                 />
               </div>
 
-              <button className="
+              <Link href="/auth/signup" className="
                 px-6 py-3 rounded-xl
                 bg-red-500 text-white font-medium
                 hover:bg-red-600
                 shadow-[0_0_20px_rgba(239,68,68,0.7)]
+                text-center
                 transition
               ">
-                Subscribe
-              </button>
+                {t.footer?.cta?.button}
+              </Link>
 
             </div>
 
             <p className="text-xs text-gray-500 mt-3">
-              No spam. Only valuable insights.
+              {t.footer?.cta?.note}
             </p>
           </div>
 
@@ -82,42 +123,27 @@ export default function Footer() {
               </h3>
 
               <p className="text-gray-400 text-sm">
-                Transforming supplier data into profitable decisions.
+                {t.footer?.brand?.desc}
               </p>
             </div>
 
             {/* LINKS */}
-            {[
-              {
-                title: "Product",
-                links: ["Analytics", "Insights", "Reporting", "AI Tools"],
-              },
-              {
-                title: "Solutions",
-                links: ["Startups", "Enterprise", "E-commerce", "Agencies"],
-              },
-              {
-                title: "Resources",
-                links: ["Blog", "Guides", "Docs", "API"],
-              },
-              {
-                title: "Company",
-                links: ["About", "Careers", "Contact", "Partners"],
-              },
-            ].map((section, i) => (
+            {footerSections.map((section, i) => (
               <div key={i}>
-                <h4 className="mb-3 text-gray-300">{section.title}</h4>
+                <h4 className="mb-3 text-gray-300 font-bold">{section.title}</h4>
                 <ul className="space-y-2 text-gray-400">
                   {section.links.map((link, j) => (
-                    <li
-                      key={j}
-                      className="
-                        hover:text-red-500
-                        hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]
-                        transition cursor-pointer
-                      "
-                    >
-                      {link}
+                    <li key={j}>
+                      <Link
+                        href={link.href}
+                        className="
+                          hover:text-red-500
+                          hover:drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]
+                          transition cursor-pointer
+                        "
+                      >
+                        {link.label}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -128,12 +154,12 @@ export default function Footer() {
 
           {/* BOTTOM */}
           <div className="mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between text-xs text-gray-500 relative z-10">
-            <p>© 2026 Nexusply. All rights reserved.</p>
+            <p>{t.footer?.bottom?.rights}</p>
 
             <div className="flex gap-6 mt-4 md:mt-0">
-              <span className="hover:text-red-500 cursor-pointer">Privacy</span>
-              <span className="hover:text-red-500 cursor-pointer">Terms</span>
-              <span className="hover:text-red-500 cursor-pointer">Security</span>
+              <span className="hover:text-red-500 cursor-pointer transition">{t.footer?.bottom?.privacy}</span>
+              <span className="hover:text-red-500 cursor-pointer transition">{t.footer?.bottom?.terms}</span>
+              <span className="hover:text-red-500 cursor-pointer transition">{t.footer?.bottom?.security}</span>
             </div>
           </div>
 
