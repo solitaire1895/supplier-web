@@ -71,17 +71,22 @@ export async function updateSession(request: NextRequest) {
   if (isProtectedRoute && user && !isSubscribePage) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('trial_ends_at, subscription_status')
+      .select('trial_ends_at, subscription_status, active_plan, role')
       .eq('id', user.id)
       .single()
 
     if (profile) {
-      const trialEndsAt = new Date(profile.trial_ends_at)
-      const now = new Date()
-      const isTrialExpired = trialEndsAt < now
-      const isNotActive = profile.subscription_status !== 'active'
+      // Admins have full access
+      if (profile.role === 'admin') return response
 
-      if (isTrialExpired && isNotActive) {
+      const trialEndsAt = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null
+      const now = new Date()
+      const isTrialExpired = trialEndsAt ? trialEndsAt < now : true
+      const isNotActive = profile.subscription_status !== 'active'
+      const hasPaidPlan = profile.active_plan && profile.active_plan.toLowerCase() !== 'free'
+
+      // Only redirect if trial is expired AND subscription is not active AND there is no paid plan
+      if (isTrialExpired && isNotActive && !hasPaidPlan) {
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard/subscribe'
         return NextResponse.redirect(url)
