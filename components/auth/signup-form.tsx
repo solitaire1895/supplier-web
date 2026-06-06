@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { useI18n } from "@/lib/i18n";
 
 export default function SignupForm() {
   const [email, setEmail] = useState("");

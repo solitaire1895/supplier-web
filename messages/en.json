@@ -190,37 +190,43 @@
     "title": "Pricing",
     "plans": {
       "basic": {
-        "title": "Basic Plan",
-        "price": "$9.99",
+        "title": "Explorer Plan",
+        "price": "1,700 FCFA",
         "features": [
-          "Access to supplier database",
-          "Basic product insights",
-          "Favorites & notes",
-          "Limited analytics"
+          "Entry/mid-range phones",
+          "Tablets & computers access",
+          "Basic calculator",
+          "1 winning product/mo (48h delay)",
+          "Platform suppliers (Alibaba, 1688...)",
+          "Community WhatsApp channel"
         ],
         "cta": "Get Started"
       },
       "standard": {
-        "title": "Standard Plan",
-        "price": "$19.99",
+        "title": "Importer Plan",
+        "price": "2,900 FCFA",
         "features": [
-          "Full price comparison",
-          "Winning products access",
-          "Affiliate system (5%)",
-          "Advanced filters",
-          "AI insights"
+          "All brands + foldable phones",
+          "All tablet brands",
+          "MacBook & entry-level Gaming PCs",
+          "Full calculator (CBM + margin)",
+          "Real-time winning products",
+          "Suppliers + direct contacts",
+          "Community WhatsApp channel"
         ],
         "cta": "Get Started"
       },
       "premium": {
-        "title": "Premium Plan",
-        "price": "$39.99",
+        "title": "Partner Plan",
+        "price": "4,000 FCFA",
         "features": [
-          "Partner program (10%)",
-          "Advanced analytics",
-          "AI negotiation assistant",
-          "Bulk comparison",
-          "Private suppliers"
+          "Latest releases + instant news",
+          "Latest generation tablets",
+          "High-end MacBook & Gaming PCs",
+          "Full calculator (+ ad estimation)",
+          "Preview winning products",
+          "All suppliers + priority access",
+          "Priority WhatsApp channel"
         ],
         "cta": "Get Started"
       }

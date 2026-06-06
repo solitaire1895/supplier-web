@@ -190,37 +190,43 @@
     "title": "Tarifs",
     "plans": {
       "basic": {
-        "title": "Plan Basique",
-        "price": "9,99 $",
+        "title": "Plan Explorateur",
+        "price": "1 700 FCFA",
         "features": [
-          "Accès à la base de données fournisseurs",
-          "Aperçus de base sur les produits",
-          "Favoris et notes",
-          "Analyses limitées"
+          "Téléphones entrée/milieu de gamme",
+          "Accès tablettes & ordinateurs",
+          "Calculatrice basique",
+          "1 produit gagnant/mois (48h délai)",
+          "Fournisseurs plateformes (Alibaba, 1688...)",
+          "Canal WhatsApp communauté"
         ],
         "cta": "Commencer"
       },
       "standard": {
-        "title": "Plan Standard",
-        "price": "19,99 $",
+        "title": "Plan Importateur",
+        "price": "2 900 FCFA",
         "features": [
-          "Comparaison complète des prix",
-          "Accès aux produits gagnants",
-          "Système d'affiliation (5 %)",
-          "Filtres avancés",
-          "Analyses par l'IA"
+          "Toutes marques + pliables",
+          "Tablettes toutes marques",
+          "MacBook & PC Gaming entrée de gamme",
+          "Calculatrice complète (CBM + marge)",
+          "Produits gagnants en temps réel",
+          "Fournisseurs + contacts directs",
+          "Canal WhatsApp communauté"
         ],
         "cta": "Commencer"
       },
       "premium": {
-        "title": "Plan Premium",
-        "price": "39,99 $",
+        "title": "Plan Partenaire",
+        "price": "4 000 FCFA",
         "features": [
-          "Programme partenaire (10 %)",
-          "Analyses avancées",
-          "Assistant de négociation par IA",
-          "Comparaison en masse",
-          "Fournisseurs privés"
+          "Dernières sorties + nouveautés annonce",
+          "Tablettes dernières générations",
+          "MacBook & Gaming haut de gamme",
+          "Calculatrice full (+ estimation pub)",
+          "Produits gagnants avant-première",
+          "Tous les fournisseurs + accès prioritaire",
+          "Canal WhatsApp prioritaire"
         ],
         "cta": "Commencer"
       }

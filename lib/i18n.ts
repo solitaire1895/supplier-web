@@ -272,37 +272,43 @@ export const translations = {
       title: "Pricing",
       plans: {
         basic: {
-          title: "Basic Plan",
-          price: "$9.99",
+          title: "Explorer Plan",
+          price: "1,700 FCFA",
           features: [
-            "Access to supplier database",
-            "Basic product insights",
-            "Favorites & notes",
-            "Limited analytics"
+            "Entry/mid-range phones",
+            "Tablets & computers access",
+            "Basic calculator",
+            "1 winning product/mo (48h delay)",
+            "Platform suppliers (Alibaba, 1688...)",
+            "Community WhatsApp channel"
           ],
           cta: "Get Started"
         },
         standard: {
-          title: "Standard Plan",
-          price: "$19.99",
+          title: "Importer Plan",
+          price: "2,900 FCFA",
           features: [
-            "Full price comparison",
-            "Winning products access",
-            "Affiliate system (5%)",
-            "Advanced filters",
-            "AI insights"
+            "All brands + foldable phones",
+            "All tablet brands",
+            "MacBook & entry-level Gaming PCs",
+            "Full calculator (CBM + margin)",
+            "Real-time winning products",
+            "Suppliers + direct contacts",
+            "Community WhatsApp channel"
           ],
           cta: "Get Started"
         },
         premium: {
-          title: "Premium Plan",
-          price: "$39.99",
+          title: "Partner Plan",
+          price: "4,000 FCFA",
           features: [
-            "Partner program (10%)",
-            "Advanced analytics",
-            "AI negotiation assistant",
-            "Bulk comparison",
-            "Private suppliers"
+            "Latest releases + instant news",
+            "Latest generation tablets",
+            "High-end MacBook & Gaming PCs",
+            "Full calculator (+ ad estimation)",
+            "Preview winning products",
+            "All suppliers + priority access",
+            "Priority WhatsApp channel"
           ],
           cta: "Get Started"
         }
@@ -344,60 +350,60 @@ export const translations = {
         privacy: "Privacy",
         terms: "Terms",
         security: "Security"
-      },
-      auth: {
-        agreeTerms: "I agree to the Terms of Service and Privacy Policy",
-        mustAgree: "You must agree to the Terms of Service and Privacy Policy",
-      },
-      policies: {
-        privacy: {
-          title: "Privacy Policy",
-          lastUpdated: "Last Updated: June 2026",
-          intro: "At Nexusply, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information.",
-          sections: [
-            {
-              title: "1. Information We Collect",
-              content: "We collect information you provide directly to us when you create an account, such as your name, email address, and payment information. We also collect usage data to improve our services."
-            },
-            {
-              title: "2. How We Use Your Information",
-              content: "We use your information to provide and maintain our services, process transactions, and communicate with you about updates or promotional offers."
-            },
-            {
-              title: "3. Data Security",
-              content: "We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure."
-            },
-            {
-              title: "4. Your Rights",
-              content: "You have the right to access, correct, or delete your personal information at any time through your account settings."
-            }
-          ]
-        },
-        terms: {
-          title: "Terms of Service",
-          lastUpdated: "Last Updated: June 2026",
-          intro: "By using Nexusply, you agree to these terms. Please read them carefully.",
-          sections: [
-            {
-              title: "1. Acceptance of Terms",
-              content: "By accessing or using our platform, you agree to be bound by these Terms of Service and all applicable laws and regulations."
-            },
-            {
-              title: "2. User Accounts",
-              content: "You are responsible for maintaining the confidentiality of your account and password. You must be at least 18 years old to use our services."
-            },
-            {
-              title: "3. Subscription and Billing",
-              content: "Certain features require a paid subscription. All fees are non-refundable unless required by law."
-            },
-            {
-              title: "4. Prohibited Conduct",
-              content: "You agree not to use the platform for any unlawful purpose or in any way that could damage or impair our services."
-            }
-          ]
-        }
       }
-    }
+    },
+    auth: {
+      agreeTerms: "I agree to the Terms of Service and Privacy Policy",
+      mustAgree: "You must agree to the Terms of Service and Privacy Policy",
+    },
+    policies: {
+      privacy: {
+        title: "Privacy Policy",
+        lastUpdated: "Last Updated: June 2026",
+        intro: "At Nexusply, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information.",
+        sections: [
+          {
+            title: "1. Information We Collect",
+            content: "We collect information you provide directly to us when you create an account, such as your name, email address, and payment information. We also collect usage data to improve our services."
+          },
+          {
+            title: "2. How We Use Your Information",
+            content: "We use your information to provide and maintain our services, process transactions, and communicate with you about updates or promotional offers."
+          },
+          {
+            title: "3. Data Security",
+            content: "We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure."
+          },
+          {
+            title: "4. Your Rights",
+            content: "You have the right to access, correct, or delete your personal information at any time through your account settings."
+          }
+        ]
+      },
+      terms: {
+        title: "Terms of Service",
+        lastUpdated: "Last Updated: June 2026",
+        intro: "By using Nexusply, you agree to these terms. Please read them carefully.",
+        sections: [
+          {
+            title: "1. Acceptance of Terms",
+            content: "By accessing or using our platform, you agree to be bound by these Terms of Service and all applicable laws and regulations."
+          },
+          {
+            title: "2. User Accounts",
+            content: "You are responsible for maintaining the confidentiality of your account and password. You must be at least 18 years old to use our services."
+          },
+          {
+            title: "3. Subscription and Billing",
+            content: "Certain features require a paid subscription. All fees are non-refundable unless required by law."
+          },
+          {
+            title: "4. Prohibited Conduct",
+            content: "You agree not to use the platform for any unlawful purpose or in any way that could damage or impair our services."
+          }
+        ]
+      }
+    },
   },
   FR: {
     common: {
@@ -638,37 +644,43 @@ export const translations = {
       title: "Tarifs",
       plans: {
         basic: {
-          title: "Plan Basique",
-          price: "9,99 $",
+          title: "Plan Explorateur",
+          price: "1 700 FCFA",
           features: [
-            "Accès à la base de données fournisseurs",
-            "Aperçus de base sur les produits",
-            "Favoris et notes",
-            "Analyses limitées"
+            "Téléphones entrée/milieu de gamme",
+            "Accès tablettes & ordinateurs",
+            "Calculatrice basique",
+            "1 produit gagnant/mois (48h délai)",
+            "Fournisseurs plateformes (Alibaba, 1688...)",
+            "Canal WhatsApp communauté"
           ],
           cta: "Commencer"
         },
         standard: {
-          title: "Plan Standard",
-          price: "19,99 $",
+          title: "Plan Importateur",
+          price: "2 900 FCFA",
           features: [
-            "Comparaison complète des prix",
-            "Accès aux produits gagnants",
-            "Système d'affiliation (5 %)",
-            "Filtres avancés",
-            "Analyses par l'IA"
+            "Toutes marques + pliables",
+            "Tablettes toutes marques",
+            "MacBook & PC Gaming entrée de gamme",
+            "Calculatrice complète (CBM + marge)",
+            "Produits gagnants en temps réel",
+            "Fournisseurs + contacts directs",
+            "Canal WhatsApp communauté"
           ],
           cta: "Commencer"
         },
         premium: {
-          title: "Plan Premium",
-          price: "39,99 $",
+          title: "Plan Partenaire",
+          price: "4 000 FCFA",
           features: [
-            "Programme partenaire (10 %)",
-            "Analyses avancées",
-            "Assistant de négociation par IA",
-            "Comparaison en masse",
-            "Fournisseurs privés"
+            "Dernières sorties + nouveautés annonce",
+            "Tablettes dernières générations",
+            "MacBook & Gaming haut de gamme",
+            "Calculatrice full (+ estimation pub)",
+            "Produits gagnants avant-première",
+            "Tous les fournisseurs + accès prioritaire",
+            "Canal WhatsApp prioritaire"
           ],
           cta: "Commencer"
         }
@@ -710,60 +722,60 @@ export const translations = {
         privacy: "Confidentialité",
         terms: "Conditions",
         security: "Sécurité"
-      },
-      auth: {
-        agreeTerms: "J'accepte les Conditions d'Utilisation et la Politique de Confidentialité",
-        mustAgree: "Vous devez accepter les Conditions d'Utilisation et la Politique de Confidentialité",
-      },
-      policies: {
-        privacy: {
-          title: "Politique de Confidentialité",
-          lastUpdated: "Dernière mise à jour : Juin 2026",
-          intro: "Chez Nexusply, nous prenons votre vie privée au sérieux. Cette politique explique comment nous collectons, utilisons et protégeons vos informations personnelles.",
-          sections: [
-            {
-              title: "1. Informations que nous collectons",
-              content: "Nous collectons les informations que vous nous fournissez directement lorsque vous créez un compte, telles que votre nom, votre adresse e-mail et vos informations de paiement. Nous collectons également des données d'utilisation pour améliorer nos services."
-            },
-            {
-              title: "2. Comment nous utilisons vos informations",
-              content: "Nous utilisons vos informations pour fournir et maintenir nos services, traiter les transactions et communiquer avec vous au sujet des mises à jour ou des offres promotionnelles."
-            },
-            {
-              title: "3. Sécurité des données",
-              content: "Nous mettons en œuvre des mesures de sécurité conformes aux normes de l'industrie pour protéger vos données. Cependant, aucune méthode de transmission sur Internet n'est sûre à 100 %."
-            },
-            {
-              title: "4. Vos droits",
-              content: "Vous avez le droit d'accéder, de corriger ou de supprimer vos informations personnelles à tout moment via les paramètres de votre compte."
-            }
-          ]
-        },
-        terms: {
-          title: "Conditions d'Utilisation",
-          lastUpdated: "Dernière mise à jour : Juin 2026",
-          intro: "En utilisant Nexusply, vous acceptez ces conditions. Veuillez les lire attentivement.",
-          sections: [
-            {
-              title: "1. Acceptation des conditions",
-              content: "En accédant à notre plateforme ou en l'utilisant, vous acceptez d'être lié par ces Conditions d'Utilisation et par toutes les lois et réglementations applicables."
-            },
-            {
-              title: "2. Comptes d'utilisateurs",
-              content: "Vous êtes responsable du maintien de la confidentialité de votre compte et de votre mot de passe. Vous devez avoir au moins 18 ans pour utiliser nos services."
-            },
-            {
-              title: "3. Abonnement et facturation",
-              content: "Certaines fonctionnalités nécessitent un abonnement payant. Tous les frais sont non remboursables, sauf si la loi l'exige."
-            },
-            {
-              title: "4. Conduite interdite",
-              content: "Vous acceptez de ne pas utiliser la plateforme à des fins illégales ou d'une manière qui pourrait endommager ou altérer nos services."
-            }
-          ]
-        }
       }
-    }
+    },
+    auth: {
+      agreeTerms: "J'accepte les Conditions d'Utilisation et la Politique de Confidentialité",
+      mustAgree: "Vous devez accepter les Conditions d'Utilisation et la Politique de Confidentialité",
+    },
+    policies: {
+      privacy: {
+        title: "Politique de Confidentialité",
+        lastUpdated: "Dernière mise à jour : Juin 2026",
+        intro: "Chez Nexusply, nous prenons votre vie privée au sérieux. Cette politique explique comment nous collectons, utilisons et protégeons vos informations personnelles.",
+        sections: [
+          {
+            title: "1. Informations que nous collectons",
+            content: "Nous collectons les informations que vous nous fournissez directement lorsque vous créez un compte, telles que votre nom, votre adresse e-mail et vos informations de paiement. Nous collectons également des données d'utilisation pour améliorer nos services."
+          },
+          {
+            title: "2. Comment nous utilisons vos informations",
+            content: "Nous utilisons vos informations pour fournir et maintenir nos services, traiter les transactions et communiquer avec vous au sujet des mises à jour ou des offres promotionnelles."
+          },
+          {
+            title: "3. Sécurité des données",
+            content: "Nous mettons en œuvre des mesures de sécurité conformes aux normes de l'industrie pour protéger vos données. Cependant, aucune méthode de transmission sur Internet n'est sûre à 100 %."
+          },
+          {
+            title: "4. Vos droits",
+            content: "Vous avez le droit d'accéder, de corriger ou de supprimer vos informations personnelles à tout moment via les paramètres de votre compte."
+          }
+        ]
+      },
+      terms: {
+        title: "Conditions d'Utilisation",
+        lastUpdated: "Dernière mise à jour : Juin 2026",
+        intro: "En utilisant Nexusply, vous acceptez ces conditions. Veuillez les lire attentivement.",
+        sections: [
+          {
+            title: "1. Acceptation des conditions",
+            content: "En accédant à notre plateforme ou en l'utilisant, vous acceptez d'être lié par ces Conditions d'Utilisation et par toutes les lois et réglementations applicables."
+          },
+          {
+            title: "2. Comptes d'utilisateurs",
+            content: "Vous êtes responsable du maintien de la confidentialité de votre compte et de votre mot de passe. Vous devez avoir au moins 18 ans pour utiliser nos services."
+          },
+          {
+            title: "3. Abonnement et facturation",
+            content: "Certaines fonctionnalités nécessitent un abonnement payant. Tous les frais sont non remboursables, sauf si la loi l'exige."
+          },
+          {
+            title: "4. Conduite interdite",
+            content: "Vous acceptez de ne pas utiliser la plateforme à des fins illégales ou d'une manière qui pourrait endommager ou altérer nos services."
+          }
+        ]
+      }
+    },
   },
   CN: {
     common: {
@@ -1004,37 +1016,43 @@ export const translations = {
       title: "价格方案",
       plans: {
         basic: {
-          title: "基础版",
-          price: "$9.99",
+          title: "探索者方案",
+          price: "1,700 FCFA",
           features: [
-            "访问供应商数据库",
-            "基础产品见解",
-            "收藏夹和笔记",
-            "有限的数据分析"
+            "入门级/中端手机",
+            "平板电脑和电脑访问",
+            "基础计算器",
+            "每月1个爆款产品（48小时延迟）",
+            "平台供应商 (Alibaba, 1688...)",
+            "社群 WhatsApp 频道"
           ],
           cta: "立即开始"
         },
         standard: {
-          title: "标准版",
-          price: "$19.99",
+          title: "进口商方案",
+          price: "2,900 FCFA",
           features: [
-            "全方位价格对比",
-            "获取爆款产品信息",
-            "联盟系统 (5%)",
-            "高级筛选器",
-            "AI 深度见解"
+            "所有品牌 + 折叠屏手机",
+            "所有平板电脑品牌",
+            "MacBook 和入门级游戏电脑",
+            "完整计算器 (CBM + 利润)",
+            "实时爆款产品",
+            "供应商 + 直接联系人",
+            "社群 WhatsApp 频道"
           ],
           cta: "立即开始"
         },
         premium: {
-          title: "高级版",
-          price: "$39.99",
+          title: "合伙人方案",
+          price: "4,000 FCFA",
           features: [
-            "合作伙伴计划 (10%)",
-            "高级数据分析",
-            "AI 谈判助手",
-            "批量价格对比",
-            "私有供应商资源"
+            "最新款 + 即时资讯",
+            "最新一代平板电脑",
+            "高端 MacBook 和游戏电脑",
+            "完整计算器 (+ 广告估算)",
+            "预选爆款产品",
+            "所有供应商 + 优先访问",
+            "优先 WhatsApp 频道"
           ],
           cta: "立即开始"
         }
@@ -1076,60 +1094,60 @@ export const translations = {
         privacy: "Privacy",
         terms: "Terms",
         security: "Security"
-      },
-      auth: {
-        agreeTerms: "我同意服务条款和隐私政策",
-        mustAgree: "您必须同意服务条款和隐私政策",
-      },
-      policies: {
-        privacy: {
-          title: "隐私政策",
-          lastUpdated: "最后更新：2026年6月",
-          intro: "在 Nexusply，我们非常重视您的隐私。本政策解释了我们如何收集、使用和保护您的个人信息。",
-          sections: [
-            {
-              title: "1. 我们收集的信息",
-              content: "当您创建账户时，我们会收集您直接提供给我们的信息，例如您的姓名、电子邮件地址和付款信息。我们还收集使用数据以改进我们的服务。"
-            },
-            {
-              title: "2. 我们如何使用您的信息",
-              content: "我们使用您的信息来提供和维护我们的服务，处理交易，并向您传达有关更新或促销优惠的信息。"
-            },
-            {
-              title: "3. 数据安全",
-              content: "我们实施行业标准的安全措施来保护您的数据。但是，没有任何通过互联网传输的方法是 100% 安全的。"
-            },
-            {
-              title: "4. 您的权利",
-              content: "您有权随时通过您的账户设置访问、更正或删除您的个人信息。"
-            }
-          ]
-        },
-        terms: {
-          title: "服务条款",
-          lastUpdated: "最后更新：2026年6月",
-          intro: "通过使用 Nexusply，您同意这些条款。请仔细阅读。",
-          sections: [
-            {
-              title: "1. 条款的接受",
-              content: "通过访问或使用我们的平台，您同意受这些服务条款以及所有适用法律法规的约束。"
-            },
-            {
-              title: "2. 用户账户",
-              content: "您有责任维护您的账户和密码的机密性。您必须年满 18 岁才能使用我们的服务。"
-            },
-            {
-              title: "3. 订阅和计费",
-              content: "某些功能需要付费订阅。除非法律要求，否则所有费用均不予退还。"
-            },
-            {
-              title: "4. 禁止行为",
-              content: "您同意不将平台用于任何非法目的，或以任何可能损害或削弱我们服务的方式使用平台。"
-            }
-          ]
-        }
       }
-    }
+    },
+    auth: {
+      agreeTerms: "我同意服务条款和隐私政策",
+      mustAgree: "您必须同意服务条款和隐私政策",
+    },
+    policies: {
+      privacy: {
+        title: "隐私政策",
+        lastUpdated: "最后更新：2026年6月",
+        intro: "在 Nexusply，我们非常重视您的隐私。本政策解释了我们如何收集、使用和保护您的个人信息。",
+        sections: [
+          {
+            title: "1. 我们收集的信息",
+            content: "当您创建账户时，我们会收集您直接提供给我们的信息，例如您的姓名、电子邮件地址和付款信息。我们还收集使用数据以改进我们的服务。"
+          },
+          {
+            title: "2. 我们如何使用您的信息",
+            content: "我们使用您的信息来提供和维护我们的服务，处理交易，并向您传达有关更新或促销优惠的信息。"
+          },
+          {
+            title: "3. 数据安全",
+            content: "我们实施行业标准的安全措施来保护您的数据。但是，没有任何通过互联网传输的方法是 100% 安全的。"
+          },
+          {
+            title: "4. 您的权利",
+            content: "您有权随时通过您的账户设置访问、更正或删除您的个人信息。"
+          }
+        ]
+      },
+      terms: {
+        title: "服务条款",
+        lastUpdated: "最后更新：2026年6月",
+        intro: "通过使用 Nexusply，您同意这些条款。请仔细阅读。",
+        sections: [
+          {
+            title: "1. 条款的接受",
+            content: "通过访问或使用我们的平台，您同意受这些服务条款以及所有适用法律法规的约束。"
+          },
+          {
+            title: "2. 用户账户",
+            content: "您有责任维护您的账户和密码的机密性。您必须年满 18 岁才能使用我们的服务。"
+          },
+          {
+            title: "3. 订阅和计费",
+            content: "某些功能需要付费订阅。除非法律要求，否则所有费用均不予退还。"
+          },
+          {
+            title: "4. 禁止行为",
+            content: "您同意不将平台用于任何非法目的，或以任何可能损害或削弱我们服务的方式使用平台。"
+          }
+        ]
+      }
+    },
   },
 };
 
@@ -1145,5 +1163,10 @@ export function useI18n() {
     return () => window.removeEventListener("languageChanged", update);
   }, []);
 
-  return { t: translations[lang], lang, setLanguage };
+  // Use a type cast to ensure the returned translation object matches the structure of the EN translation.
+  // This avoids TypeScript errors when accessing properties that are present in all translations but
+  // are lost during union type inference of large objects.
+  const t = translations[lang] as typeof translations.EN;
+
+  return { t, lang, setLanguage };
 }
