@@ -263,5 +263,57 @@
       "terms": "Conditions",
       "security": "Sécurité"
     }
+  },
+  "auth": {
+    "agreeTerms": "J'accepte les Conditions d'Utilisation et la Politique de Confidentialité",
+    "mustAgree": "Vous devez accepter les Conditions d'Utilisation et la Politique de Confidentialité"
+  },
+  "policies": {
+    "privacy": {
+      "title": "Politique de Confidentialité",
+      "lastUpdated": "Dernière mise à jour : Juin 2026",
+      "intro": "Chez Nexusply, nous prenons votre vie privée au sérieux. Cette politique explique comment nous collectons, utilisons et protégeons vos informations personnelles.",
+      "sections": [
+        {
+          "title": "1. Informations que nous collectons",
+          "content": "Nous collectons les informations que vous nous fournissez directement lorsque vous créez un compte, telles que votre nom, votre adresse e-mail et vos informations de paiement. Nous collectons également des données d'utilisation pour améliorer nos services."
+        },
+        {
+          "title": "2. Comment nous utilisons vos informations",
+          "content": "Nous utilisons vos informations pour fournir et maintenir nos services, traiter les transactions et communiquer avec vous au sujet des mises à jour ou des offres promotionnelles."
+        },
+        {
+          "title": "3. Sécurité des données",
+          "content": "Nous mettons en œuvre des mesures de sécurité conformes aux normes de l'industrie pour protéger vos données. Cependant, aucune méthode de transmission sur Internet n'est sûre à 100 %."
+        },
+        {
+          "title": "4. Vos droits",
+          "content": "Vous avez le droit d'accéder, de corriger ou de supprimer vos informations personnelles à tout moment via les paramètres de votre compte."
+        }
+      ]
+    },
+    "terms": {
+      "title": "Conditions d'Utilisation",
+      "lastUpdated": "Dernière mise à jour : Juin 2026",
+      "intro": "En utilisant Nexusply, vous acceptez ces conditions. Veuillez les lire attentivement.",
+      "sections": [
+        {
+          "title": "1. Acceptation des conditions",
+          "content": "En accédant à notre plateforme ou en l'utilisant, vous acceptez d'être lié par ces Conditions d'Utilisation et par toutes les lois et réglementations applicables."
+        },
+        {
+          "title": "2. Comptes d'utilisateurs",
+          "content": "Vous êtes responsable du maintien de la confidentialité de votre compte et de votre mot de passe. Vous devez avoir au moins 18 ans pour utiliser nos services."
+        },
+        {
+          "title": "3. Abonnement et facturation",
+          "content": "Certaines fonctionnalités nécessitent un abonnement payant. Tous les frais sont non remboursables, sauf si la loi l'exige."
+        },
+        {
+          "title": "4. Conduite interdite",
+          "content": "Vous acceptez de ne pas utiliser la plateforme à des fins illégales ou d'une manière qui pourrait endommager ou altérer nos services."
+        }
+      ]
+    }
   }
 }

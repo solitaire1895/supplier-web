@@ -14,10 +14,12 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const router = useRouter();
+  const { t } = useI18n();
 
   // ✅ HANDLE SIGNUP
   const handleSignup = async () => {
@@ -29,6 +31,10 @@ export default function SignupForm() {
 
     if (password !== confirmPassword) {
       return setError("Passwords do not match");
+    }
+
+    if (!agreed) {
+      return setError(t?.auth?.mustAgree || "You must agree to the Terms of Service and Privacy Policy");
     }
 
     try {
@@ -120,6 +126,25 @@ export default function SignupForm() {
             placeholder="••••••••"
             className="bg-white/5 border-white/10 focus:border-red-500 text-white placeholder:text-gray-500"
           />
+        </div>
+
+        {/* ✅ AGREEMENT CHECKBOX */}
+        <div className="flex items-start gap-3 pt-2">
+          <input
+            type="checkbox"
+            id="agree"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-white/10 bg-white/5 text-red-500 focus:ring-red-500"
+          />
+          <Label htmlFor="agree" className="text-sm text-gray-400 leading-snug cursor-pointer">
+            {t?.auth?.agreeTerms || "I agree to the Terms of Service and Privacy Policy"}
+            <div className="mt-1 space-x-2">
+              <Link href="/terms" className="text-red-500 hover:underline">Terms</Link>
+              <span>&</span>
+              <Link href="/privacy" className="text-red-500 hover:underline">Privacy</Link>
+            </div>
+          </Label>
         </div>
 
         {/* ✅ ERROR MESSAGE */}

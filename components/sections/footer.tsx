@@ -30,8 +30,8 @@ export default function Footer() {
       title: t.footer?.sections?.company,
       links: [
         { label: t.footer?.links?.about, href: "#about" },
-        { label: t.footer?.links?.terms, href: "#" },
-        { label: t.footer?.links?.privacy, href: "#" },
+        { label: t.footer?.links?.terms, href: "/terms" },
+        { label: t.footer?.links?.privacy, href: "/privacy" },
       ],
     },
     {
@@ -157,8 +157,8 @@ export default function Footer() {
             <p>{t.footer?.bottom?.rights}</p>
 
             <div className="flex gap-6 mt-4 md:mt-0">
-              <span className="hover:text-red-500 cursor-pointer transition">{t.footer?.bottom?.privacy}</span>
-              <span className="hover:text-red-500 cursor-pointer transition">{t.footer?.bottom?.terms}</span>
+              <Link href="/privacy" className="hover:text-red-500 cursor-pointer transition">{t.footer?.bottom?.privacy}</Link>
+              <Link href="/terms" className="hover:text-red-500 cursor-pointer transition">{t.footer?.bottom?.terms}</Link>
               <span className="hover:text-red-500 cursor-pointer transition">{t.footer?.bottom?.security}</span>
             </div>
           </div>

@@ -263,5 +263,57 @@
       "terms": "Terms",
       "security": "Security"
     }
+  },
+  "auth": {
+    "agreeTerms": "I agree to the Terms of Service and Privacy Policy",
+    "mustAgree": "You must agree to the Terms of Service and Privacy Policy"
+  },
+  "policies": {
+    "privacy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last Updated: June 2026",
+      "intro": "At Nexusply, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information.",
+      "sections": [
+        {
+          "title": "1. Information We Collect",
+          "content": "We collect information you provide directly to us when you create an account, such as your name, email address, and payment information. We also collect usage data to improve our services."
+        },
+        {
+          "title": "2. How We Use Your Information",
+          "content": "We use your information to provide and maintain our services, process transactions, and communicate with you about updates or promotional offers."
+        },
+        {
+          "title": "3. Data Security",
+          "content": "We implement industry-standard security measures to protect your data. However, no method of transmission over the internet is 100% secure."
+        },
+        {
+          "title": "4. Your Rights",
+          "content": "You have the right to access, correct, or delete your personal information at any time through your account settings."
+        }
+      ]
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "lastUpdated": "Last Updated: June 2026",
+      "intro": "By using Nexusply, you agree to these terms. Please read them carefully.",
+      "sections": [
+        {
+          "title": "1. Acceptance of Terms",
+          "content": "By accessing or using our platform, you agree to be bound by these Terms of Service and all applicable laws and regulations."
+        },
+        {
+          "title": "2. User Accounts",
+          "content": "You are responsible for maintaining the confidentiality of your account and password. You must be at least 18 years old to use our services."
+        },
+        {
+          "title": "3. Subscription and Billing",
+          "content": "Certain features require a paid subscription. All fees are non-refundable unless required by law."
+        },
+        {
+          "title": "4. Prohibited Conduct",
+          "content": "You agree not to use the platform for any unlawful purpose or in any way that could damage or impair our services."
+        }
+      ]
+    }
   }
 }
