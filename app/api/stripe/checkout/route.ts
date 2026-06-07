@@ -4,6 +4,10 @@ import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   try {
+    if (!stripe) {
+      return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 })
+    }
+
     const { priceId } = await req.json()
     const supabase = await createClient()
 

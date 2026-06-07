@@ -4,6 +4,10 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
+  if (!stripe) {
+    return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 })
+  }
+
   // We use the Service Role Key to bypass RLS since webhooks are server-to-server
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
