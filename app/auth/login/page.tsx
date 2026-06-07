@@ -4,8 +4,7 @@ import { HexagonBackground } from "@/components/animate-ui/components/background
 export const dynamic = 'force-dynamic'
 
 export default function LoginPage() {
-...
-
+  return (
     <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden px-4">
 
       {/* FULL PAGE BACKGROUND */}
