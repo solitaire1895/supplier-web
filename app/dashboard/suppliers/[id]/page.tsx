@@ -1,80 +1,130 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { 
   Star, ChevronLeft, ShieldCheck, Box, Truck, 
   TrendingUp, Activity, MessageSquare, Award, Lock, Phone, MessageCircle, Mail
 } from "lucide-react";
 import { getPlanFeatures } from "@/lib/plans";
-import { getCurrentPlan } from "@/lib/settings";
 import { supabase } from "@/lib/supabase/client";
+import { submitReview } from "@/lib/supabase/actions";
+import { useUser } from "@/lib/supabase/provider";
 import Link from "next/link";
 import Navbar from "@/components/navbar/navbar";
 
 export default function SupplierPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const rawId = params?.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
+  
   const router = useRouter();
-  const [plan, setPlan] = useState("Free");
+  const { profile, loading: userLoading } = useUser();
   const [supplier, setSupplier] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    setPlan(getCurrentPlan());
-
-    async function fetchSupplier() {
+  const fetchSupplierData = useCallback(async () => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // 1. Fetch Supplier
       const { data, error } = await supabase
         .from('suppliers')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
+      if (error) {
         console.error("Error fetching supplier:", error);
         setLoading(false);
         return;
       }
 
+      if (!data) {
+        console.warn(`Supplier not found for ID: ${id}`);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Fetch Reviews
+      const { data: revs } = await supabase
+        .from('reviews')
+        .select('*, profiles(email, full_name)')
+        .eq('supplier_id', id)
+        .order('created_at', { ascending: false });
+
       setSupplier({
         ...data,
         rating: 4.8,
-        reviewsCount: 124,
+        reviewsCount: revs?.length || 0,
         description: data.description || "High-performance analyzed supplier specializing in scalable production and consistent quality."
       });
+      
+      setReviews(revs || []);
+    } catch (err) {
+      console.error("Unexpected error fetching supplier data:", err);
+    } finally {
       setLoading(false);
     }
-
-    if (id) fetchSupplier();
   }, [id]);
 
+  useEffect(() => {
+    fetchSupplierData();
+
+    // Safety timeout to ensure loading spinner is removed
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 8000);
+
+    return () => clearTimeout(timeout);
+  }, [fetchSupplierData]);
+
+  const handleAddReview = async () => {
+    if (!newComment || submitting) return;
+    setSubmitting(true);
+    
+    const result = await submitReview({
+      type: 'supplier',
+      id: id as string,
+      rating: newRating,
+      content: newComment
+    });
+
+    if (result.success) {
+      // Refresh reviews locally
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profileData } = await supabase.from('profiles').select('email, full_name').eq('id', user?.id).single();
+      
+      const newReview = {
+        rating: newRating,
+        content: newComment,
+        created_at: new Date().toISOString(),
+        profiles: profileData
+      };
+      
+      setReviews([newReview, ...reviews]);
+      setNewComment("");
+      setNewRating(5);
+    } else {
+      alert(result.error || "Failed to submit review");
+    }
+    
+    setSubmitting(false);
+  };
+
+  const plan = profile?.active_plan || "Free";
   const features = getPlanFeatures(plan);
   const ratingStats = [92, 75, 55, 30, 12];
 
-  const [reviews, setReviews] = useState([
-    {
-      name: "Charlotte Hanlin",
-      rating: 5,
-      date: "2 days ago",
-      comment: "Amazing supplier. Fast delivery and great product quality. The packaging was pristine and our customers are loving it. 🔥",
-    },
-    {
-      name: "Alfonzo Schuessler",
-      rating: 4,
-      date: "1 week ago",
-      comment: "Good experience overall. Communication was smooth, though shipping took one day longer than expected. Will order again.",
-    },
-  ]);
-
-  const [newRating, setNewRating] = useState(5);
-  const [newComment, setNewComment] = useState("");
-
-  const addReview = () => {
-    if (!newComment) return;
-    setReviews([{ name: "You", rating: newRating, date: "Just now", comment: newComment }, ...reviews]);
-    setNewComment("");
-  };
-
-  if (loading) return (
+  if (loading || userLoading) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
        <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
@@ -82,8 +132,14 @@ export default function SupplierPage() {
 
   if (!supplier) return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-       <h1 className="text-2xl font-bold mb-4">Supplier Not Found</h1>
-       <button onClick={() => router.push('/dashboard')} className="px-6 py-2 bg-red-500 rounded-xl">Go Back</button>
+       <h1 className="text-2xl font-bold mb-4 text-center px-4">Supplier Not Found</h1>
+       <p className="text-gray-400 mb-8 max-w-md text-center px-4">We couldn&apos;t find the supplier you&apos;re looking for. It may have been removed or the ID is incorrect.</p>
+       <button 
+         onClick={() => router.push('/dashboard')} 
+         className="px-8 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+       >
+         Return to Dashboard
+       </button>
     </div>
   );
 
@@ -210,7 +266,7 @@ export default function SupplierPage() {
                       />
                     ))}
                   </div>
-                  <p className="text-gray-400 text-sm font-medium">Based on {supplier.reviewsCount} reviews</p>
+                  <p className="text-gray-400 text-sm font-medium">Based on {reviews.length} reviews</p>
                 </div>
 
                 <div className="flex-1 w-full space-y-3">
@@ -225,6 +281,42 @@ export default function SupplierPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* REVIEWS FEED */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
+              <div className="flex items-center gap-2 mb-8">
+                <MessageSquare className="text-gray-400" size={20} />
+                <h2 className="text-lg font-semibold">Community Feed</h2>
+              </div>
+
+              <div className="space-y-6">
+                {reviews.length === 0 ? (
+                  <p className="text-gray-500 text-sm text-center py-8 italic">No reviews yet. Be the first to share your experience!</p>
+                ) : (
+                  reviews.map((r, i) => (
+                    <div key={i} className="bg-black/30 p-5 rounded-2xl border border-white/5">
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center gap-2">
+                           <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 text-[10px] font-bold border border-red-500/20">
+                              {(r.profiles?.full_name || r.profiles?.email)?.[0]?.toUpperCase()}
+                           </div>
+                           <p className="font-bold text-sm text-gray-200">
+                             {r.profiles?.full_name || r.profiles?.email?.split('@')[0] || "Anonymous"}
+                           </p>
+                        </div>
+                        <div className="flex">
+                          {[...Array(5)].map((_, j) => (
+                            <Star key={j} className={`w-3 h-3 ${j < r.rating ? "text-red-500 fill-red-500" : "text-gray-700"}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-gray-400 text-xs leading-relaxed italic">&quot;{r.content}&quot;</p>
+                      <p className="text-[10px] text-gray-600 mt-3">{new Date(r.created_at).toLocaleDateString()}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -254,8 +346,19 @@ export default function SupplierPage() {
                   <Star key={i} onClick={() => setNewRating(i + 1)} className={`w-6 h-6 cursor-pointer transition-all hover:scale-110 ${i < newRating ? "text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]" : "text-gray-600 hover:text-gray-400"}`} />
                 ))}
               </div>
-              <textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="How was the product quality and shipping time?" className="w-full p-4 rounded-xl bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-red-500/50 transition-all resize-none h-28 mb-4" />
-              <button onClick={addReview} disabled={!newComment} className="w-full py-3 rounded-xl text-sm font-semibold bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all">Submit Review</button>
+              <textarea 
+                value={newComment} 
+                onChange={(e) => setNewComment(e.target.value)} 
+                placeholder="How was the product quality and shipping time?" 
+                className="w-full p-4 rounded-xl bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-red-500/50 transition-all resize-none h-28 mb-4" 
+              />
+              <button 
+                onClick={handleAddReview} 
+                disabled={!newComment || submitting} 
+                className="w-full py-3 rounded-xl text-sm font-semibold bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {submitting ? "Submitting..." : "Submit Review"}
+              </button>
             </div>
           </div>
         </div>

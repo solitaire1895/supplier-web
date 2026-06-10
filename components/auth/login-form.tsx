@@ -127,14 +127,15 @@ export default function LoginForm() {
         </Button>
       </div>
 
-      {/* Divider */}
+      {/* Divider - Temporarily hidden
       <div className="flex items-center gap-4">
         <div className="h-px flex-1 bg-white/10" />
         <span className="text-gray-500 text-sm">or continue with</span>
         <div className="h-px flex-1 bg-white/10" />
       </div>
+      */}
 
-      {/* Social */}
+      {/* Social - Temporarily hidden
       <div className="grid grid-cols-3 gap-3">
         {[
           { icon: FaGoogle, provider: 'google' as const },
@@ -159,6 +160,7 @@ export default function LoginForm() {
           </button>
         ))}
       </div>
+      */}
 
       {/* Footer */}
       <p className="text-gray-400 text-sm text-center">

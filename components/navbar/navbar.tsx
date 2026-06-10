@@ -2,39 +2,31 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Filter, User, Home, Zap, Sparkles, Menu } from "lucide-react";
+import { Search, Filter, User, Zap, Sparkles, Menu } from "lucide-react";
 import SearchBar from "./search-bar";
 import FilterPanel from "./filter-panel";
 import ProfileMenu from "./profile-menu";
 import ProfileDropdown from "./profile-dropdown";
 import MobileNavMenu from "./mobile-nav-menu";
 import LanguageSwitcher from "@/components/layout/language-switcher";
-import { getCurrentPlan } from "@/lib/settings";
 import { getPlanFeatures } from "@/lib/plans";
 import { useI18n } from "@/lib/i18n";
+import { useUser } from "@/lib/supabase/provider";
 
 export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
-  const [plan, setPlan] = useState("Free");
   const { t, lang } = useI18n();
+  const { profile } = useUser();
 
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    setPlan(getCurrentPlan());
-    
-    // Listen for plan changes
-    const handleSettingsUpdate = () => setPlan(getCurrentPlan());
-    window.addEventListener("settingsUpdated", handleSettingsUpdate);
-    return () => window.removeEventListener("settingsUpdated", handleSettingsUpdate);
-  }, []);
-
-  const features = getPlanFeatures(plan);
-  const isPremium = plan !== "Free";
+  const currentPlan = profile?.active_plan || "Free";
+  const features = getPlanFeatures(currentPlan);
+  const isPremium = currentPlan !== "Free";
 
   // Reusable button classes to ensure a premium feel without relying on external CSS
   const iconBtnClass = "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border cursor-pointer";
@@ -237,3 +229,4 @@ export default function Navbar() {
     </>
   );
 }
+

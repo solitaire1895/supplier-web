@@ -31,6 +31,30 @@ export const getProducts = cache(async () => {
   return data
 })
 
+export const getReviews = cache(async (type: 'product' | 'supplier', id: string) => {
+  const supabase = await createClient()
+  const column = type === 'product' ? 'product_id' : 'supplier_id'
+
+  const { data, error } = await supabase
+    .from('reviews')
+    .select(`
+      *,
+      profiles (
+        email,
+        full_name
+      )
+    `)
+    .eq(column, id)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error(`Error fetching reviews for ${type}:`, error)
+    return []
+  }
+
+  return data
+})
+
 export const getFavoriteSuppliers = cache(async () => {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

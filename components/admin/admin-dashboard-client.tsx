@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Bell, Settings, Home, BarChart2, 
   Users, Activity, Database, Zap, 
@@ -12,7 +12,7 @@ import ProductsAdmin from "./products-admin";
 import UsersAdmin from "./users-admin";
 import AdminSidebar from "./admin-sidebar";
 import { supabase } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AdminDashboardClient({ 
   initialSuppliers, 
@@ -25,8 +25,13 @@ export default function AdminDashboardClient({
   initialUsers: any[],
   currentUser: any
 }) {
-  const [activeTab, setActiveTab] = useState("User");
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get("tab") || "User";
+
+  const setActiveTab = (tab: string) => {
+    router.push(`/admin?tab=${tab}`);
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -45,16 +50,16 @@ export default function AdminDashboardClient({
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
              <div className="bg-white/5 border border-white/10 p-8 rounded-3xl">
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Volume</p>
-                <h3 className="text-3xl font-black text-white">$128,430</h3>
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Suppliers</p>
+                <h3 className="text-3xl font-black text-white">{initialSuppliers.length}</h3>
              </div>
              <div className="bg-white/5 border border-white/10 p-8 rounded-3xl">
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Active Sessions</p>
-                <h3 className="text-3xl font-black text-white">432</h3>
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Winning Products</p>
+                <h3 className="text-3xl font-black text-white">{initialProducts.length}</h3>
              </div>
              <div className="bg-white/5 border border-white/10 p-8 rounded-3xl">
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Conversion</p>
-                <h3 className="text-3xl font-black text-red-500">12.4%</h3>
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Users</p>
+                <h3 className="text-3xl font-black text-red-500">{initialUsers.length}</h3>
              </div>
           </div>
         );
@@ -130,3 +135,4 @@ export default function AdminDashboardClient({
     </div>
   );
 }
+

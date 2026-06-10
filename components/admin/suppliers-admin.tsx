@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Plus, Search, MoreHorizontal, 
   Trash2, Edit, ExternalLink, 
@@ -19,13 +19,19 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    setSuppliers(initialSuppliers);
+  }, [initialSuppliers]);
+
   const [formData, setFormData] = useState({
     name: "",
     platform: "Alibaba",
     category: "",
     moq: 1,
     status: "active",
-    image_url: ""
+    image_url: "",
+    contact_url: "",
+    supplied_products: ""
   });
 
   const filtered = suppliers.filter(s => 
@@ -54,7 +60,9 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
         category: supplier.category || "",
         moq: supplier.moq || 1,
         status: supplier.status || "active",
-        image_url: supplier.image_url || ""
+        image_url: supplier.image_url || "",
+        contact_url: supplier.contact_url || "",
+        supplied_products: supplier.supplied_products || ""
       });
     } else {
       setEditingSupplier(null);
@@ -64,7 +72,9 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
         category: "",
         moq: 1,
         status: "active",
-        image_url: ""
+        image_url: "",
+        contact_url: "",
+        supplied_products: ""
       });
     }
     setIsFormOpen(true);
@@ -84,11 +94,7 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
     if (res.success) {
       setIsFormOpen(false);
       router.refresh();
-      // For immediate UI update if not using server components effectively
-      if (!editingSupplier) {
-         // This is a bit hacky, normally router.refresh() should handle it but on client side we might need to fetch again or update state
-         window.location.reload(); 
-      } else {
+      if (editingSupplier) {
          setSuppliers(suppliers.map(s => s.id === editingSupplier.id ? { ...s, ...formData } : s));
       }
     } else {
@@ -99,7 +105,6 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
 
   const handleImportComplete = () => {
     router.refresh();
-    window.location.reload();
   };
 
   return (
@@ -193,7 +198,7 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
               <AlertCircle size={14} className="text-red-500" /> Import Guidelines
             </h4>
             <ul className="text-xs text-gray-400 space-y-3 list-disc pl-4">
-              <li>Header row required: <code className="text-red-400">name, platform, category, moq, status, image_url, contact_info</code></li>
+              <li>Header row required: <code className="text-red-400">name, platform, category, moq, status, image_url, contact_url, supplied_products, contact_info</code></li>
               <li><code className="text-red-400">contact_info</code> should be a JSON string like <code className="text-gray-300">{"{\"whatsapp\": \"...\"}"}</code></li>
               <li>Platform must be one of: Alibaba, 1688, Pinduoduo, Xianyu, AliExpress, or Direct.</li>
             </ul>
@@ -211,63 +216,95 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Supplier Name</label>
-                <input 
-                  required
-                  type="text" 
-                  value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
-                  placeholder="e.g. Shenzhen Tech Co."
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="max-h-[70vh] overflow-y-auto no-scrollbar">
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Platform</label>
-                  <select 
-                    value={formData.platform}
-                    onChange={e => setFormData({...formData, platform: e.target.value})}
+                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Supplier Name</label>
+                  <input 
+                    required
+                    type="text" 
+                    value={formData.name}
+                    onChange={e => setFormData({...formData, name: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
-                  >
-                    <option value="Alibaba" className="bg-black">Alibaba</option>
-                    <option value="1688" className="bg-black">1688</option>
-                    <option value="Pinduoduo" className="bg-black">Pinduoduo</option>
-                    <option value="AliExpress" className="bg-black">AliExpress</option>
-                    <option value="Direct" className="bg-black">Direct</option>
-                  </select>
+                    placeholder="e.g. Shenzhen Tech Co."
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Platform</label>
+                    <select 
+                      value={formData.platform}
+                      onChange={e => setFormData({...formData, platform: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
+                    >
+                      <option value="Alibaba" className="bg-black">Alibaba</option>
+                      <option value="1688" className="bg-black">1688</option>
+                      <option value="Pinduoduo" className="bg-black">Pinduoduo</option>
+                      <option value="Xianyu" className="bg-black">Xianyu</option>
+                      <option value="AliExpress" className="bg-black">AliExpress</option>
+                      <option value="Direct" className="bg-black">Direct</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Status</label>
+                    <select 
+                      value={formData.status}
+                      onChange={e => setFormData({...formData, status: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
+                    >
+                      <option value="active" className="bg-black">Active</option>
+                      <option value="pending" className="bg-black">Pending</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Status</label>
-                  <select 
-                    value={formData.status}
-                    onChange={e => setFormData({...formData, status: e.target.value})}
+                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Category</label>
+                  <input 
+                    type="text" 
+                    value={formData.category}
+                    onChange={e => setFormData({...formData, category: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
-                  >
-                    <option value="active" className="bg-black">Active</option>
-                    <option value="pending" className="bg-black">Pending</option>
-                  </select>
+                    placeholder="e.g. Electronics"
+                  />
                 </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Image URL</label>
-                <input 
-                  type="text" 
-                  value={formData.image_url}
-                  onChange={e => setFormData({...formData, image_url: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
-                  placeholder="https://..."
-                />
-              </div>
-              <button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="w-full bg-red-500 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:bg-red-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : editingSupplier ? 'Update Supplier' : 'Create Supplier'}
-              </button>
-            </form>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Contact URL</label>
+                  <input 
+                    type="text" 
+                    value={formData.contact_url}
+                    onChange={e => setFormData({...formData, contact_url: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
+                    placeholder="https://wa.me/..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Products Supplied</label>
+                  <textarea 
+                    value={formData.supplied_products}
+                    onChange={e => setFormData({...formData, supplied_products: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50 min-h-[80px]"
+                    placeholder="List products this supplier provides..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Image URL</label>
+                  <input 
+                    type="text" 
+                    value={formData.image_url}
+                    onChange={e => setFormData({...formData, image_url: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
+                    placeholder="https://..."
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full bg-red-500 text-white font-bold py-3 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:bg-red-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : editingSupplier ? 'Update Supplier' : 'Create Supplier'}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}

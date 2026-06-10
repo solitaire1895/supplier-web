@@ -7,10 +7,11 @@ import {
   Star,
   Settings,
   LogOut,
-  Globe,
-  Check,
+  Shield,
 } from "lucide-react";
 import { useI18n, Lang } from "@/lib/i18n";
+import { useUser } from "@/lib/supabase/provider";
+import { supabase } from "@/lib/supabase/client";
 
 const languages = [
   { code: "EN" as Lang, label: "English", flag: "🇺🇸" },
@@ -21,6 +22,14 @@ const languages = [
 export default function ProfileDropdown() {
   const router = useRouter();
   const { t, lang, setLanguage } = useI18n();
+  const { profile } = useUser();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+  };
+
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
 
   return (
     <div
@@ -33,9 +42,11 @@ export default function ProfileDropdown() {
     >
       {/* USER */}
       <div className="mb-4 px-2">
-        <p className="text-white font-medium">Maixent</p>
-        <p className="text-gray-400 text-sm">
-          maixent@mail.com
+        <p className="text-white font-medium capitalize">
+          {profile?.email?.split('@')[0] || "User"}
+        </p>
+        <p className="text-gray-400 text-sm truncate">
+          {profile?.email || "No email"}
         </p>
       </div>
 
@@ -72,6 +83,15 @@ export default function ProfileDropdown() {
       {/* MENU */}
       <div className="space-y-1 text-sm">
 
+        {isAdmin && (
+          <DropdownItem
+            icon={<Shield size={16} className="text-red-500" />}
+            label="Admin Panel"
+            onClick={() => router.push("/admin")}
+            className="bg-red-500/5 text-red-500 hover:bg-red-500/10"
+          />
+        )}
+
         <DropdownItem
           icon={<User size={16} />}
           label={t.navbar.profile}
@@ -101,7 +121,7 @@ export default function ProfileDropdown() {
         <DropdownItem
           icon={<LogOut size={16} />}
           label={t.profile.logout}
-          onClick={() => console.log("logout")}
+          onClick={handleLogout}
           className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
         />
 

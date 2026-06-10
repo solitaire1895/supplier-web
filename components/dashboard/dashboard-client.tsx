@@ -1,0 +1,177 @@
+"use client";
+
+import Navbar from "@/components/navbar/navbar";
+import SupplierCard from "@/components/dashboard/supplier-card";
+import FilterSidebar from "@/components/dashboard/filter-sidebar";
+import { Search, Users, Star, Package, Zap, SlidersHorizontal, ChevronDown, Lock } from "lucide-react";
+import { getPlanFeatures } from "@/lib/plans";
+import Link from "next/link";
+import { useI18n } from "@/lib/i18n";
+
+interface DashboardClientProps {
+  suppliers: any[];
+  stats: any;
+  profile: any;
+}
+
+export default function DashboardClient({ suppliers, stats, profile }: DashboardClientProps) {
+  const { t, lang } = useI18n();
+
+  if (!t) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <Zap className="text-red-500 animate-pulse" size={48} />
+    </div>
+  );
+
+  const features = getPlanFeatures(profile?.active_plan);
+
+  // Filter suppliers based on plan
+  const filteredSuppliers = suppliers.filter(s => {
+    // Platform restriction
+    if (features.access.suppliers === 'platforms' && s.platform === 'Direct') return false;
+    
+    // Category restriction
+    if (!features.access.tablets && s.category === 'Tablets') return false;
+    if (features.access.computers === 'none' && s.category === 'Computers') return false;
+    
+    return true;
+  });
+
+  const displaySuppliers = filteredSuppliers.slice(0, 12); // Show some initially
+  const lockedCount = suppliers.length - filteredSuppliers.length;
+
+  return (
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30">
+      <Navbar />
+
+      {/* MAIN CONTENT AREA */}
+      <div className="pt-28 pb-24 px-4 md:px-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+
+        {/* HERO SEARCH & HEADER */}
+        <div className="mb-12">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
+            {t.dashboard.title}
+          </h1>
+          <p className="text-gray-400 text-sm md:text-base mb-8 max-w-2xl">
+            {t.dashboard.subtitle}
+          </p>
+
+          {/* Premium Omnibar Search */}
+          <div className="relative group max-w-3xl">
+            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+              <Search className="text-gray-400 group-focus-within:text-red-500 transition-colors duration-300" size={20} />
+            </div>
+            <input 
+              type="text" 
+              placeholder={t.dashboard.searchPlaceholder}
+              className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl py-4 pl-14 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:shadow-[0_0_30px_rgba(239,68,68,0.15)] transition-all text-sm md:text-base"
+            />
+            <div className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2">
+              <kbd className="hidden sm:inline-flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-lg text-[10px] font-medium text-gray-400 border border-white/5">
+                <span className="text-xs">⌘</span> K
+              </kbd>
+              <button className="lg:hidden p-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors">
+                <SlidersHorizontal size={16} className="text-gray-300" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* TOP STATS ROW */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
+          {[
+            { label: t.dashboard.stats.suppliers, value: stats.suppliers.toString(), icon: Users },
+            { label: t.dashboard.stats.favorites, value: stats.favorites.toString(), icon: Star },
+            { label: t.dashboard.stats.avgMoq, value: "75", icon: Package },
+            { label: t.dashboard.stats.topCategory, value: "Electronics", icon: Zap, highlight: true },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 overflow-hidden group hover:border-white/20 transition-all duration-500"
+            >
+              <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/5 rounded-full blur-[30px] group-hover:bg-red-500/10 transition-all duration-500"></div>
+              
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div className={`p-2 rounded-xl ${stat.highlight ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-white/5 text-gray-400 border border-white/5'}`}>
+                  <stat.icon size={18} />
+                </div>
+              </div>
+              
+              <div className="relative z-10">
+                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">{stat.label}</p>
+                <p className={`text-2xl font-bold tracking-tight ${stat.highlight ? 'text-white' : 'text-gray-200'}`}>
+                  {stat.value}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* MAIN LAYOUT GRID (SIDEBAR + SUPPLIERS) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
+
+          <aside className="hidden lg:block sticky top-28 z-10 h-[calc(100vh-140px)] overflow-y-auto no-scrollbar">
+            <FilterSidebar />
+            
+            {/* PLAN UPSELL IN SIDEBAR */}
+            {features.access.suppliers === 'platforms' && (
+              <div className="mt-8 p-6 bg-red-500/5 border border-red-500/20 rounded-3xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                <div className="relative z-10">
+                  <Lock className="text-red-500 mb-4" size={20} />
+                  <h3 className="text-sm font-bold mb-2">{t.dashboard.lockedTitle}</h3>
+                  <p className="text-xs text-gray-400 mb-4 leading-relaxed">{t.dashboard.lockedDesc}</p>
+                  <Link href="/dashboard/profile?tab=plan" className="text-xs font-bold text-red-500 hover:text-red-400 transition-colors">
+                    {t.common.upgrade} Now →
+                  </Link>
+                </div>
+              </div>
+            )}
+          </aside>
+
+          <main className="min-w-0 flex flex-col h-full">
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                {t.dashboard.discoveryGrid}
+                <span className="bg-white/10 text-xs px-2 py-0.5 rounded-md text-gray-400 font-normal">{filteredSuppliers.length} {t.common.results}</span>
+              </h2>
+              
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button className="flex-1 sm:flex-none flex items-center justify-between gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+                  {t.common.sortBy}: {t.common.recommended} <ChevronDown size={14} className="text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            {/* SUPPLIERS GRID */}
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {displaySuppliers.map((supplier, i) => (
+                <div key={i} className="animate-in fade-in zoom-in-95 duration-500" style={{ animationDelay: `${i * 50}ms` }}>
+                  <SupplierCard supplier={supplier} />
+                </div>
+              ))}
+              
+              {/* Locked Suppliers Placeholders */}
+              {lockedCount > 0 && Array.from({ length: 3 }).map((_, i) => (
+                <div key={`locked-supplier-${i}`} className="bg-white/5 border border-dashed border-white/10 rounded-[2rem] h-[280px] flex flex-col items-center justify-center p-8 text-center opacity-60">
+                   <Lock className="text-gray-600 mb-4" size={24} />
+                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{t.dashboard.lockedSupplier}</p>
+                   <p className="text-xs text-gray-500 leading-relaxed">{t.dashboard.lockedSupplierDesc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Load More Trigger (Mock) */}
+            <div className="mt-12 flex justify-center">
+              <button className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300">
+                {t.common.loadMore}
+              </button>
+            </div>
+
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { 
   Star, ChevronLeft, Activity, TrendingUp, AlertCircle, Truck, DollarSign, Package, MessageSquare
 } from "lucide-react";
@@ -9,31 +9,50 @@ import Navbar from "@/components/navbar/navbar";
 import SupplierCard from "@/components/dashboard/supplier-card";
 import ProfitCalculator from "@/components/dashboard/profit-calculator";
 import { supabase } from "@/lib/supabase/client";
-import { getCurrentPlan } from "@/lib/settings";
+import { submitReview } from "@/lib/supabase/actions";
+import { useUser } from "@/lib/supabase/provider";
 
 export default function ProductDetailPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const rawId = params?.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
+  
   const router = useRouter();
   const supplierRef = useRef<HTMLDivElement | null>(null);
+  const { profile, loading: userLoading } = useUser();
   
   const [product, setProduct] = useState<any>(null);
   const [matchedSuppliers, setMatchedSuppliers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [plan, setPlan] = useState("Free");
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [newRating, setNewRating] = useState(5);
+  const [newComment, setNewComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    setPlan(getCurrentPlan());
-
-    async function fetchProductData() {
+  const fetchProductData = useCallback(async () => {
+    if (!id) {
+      console.warn("ProductDetailPage: No ID found in params");
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+    try {
       // 1. Fetch Product
       const { data: prod, error } = await supabase
         .from('products')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-      if (error || !prod) {
-        console.error("Error fetching product:", error);
+      if (error) {
+        console.error("Supabase error fetching product:", error);
+        setLoading(false);
+        return;
+      }
+
+      if (!prod) {
+        console.warn(`Product not found for ID: ${id}`);
         setLoading(false);
         return;
       }
@@ -50,39 +69,82 @@ export default function ProductDetailPage() {
       });
 
       // 2. Fetch Matched Suppliers
-      const { data: sups } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('category', prod.category)
-        .limit(4);
+      if (prod.category) {
+        const { data: sups } = await supabase
+          .from('suppliers')
+          .select('*')
+          .eq('category', prod.category)
+          .limit(4);
+        
+        setMatchedSuppliers(sups || []);
+      }
+
+      // 3. Fetch Reviews
+      const { data: revs } = await supabase
+        .from('reviews')
+        .select('*, profiles(email, full_name)')
+        .eq('product_id', id)
+        .order('created_at', { ascending: false });
       
-      setMatchedSuppliers(sups || []);
+      setReviews(revs || []);
+    } catch (err) {
+      console.error("Unexpected error fetching product data:", err);
+    } finally {
       setLoading(false);
     }
-
-    if (id) fetchProductData();
   }, [id]);
 
-  /* ================= REVIEWS ================= */
-  const [reviews, setReviews] = useState([
-    { name: "John D.", rating: 5, date: "2 days ago", comment: "Very profitable product. Found a great supplier through Nexusply, margins are insane 🔥" },
-    { name: "Sarah M.", rating: 4, date: "1 week ago", comment: "Good margins but you need a strong creative angle to beat the moderate competition." },
-  ]);
+  useEffect(() => {
+    fetchProductData();
 
-  const [newRating, setNewRating] = useState(5);
-  const [newComment, setNewComment] = useState("");
+    // Safety timeout
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 8000);
 
-  const addReview = () => {
-    if (!newComment) return;
-    setReviews([{ name: "You", rating: newRating, date: "Just now", comment: newComment }, ...reviews]);
-    setNewComment("");
+    return () => clearTimeout(timeout);
+  }, [fetchProductData]);
+
+  const handleAddReview = async () => {
+    if (!newComment || submitting) return;
+    setSubmitting(true);
+    
+    const result = await submitReview({
+      type: 'product',
+      id: id as string,
+      rating: newRating,
+      content: newComment
+    });
+
+    if (result.success) {
+      // Refresh reviews locally for immediate feedback
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profileData } = await supabase.from('profiles').select('email, full_name').eq('id', user?.id).single();
+      
+      const newReview = {
+        rating: newRating,
+        content: newComment,
+        created_at: new Date().toISOString(),
+        profiles: profileData
+      };
+      
+      setReviews([newReview, ...reviews]);
+      setNewComment("");
+      setNewRating(5);
+    } else {
+      alert(result.error || "Failed to submit review");
+    }
+    
+    setSubmitting(false);
   };
 
   const scrollToSuppliers = () => {
     supplierRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  if (loading) return (
+  const plan = profile?.active_plan || "Free";
+
+  if (loading || userLoading) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
        <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
@@ -90,8 +152,14 @@ export default function ProductDetailPage() {
 
   if (!product) return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-       <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-       <button onClick={() => router.push('/dashboard')} className="px-6 py-2 bg-red-500 rounded-xl">Go Back</button>
+       <h1 className="text-2xl font-bold mb-4 text-center px-4">Product Not Found</h1>
+       <p className="text-gray-400 mb-8 max-w-md text-center px-4">We couldn&apos;t find the product you&apos;re looking for. It may have been removed or the ID is incorrect.</p>
+       <button 
+         onClick={() => router.push('/dashboard/winning-products')} 
+         className="px-8 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+       >
+         Return to Winning Products
+       </button>
     </div>
   );
 
@@ -251,14 +319,16 @@ export default function ProductDetailPage() {
                 {reviews.map((r, i) => (
                   <div key={i} className="bg-black/30 p-4 rounded-2xl border border-white/5">
                     <div className="flex justify-between items-center mb-2">
-                      <p className="font-medium text-sm text-gray-200">{r.name}</p>
+                      <p className="font-medium text-sm text-gray-200">
+                        {r.profiles?.full_name || r.profiles?.email?.split('@')[0] || "Anonymous"}
+                      </p>
                       <div className="flex">
                         {[...Array(5)].map((_, j) => (
                           <Star key={j} className={`w-3 h-3 ${j < r.rating ? "text-red-500 fill-red-500" : "text-gray-700"}`} />
                         ))}
                       </div>
                     </div>
-                    <p className="text-gray-400 text-xs leading-relaxed">&quot;{r.comment}&quot;</p>
+                    <p className="text-gray-400 text-xs leading-relaxed">&quot;{r.content}&quot;</p>
                   </div>
                 ))}
               </div>
@@ -282,11 +352,11 @@ export default function ProductDetailPage() {
                   className="w-full p-4 rounded-xl bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-red-500/50 transition-all resize-none h-24 mb-4"
                 />
                 <button
-                  onClick={addReview}
-                  disabled={!newComment}
+                  onClick={handleAddReview}
+                  disabled={!newComment || submitting}
                   className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-semibold disabled:opacity-50 transition-all"
                 >
-                  Submit Insight
+                  {submitting ? "Submitting..." : "Submit Insight"}
                 </button>
               </div>
             </div>

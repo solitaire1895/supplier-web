@@ -46,6 +46,8 @@ export default function CSVImport({ type, onComplete }: CSVImportProps) {
                 moq: parseInt(item.moq) || 1,
                 status: item.status || 'active',
                 image_url: item.image_url,
+                contact_url: item.contact_url,
+                supplied_products: item.supplied_products,
                 contact_info: item.contact_info ? JSON.parse(item.contact_info) : null
               };
               res = await addSupplier(supplierData);

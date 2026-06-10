@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Plus, Search, TrendingUp, 
   Trash2, Edit, MoreHorizontal,
@@ -18,6 +18,10 @@ export default function ProductsAdmin({ initialProducts }: { initialProducts: an
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setProducts(initialProducts);
+  }, [initialProducts]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -96,7 +100,9 @@ export default function ProductsAdmin({ initialProducts }: { initialProducts: an
     if (res.success) {
       setIsFormOpen(false);
       router.refresh();
-      window.location.reload();
+      if (editingProduct) {
+         setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...formData } : p));
+      }
     } else {
       alert("Error: " + res.error);
     }
@@ -105,7 +111,6 @@ export default function ProductsAdmin({ initialProducts }: { initialProducts: an
 
   const handleImportComplete = () => {
     router.refresh();
-    window.location.reload();
   };
 
   return (

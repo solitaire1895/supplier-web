@@ -173,3 +173,34 @@ export async function toggleFavorite(type: 'product' | 'supplier', id: string) {
   revalidatePath('/dashboard/profile')
   return { success: true }
 }
+
+/* ================= REVIEWS ACTIONS ================= */
+
+export async function submitReview(data: { 
+  type: 'product' | 'supplier', 
+  id: string, 
+  rating: number, 
+  content: string 
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'Unauthorized' }
+
+  const column = data.type === 'product' ? 'product_id' : 'supplier_id'
+
+  const { error } = await supabase.from('reviews').insert({
+    user_id: user.id,
+    [column]: data.id,
+    rating: data.rating,
+    content: data.content
+  })
+
+  if (error) {
+    console.error('Error submitting review:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath(`/dashboard/${data.type}s/${data.id}`)
+  return { success: true }
+}

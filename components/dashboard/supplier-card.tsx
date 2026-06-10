@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, CheckCircle, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { toggleFavorite } from "@/lib/supabase/actions";
 import { supabase } from "@/lib/supabase/client";
+import { motion } from "framer-motion";
 
 type Supplier = {
   id: string;
@@ -23,16 +24,18 @@ export default function SupplierCard({ supplier }: { supplier: Supplier }) {
 
   useEffect(() => {
     const checkFavorite = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data } = await supabase
-        .from('user_favorites')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('supplier_id', supplier.id)
+        .from("user_favorites")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("supplier_id", supplier.id)
         .single();
-      
+
       setFavorite(!!data);
     };
 
@@ -45,11 +48,11 @@ export default function SupplierCard({ supplier }: { supplier: Supplier }) {
 
     try {
       setLoading(true);
-      const res = await toggleFavorite('supplier', supplier.id);
+      const res = await toggleFavorite("supplier", supplier.id);
       if (res.success) {
         setFavorite(!favorite);
-      } else if (res.error === 'Unauthorized') {
-        router.push('/auth/login');
+      } else if (res.error === "Unauthorized") {
+        router.push("/auth/login");
       }
     } catch (error) {
       console.error("Favorite toggle error:", error);
@@ -63,83 +66,91 @@ export default function SupplierCard({ supplier }: { supplier: Supplier }) {
   };
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.02 }}
       onClick={handleNavigate}
-      className="
-      relative group cursor-pointer
-      bg-white/5 backdrop-blur-xl
-      border border-white/10
-      rounded-2xl p-5
-      transition-all duration-300
-      hover:border-red-500
-      hover:shadow-[0_0_40px_rgba(239,68,68,0.25)]
-    "
+      className="relative group cursor-pointer bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-red-500/50 shadow-xl hover:shadow-neon"
     >
-      {/* ⭐ FAVORITE */}
-      <button
-        onClick={handleFavorite}
-        disabled={loading}
-        className="
-        absolute top-4 right-4 p-2 rounded-full
-        hover:bg-white/10 transition
-        disabled:opacity-50
-      "
-      >
-        {loading ? (
-          <Loader2 className="w-5 h-5 animate-spin text-white" />
-        ) : (
-          <Star
-            className={`w-5 h-5 transition ${
-              favorite
-                ? "text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]"
-                : "text-gray-400 group-hover:text-white"
-            }`}
-          />
-        )}
-      </button>
-
-      {/* HEADER */}
-      <div className="mb-4 pr-8">
-        <h3 className="text-white text-lg font-semibold line-clamp-1">
-          {supplier.name}
-        </h3>
-
-        <p className="text-gray-400 text-sm">
-          {supplier.platform}
-        </p>
+      {/* HEADER BAR */}
+      <div className="bg-red-500/10 backdrop-blur-md border-b border-white/5 px-6 py-3 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded">
+            {supplier.platform}
+          </span>
+          <span className="text-[10px] text-gray-500 font-mono">
+            #{supplier.id.slice(0, 8).toUpperCase()}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 text-[10px] text-green-400 font-bold uppercase">
+          <ShieldCheck size={12} />
+          {t?.supplier?.verified || "Verified"}
+        </div>
       </div>
 
-      {/* INFO */}
-      <div className="flex justify-between text-sm text-gray-300 mb-6">
-        <div>
-          <p className="text-gray-500">{t?.supplier?.moq || 'MOQ'}</p>
-          <p className="text-white font-medium">
-            {supplier.moq}
-          </p>
-        </div>
+      <div className="p-6">
+        {/* ⭐ FAVORITE */}
+        <button
+          onClick={handleFavorite}
+          disabled={loading}
+          className="absolute top-[4.5rem] right-6 p-2 rounded-full bg-black/20 hover:bg-black/40 border border-white/5 transition active:scale-90"
+        >
+          {loading ? (
+            <Loader2 className="w-5 h-5 animate-spin text-white" />
+          ) : (
+            <Star
+              className={`w-5 h-5 transition ${
+                favorite
+                  ? "text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]"
+                  : "text-gray-400 group-hover:text-white"
+              }`}
+            />
+          )}
+        </button>
 
-        <div>
-          <p className="text-gray-500">{t?.supplier?.category || 'Category'}</p>
-          <p className="text-white font-medium">
+        {/* CONTENT */}
+        <div className="mb-6 pr-10">
+          <h3 className="text-white text-xl font-bold mb-1 line-clamp-1 group-hover:text-red-400 transition-colors">
+            {supplier.name}
+          </h3>
+          <p className="text-gray-500 text-sm font-medium uppercase tracking-tight">
             {supplier.category}
           </p>
         </div>
-      </div>
 
-      {/* ACTION */}
-      <button
-        onClick={(e) => e.stopPropagation()}
-        className="
-        w-full py-2 rounded-full text-sm font-medium
-        bg-red-500 text-white
-        shadow-[0_0_20px_rgba(239,68,68,0.6)]
-        hover:shadow-[0_0_40px_rgba(239,68,68,0.9)]
-        transition-all
-        cursor-pointer
-      "
-      >
-        {t?.supplier?.contact || 'Contact'}
-      </button>
-    </div>
+        {/* INFO GRID */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="bg-white/[0.03] border border-white/5 p-3 rounded-2xl">
+            <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">
+              {t?.supplier?.moq || "MOQ"}
+            </p>
+            <p className="text-white text-lg font-bold">
+              {supplier.moq} <span className="text-[10px] text-gray-500">{t?.supplier?.units || "Units"}</span>
+            </p>
+          </div>
+
+          <div className="bg-white/[0.03] border border-white/5 p-3 rounded-2xl">
+            <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">
+              {t?.supplier?.reliability || "Reliability"}
+            </p>
+            <p className="text-green-400 text-lg font-bold flex items-center gap-1">
+               98% <CheckCircle size={14} />
+            </p>
+          </div>
+        </div>
+
+        {/* ACTION */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleNavigate();
+          }}
+          className="w-full py-3.5 rounded-2xl text-xs font-bold uppercase tracking-widest bg-red-500 text-white shadow-neon hover:shadow-neon-strong hover:bg-red-600 transition-all active:scale-95"
+        >
+          {t?.supplier?.viewDetails || "View Details"}
+        </button>
+      </div>
+    </motion.div>
   );
 }
