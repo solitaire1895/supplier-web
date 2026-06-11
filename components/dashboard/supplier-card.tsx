@@ -62,6 +62,10 @@ export default function SupplierCard({ supplier }: { supplier: Supplier }) {
   };
 
   const handleNavigate = () => {
+    if (!supplier.id) {
+      console.error("SupplierCard: Missing supplier ID!", supplier);
+      return;
+    }
     router.push(`/dashboard/suppliers/${supplier.id}`);
   };
 
@@ -80,7 +84,7 @@ export default function SupplierCard({ supplier }: { supplier: Supplier }) {
             {supplier.platform}
           </span>
           <span className="text-[10px] text-gray-500 font-mono">
-            #{supplier.id.slice(0, 8).toUpperCase()}
+            #{supplier.id?.slice(0, 8).toUpperCase() || 'NEW'}
           </span>
         </div>
         <div className="flex items-center gap-1 text-[10px] text-green-400 font-bold uppercase">

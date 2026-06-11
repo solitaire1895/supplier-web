@@ -94,6 +94,8 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
     if (res.success) {
       setIsFormOpen(false);
       router.refresh();
+      
+      // Optimistic update
       if (editingSupplier) {
          setSuppliers(suppliers.map(s => s.id === editingSupplier.id ? { ...s, ...formData } : s));
       }

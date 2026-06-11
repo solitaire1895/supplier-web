@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { 
   Star, ChevronLeft, ShieldCheck, Box, Truck, 
-  TrendingUp, Activity, MessageSquare, Award, Lock, Phone, MessageCircle, Mail
+  TrendingUp, Activity, MessageSquare, Award, Lock, Phone, MessageCircle, Mail, AlertCircle
 } from "lucide-react";
 import { getPlanFeatures } from "@/lib/plans";
 import { supabase } from "@/lib/supabase/client";
@@ -22,28 +22,37 @@ export default function SupplierPage() {
   const { profile, loading: userLoading } = useUser();
   const [supplier, setSupplier] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const fetchSupplierData = useCallback(async () => {
-    if (!id) {
+    if (!id) return;
+
+    // UUID regex check
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      console.warn(`SupplierPage: Invalid UUID format for ID: ${id}`);
+      setError(`Invalid ID format: ${id}`);
       setLoading(false);
       return;
     }
     
     setLoading(true);
+    setError(null);
     try {
       // 1. Fetch Supplier
-      const { data, error } = await supabase
+      const { data, error: dbError } = await supabase
         .from('suppliers')
         .select('*')
         .eq('id', id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching supplier:", error);
+      if (dbError) {
+        console.error("Error fetching supplier:", dbError);
+        setError(`Database error: ${dbError.message}`);
         setLoading(false);
         return;
       }
@@ -69,8 +78,9 @@ export default function SupplierPage() {
       });
       
       setReviews(revs || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Unexpected error fetching supplier data:", err);
+      setError(err.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -82,7 +92,7 @@ export default function SupplierPage() {
     // Safety timeout to ensure loading spinner is removed
     const timeout = setTimeout(() => {
       setLoading(false);
-    }, 8000);
+    }, 10000);
 
     return () => clearTimeout(timeout);
   }, [fetchSupplierData]);
@@ -124,22 +134,35 @@ export default function SupplierPage() {
   const features = getPlanFeatures(plan);
   const ratingStats = [92, 75, 55, 30, 12];
 
-  if (loading || userLoading) return (
+  if ((loading && !supplier) || userLoading) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
        <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   if (!supplier) return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-       <h1 className="text-2xl font-bold mb-4 text-center px-4">Supplier Not Found</h1>
-       <p className="text-gray-400 mb-8 max-w-md text-center px-4">We couldn&apos;t find the supplier you&apos;re looking for. It may have been removed or the ID is incorrect.</p>
-       <button 
-         onClick={() => router.push('/dashboard')} 
-         className="px-8 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
-       >
-         Return to Dashboard
-       </button>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
+       <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 border border-red-500/20">
+          <AlertCircle size={32} className="text-red-500" />
+       </div>
+       <h1 className="text-2xl font-bold mb-2 text-center">Supplier Not Found</h1>
+       <p className="text-gray-400 mb-8 max-w-md text-center">
+         {error ? error : `We couldn't find a supplier with ID: ${id || 'unknown'}. It may have been removed.`}
+       </p>
+       <div className="flex gap-4">
+         <button 
+           onClick={() => router.push('/dashboard')} 
+           className="px-8 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+         >
+           Return to Dashboard
+         </button>
+         <button 
+           onClick={() => fetchSupplierData()} 
+           className="px-8 py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold hover:bg-white/10 transition-all"
+         >
+           Try Again
+         </button>
+       </div>
     </div>
   );
 

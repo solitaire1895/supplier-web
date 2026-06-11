@@ -100,8 +100,14 @@ export default function ProductsAdmin({ initialProducts }: { initialProducts: an
     if (res.success) {
       setIsFormOpen(false);
       router.refresh();
+      
+      // Optimistic/Immediate UI update
       if (editingProduct) {
          setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...formData } : p));
+      } else {
+         // Since we don't have the new ID yet from addProduct action (which just returns success),
+         // and we've called router.refresh(), the prop initialProducts will update soon.
+         // But to be safe, we can trigger a re-fetch if initialProducts doesn't change fast enough.
       }
     } else {
       alert("Error: " + res.error);

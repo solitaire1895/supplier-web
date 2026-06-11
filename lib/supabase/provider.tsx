@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "./client";
 import { User } from "@supabase/supabase-js";
 
@@ -18,6 +18,7 @@ interface UserContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  authLoading: boolean;
   refreshProfile: () => Promise<void>;
 }
 
@@ -27,54 +28,68 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const isInitialized = useRef(false);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error("Error fetching profile:", error);
+        console.error("UserProvider: Error fetching profile:", error);
         setProfile(null);
       } else {
         setProfile(data);
       }
     } catch (err) {
-      console.error("Unexpected error fetching profile:", err);
+      console.error("UserProvider: Unexpected error fetching profile:", err);
       setProfile(null);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       await fetchProfile(user.id);
     }
-  };
+  }, [user, fetchProfile]);
 
   useEffect(() => {
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+
     let mounted = true;
 
     // 1. Initial Session Check
-    const getInitialSession = async () => {
+    const initSession = async () => {
       try {
+        setAuthLoading(true);
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
         
-        if (mounted && session?.user) {
-          setUser(session.user);
-          await fetchProfile(session.user.id);
+        if (mounted) {
+          if (session?.user) {
+            setUser(session.user);
+            await fetchProfile(session.user.id);
+          } else {
+            setUser(null);
+            setProfile(null);
+            setLoading(false);
+          }
         }
       } catch (err) {
-        console.error("Auth session check failed:", err);
-      } finally {
+        console.error("UserProvider: Auth init failed:", err);
         if (mounted) setLoading(false);
+      } finally {
+        if (mounted) setAuthLoading(false);
       }
     };
 
-    getInitialSession();
+    initSession();
 
     // 2. Listen for Auth Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -82,33 +97,38 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
 
         if (session?.user) {
-          setUser(session.user);
-          await fetchProfile(session.user.id);
+          // Only re-fetch profile if the user ID changed or it's a critical auth event
+          if (user?.id !== session.user.id || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            setUser(session.user);
+            await fetchProfile(session.user.id);
+          }
         } else {
           setUser(null);
           setProfile(null);
+          setLoading(false);
         }
-        setLoading(false);
+        setAuthLoading(false);
       }
     );
 
-    // 3. Safety Timeout: Ensure loading is cleared after 5 seconds no matter what
+    // 3. Absolute Safety Timeout
     const timeout = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn("Auth initialization timed out, clearing loading state");
+      if (mounted && (loading || authLoading)) {
+        console.warn("UserProvider: Initialization timeout reached");
         setLoading(false);
+        setAuthLoading(false);
       }
-    }, 5000);
+    }, 6000);
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
       clearTimeout(timeout);
     };
-  }, []);
+  }, [fetchProfile, user?.id, loading, authLoading]);
 
   return (
-    <UserContext.Provider value={{ user, profile, loading, refreshProfile }}>
+    <UserContext.Provider value={{ user, profile, loading, authLoading, refreshProfile }}>
       {children}
     </UserContext.Provider>
   );

@@ -24,29 +24,37 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<any>(null);
   const [matchedSuppliers, setMatchedSuppliers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const fetchProductData = useCallback(async () => {
-    if (!id) {
-      console.warn("ProductDetailPage: No ID found in params");
+    if (!id) return;
+    
+    // UUID regex check
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      console.warn(`ProductDetailPage: Invalid UUID format for ID: ${id}`);
+      setError(`Invalid ID format: ${id}`);
       setLoading(false);
       return;
     }
-    
+
     setLoading(true);
+    setError(null);
     try {
       // 1. Fetch Product
-      const { data: prod, error } = await supabase
+      const { data: prod, error: dbError } = await supabase
         .from('products')
         .select('*')
         .eq('id', id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Supabase error fetching product:", error);
+      if (dbError) {
+        console.error("Supabase error fetching product:", dbError);
+        setError(`Database error: ${dbError.message}`);
         setLoading(false);
         return;
       }
@@ -87,8 +95,9 @@ export default function ProductDetailPage() {
         .order('created_at', { ascending: false });
       
       setReviews(revs || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Unexpected error fetching product data:", err);
+      setError(err.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -100,7 +109,7 @@ export default function ProductDetailPage() {
     // Safety timeout
     const timeout = setTimeout(() => {
       setLoading(false);
-    }, 8000);
+    }, 10000);
 
     return () => clearTimeout(timeout);
   }, [fetchProductData]);
@@ -144,22 +153,35 @@ export default function ProductDetailPage() {
 
   const plan = profile?.active_plan || "Free";
 
-  if (loading || userLoading) return (
+  if ((loading && !product) || userLoading) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
        <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 
   if (!product) return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-       <h1 className="text-2xl font-bold mb-4 text-center px-4">Product Not Found</h1>
-       <p className="text-gray-400 mb-8 max-w-md text-center px-4">We couldn&apos;t find the product you&apos;re looking for. It may have been removed or the ID is incorrect.</p>
-       <button 
-         onClick={() => router.push('/dashboard/winning-products')} 
-         className="px-8 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
-       >
-         Return to Winning Products
-       </button>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
+       <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 border border-red-500/20">
+          <AlertCircle size={32} className="text-red-500" />
+       </div>
+       <h1 className="text-2xl font-bold mb-2 text-center">Product Not Found</h1>
+       <p className="text-gray-400 mb-8 max-w-md text-center">
+         {error ? error : `We couldn't find a product with ID: ${id || 'unknown'}. It may have been removed.`}
+       </p>
+       <div className="flex gap-4">
+         <button 
+           onClick={() => router.push('/dashboard/winning-products')} 
+           className="px-8 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+         >
+           Browse All Products
+         </button>
+         <button 
+           onClick={() => fetchProductData()} 
+           className="px-8 py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold hover:bg-white/10 transition-all"
+         >
+           Try Again
+         </button>
+       </div>
     </div>
   );
 
