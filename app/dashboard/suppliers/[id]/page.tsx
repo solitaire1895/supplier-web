@@ -438,7 +438,3 @@ function GlobeIcon() {
     </svg>
   );
 }
-10 15.3 15.3 0 0 1 4-10z"></path>
-    </svg>
-  );
-}

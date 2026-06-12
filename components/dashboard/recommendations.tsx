@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getRecommendedProducts, getRecommendedSuppliers } from "@/lib/supabase/queries";
+import { getRecommendedProductsAction, getRecommendedSuppliersAction } from "@/lib/supabase/actions";
 import ProductCard from "./product-card";
 import SupplierCard from "./supplier-card";
 import { Zap, Sparkles } from "lucide-react";
@@ -18,8 +18,8 @@ export default function Recommendations({ type = "both" }: { type?: "product" | 
       setLoading(true);
       try {
         const promises = [];
-        if (type === "product" || type === "both") promises.push(getRecommendedProducts(4));
-        if (type === "supplier" || type === "both") promises.push(getRecommendedSuppliers(4));
+        if (type === "product" || type === "both") promises.push(getRecommendedProductsAction(4));
+        if (type === "supplier" || type === "both") promises.push(getRecommendedSuppliersAction(4));
 
         const results = await Promise.all(promises);
         

@@ -263,3 +263,41 @@ export async function searchSuppliersAction(query: string) {
 
   return data
 }
+
+export async function getRecommendedProductsAction(limit: number = 4) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .rpc('get_recommended_products', {
+      p_user_id: user.id,
+      p_limit: limit
+    })
+
+  if (error) {
+    console.error('Error getting recommended products:', error)
+    return []
+  }
+
+  return data
+}
+
+export async function getRecommendedSuppliersAction(limit: number = 4) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data, error } = await supabase
+    .rpc('get_recommended_suppliers', {
+      p_user_id: user.id,
+      p_limit: limit
+    })
+
+  if (error) {
+    console.error('Error getting recommended suppliers:', error)
+    return []
+  }
+
+  return data
+}
