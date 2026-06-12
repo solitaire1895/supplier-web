@@ -7,6 +7,7 @@ import { User } from "@supabase/supabase-js";
 interface UserProfile {
   id: string;
   email: string | null;
+  full_name: string | null;
   role: string;
   active_plan: string;
   trial_ends_at: string | null;

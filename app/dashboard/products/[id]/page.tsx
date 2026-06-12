@@ -9,7 +9,7 @@ import Navbar from "@/components/navbar/navbar";
 import SupplierCard from "@/components/dashboard/supplier-card";
 import ProfitCalculator from "@/components/dashboard/profit-calculator";
 import { supabase } from "@/lib/supabase/client";
-import { submitReview } from "@/lib/supabase/actions";
+import { submitReview, trackActivityAction } from "@/lib/supabase/actions";
 import { useUser } from "@/lib/supabase/provider";
 
 export default function ProductDetailPage() {
@@ -75,6 +75,9 @@ export default function ProductDetailPage() {
         delivery: "5–7 days",
         description: prod.description || "High-demand analyzed product with strong market traction and solid profit potential."
       });
+
+      // Track Activity
+      trackActivityAction('view_product', id);
 
       // 2. Fetch Matched Suppliers
       if (prod.category) {

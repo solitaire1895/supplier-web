@@ -204,3 +204,62 @@ export async function submitReview(data: {
   revalidatePath(`/dashboard/${data.type}s/${data.id}`)
   return { success: true }
 }
+
+/* ================= SEARCH & ACTIVITY ACTIONS ================= */
+
+export async function trackActivityAction(type: 'view_product' | 'view_supplier' | 'search', targetId?: string, metaData?: any) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const { error } = await supabase
+    .from('user_activity')
+    .insert({
+      user_id: user.id,
+      activity_type: type,
+      target_id: targetId,
+      meta_data: metaData
+    })
+
+  if (error) console.error('Error tracking activity:', error)
+}
+
+export async function searchProductsAction(query: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .textSearch('search_vector', query, {
+      type: 'websearch',
+      config: 'english'
+    })
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error searching products:', error)
+    return []
+  }
+
+  return data
+}
+
+export async function searchSuppliersAction(query: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('suppliers')
+    .select('*')
+    .textSearch('search_vector', query, {
+      type: 'websearch',
+      config: 'english'
+    })
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error searching suppliers:', error)
+    return []
+  }
+
+  return data
+}

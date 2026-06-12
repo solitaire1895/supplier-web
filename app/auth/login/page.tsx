@@ -1,9 +1,12 @@
+"use client"
+
 import LoginForm from "@/components/auth/login-form"
 import { HexagonBackground } from "@/components/animate-ui/components/backgrounds/hexagon"
-
-export const dynamic = 'force-dynamic'
+import { useI18n } from "@/lib/i18n"
 
 export default function LoginPage() {
+  const { t } = useI18n()
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden px-4">
 
@@ -38,15 +41,15 @@ export default function LoginPage() {
           {/* Content */}
           <div>
             <p className="text-gray-400 mb-3 text-sm">
-              Supplier Intelligence
+              {t.dashboard.title}
             </p>
 
             <h2 className="text-3xl font-semibold text-white leading-snug">
-              Access your supplier command center
+              {t.auth.panelTitle}
             </h2>
 
             <p className="text-gray-400 mt-4 text-sm">
-              Discover, compare, and optimize sourcing decisions with precision.
+              {t.auth.panelDesc}
             </p>
           </div>
 

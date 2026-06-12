@@ -27,15 +27,15 @@ export default function SignupForm() {
     setError("");
 
     if (!email || !password || !confirmPassword) {
-      return setError("All fields are required");
+      return setError(t.auth.allFieldsRequired);
     }
 
     if (password !== confirmPassword) {
-      return setError("Passwords do not match");
+      return setError(t.auth.passwordsDoNotMatch);
     }
 
     if (!agreed) {
-      return setError(t?.auth?.mustAgree || "You must agree to the Terms of Service and Privacy Policy");
+      return setError(t.auth.mustAgree);
     }
 
     try {
@@ -52,7 +52,7 @@ export default function SignupForm() {
       if (authError) throw authError;
 
       // ✅ SUCCESS → redirect
-      router.push("/auth/login?message=Check your email to confirm your account");
+      router.push(`/auth/login?message=${encodeURIComponent(t.auth.checkEmail)}`);
 
     } catch (err: any) {
       setError(err.message);
@@ -85,10 +85,10 @@ export default function SignupForm() {
       {/* Title */}
       <div>
         <h1 className="text-2xl font-semibold text-white mb-2">
-          Create an account
+          {t.auth.signupTitle}
         </h1>
         <p className="text-gray-400">
-          Start optimizing your supplier strategy today
+          {t.auth.signupSubtitle}
         </p>
       </div>
 
@@ -96,7 +96,7 @@ export default function SignupForm() {
       <div className="space-y-4">
         {/* Email */}
         <div className="space-y-2">
-          <Label className="text-gray-300">Email</Label>
+          <Label className="text-gray-300">{t.auth.emailLabel}</Label>
           <Input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -107,7 +107,7 @@ export default function SignupForm() {
 
         {/* Password */}
         <div className="space-y-2">
-          <Label className="text-gray-300">Password</Label>
+          <Label className="text-gray-300">{t.auth.passwordLabel}</Label>
           <Input
             type="password"
             value={password}
@@ -119,7 +119,7 @@ export default function SignupForm() {
 
         {/* Confirm Password */}
         <div className="space-y-2">
-          <Label className="text-gray-300">Confirm Password</Label>
+          <Label className="text-gray-300">{t.auth.confirmPasswordLabel}</Label>
           <Input
             type="password"
             value={confirmPassword}
@@ -139,11 +139,11 @@ export default function SignupForm() {
             className="mt-1 h-4 w-4 rounded border-white/10 bg-white/5 text-red-500 focus:ring-red-500"
           />
           <Label htmlFor="agree" className="text-sm text-gray-400 leading-snug cursor-pointer">
-            {t?.auth?.agreeTerms || "I agree to the Terms of Service and Privacy Policy"}
+            {t.auth.agreeTerms}
             <div className="mt-1 space-x-2">
-              <Link href="/terms" className="text-red-500 hover:underline">Terms</Link>
+              <Link href="/terms" className="text-red-500 hover:underline">{t.footer.links.terms}</Link>
               <span>&</span>
-              <Link href="/privacy" className="text-red-500 hover:underline">Privacy</Link>
+              <Link href="/privacy" className="text-red-500 hover:underline">{t.footer.links.privacy}</Link>
             </div>
           </Label>
         </div>
@@ -168,50 +168,15 @@ export default function SignupForm() {
             transition-all
           "
         >
-          {loading ? "Creating account..." : "Get Started"}
+          {loading ? t.auth.signingUp : t.auth.signupButton}
         </Button>
       </div>
 
-      {/* Divider - Temporarily hidden
-      <div className="flex items-center gap-4">
-        <div className="h-px flex-1 bg-white/10" />
-        <span className="text-gray-500 text-sm">or continue with</span>
-        <div className="h-px flex-1 bg-white/10" />
-      </div>
-      */}
-
-      {/* Social - Temporarily hidden
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { icon: FaGoogle, provider: 'google' as const },
-          { icon: FaFacebookF, provider: 'facebook' as const },
-          { icon: FaApple, provider: 'apple' as const }
-        ].map(({ icon: Icon, provider }, i) => (
-          <button
-            key={i}
-            onClick={() => handleSocialLogin(provider)}
-            className="
-              bg-white/5 
-              border border-white/10 
-              rounded-lg 
-              py-2 
-              flex items-center justify-center
-              hover:border-red-500 
-              hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]
-              transition
-            "
-          >
-            <Icon className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
-          </button>
-        ))}
-      </div>
-      */}
-
       {/* Footer */}
       <p className="text-gray-400 text-sm text-center">
-        Already have an account?{" "}
+        {t.auth.hasAccount}{" "}
         <Link href="/auth/login" className="text-red-500 hover:underline">
-          Login
+          {t.auth.loginLink}
         </Link>
       </p>
     </motion.div>

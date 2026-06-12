@@ -9,6 +9,7 @@ import { motion } from "framer-motion"
 import { FaGoogle, FaFacebookF, FaApple } from "react-icons/fa"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase/client"
+import { useI18n } from "@/lib/i18n"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -17,13 +18,14 @@ export default function LoginForm() {
   const [error, setError] = useState("")
 
   const router = useRouter()
+  const { t } = useI18n()
 
   // ✅ HANDLE LOGIN
   const handleLogin = async () => {
     setError("")
 
     if (!email || !password) {
-      return setError("All fields are required")
+      return setError(t.auth.allFieldsRequired)
     }
 
     try {
@@ -70,10 +72,10 @@ export default function LoginForm() {
       {/* Title */}
       <div>
         <h1 className="text-2xl font-semibold text-white mb-2">
-          Welcome back
+          {t.auth.loginTitle}
         </h1>
         <p className="text-gray-400">
-          Enter your credentials to access Nexusply
+          {t.auth.loginSubtitle}
         </p>
       </div>
 
@@ -82,7 +84,7 @@ export default function LoginForm() {
 
         {/* Email */}
         <div className="space-y-2">
-          <Label className="text-gray-300">Email</Label>
+          <Label className="text-gray-300">{t.auth.emailLabel}</Label>
           <Input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -93,7 +95,7 @@ export default function LoginForm() {
 
         {/* Password */}
         <div className="space-y-2">
-          <Label className="text-gray-300">Password</Label>
+          <Label className="text-gray-300">{t.auth.passwordLabel}</Label>
           <Input
             type="password"
             value={password}
@@ -123,50 +125,15 @@ export default function LoginForm() {
             transition-all
           "
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? t.auth.loggingIn : t.auth.loginButton}
         </Button>
       </div>
 
-      {/* Divider - Temporarily hidden
-      <div className="flex items-center gap-4">
-        <div className="h-px flex-1 bg-white/10" />
-        <span className="text-gray-500 text-sm">or continue with</span>
-        <div className="h-px flex-1 bg-white/10" />
-      </div>
-      */}
-
-      {/* Social - Temporarily hidden
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { icon: FaGoogle, provider: 'google' as const },
-          { icon: FaFacebookF, provider: 'facebook' as const },
-          { icon: FaApple, provider: 'apple' as const }
-        ].map(({ icon: Icon, provider }, i) => (
-          <button
-            key={i}
-            onClick={() => handleSocialLogin(provider)}
-            className="
-              bg-white/5 
-              border border-white/10 
-              rounded-lg 
-              py-2 
-              flex items-center justify-center
-              hover:border-red-500 
-              hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]
-              transition
-            "
-          >
-            <Icon className="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
-          </button>
-        ))}
-      </div>
-      */}
-
       {/* Footer */}
       <p className="text-gray-400 text-sm text-center">
-        Don’t have an account?{" "}
+        {t.auth.noAccount}{" "}
         <Link href="/auth/signup" className="text-red-500 hover:underline">
-          Sign up
+          {t.auth.signupLink}
         </Link>
       </p>
     </motion.div>

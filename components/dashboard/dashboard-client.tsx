@@ -3,10 +3,14 @@
 import Navbar from "@/components/navbar/navbar";
 import SupplierCard from "@/components/dashboard/supplier-card";
 import FilterSidebar from "@/components/dashboard/filter-sidebar";
-import { Search, Users, Star, Package, Zap, SlidersHorizontal, ChevronDown, Lock } from "lucide-react";
+import Recommendations from "@/components/dashboard/recommendations";
+import { Search, Users, Star, Package, Zap, SlidersHorizontal, ChevronDown, Lock, Loader2, X } from "lucide-react";
 import { getPlanFeatures } from "@/lib/plans";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import { useState, useEffect, useCallback } from "react";
+import { searchSuppliersAction } from "@/lib/supabase/actions";
+import { useSearchParams, useRouter } from "next/navigation";
 
 interface DashboardClientProps {
   suppliers: any[];
@@ -16,6 +20,37 @@ interface DashboardClientProps {
 
 export default function DashboardClient({ suppliers, stats, profile }: DashboardClientProps) {
   const { t, lang } = useI18n();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+  const [searchResults, setSearchResults] = useState<any[] | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  const performSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults(null);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const results = await searchSuppliersAction(query);
+      setSearchResults(results);
+    } catch (err) {
+      console.error("Search error:", err);
+    } finally {
+      setSearching(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) {
+      setSearchQuery(q);
+      performSearch(q);
+    }
+  }, [searchParams, performSearch]);
 
   if (!t) return (
     <div className="min-h-screen bg-black flex items-center justify-center">
@@ -25,8 +60,32 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
 
   const features = getPlanFeatures(profile?.active_plan);
 
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
+    // Update URL without reloading to support back/forward
+    const params = new URLSearchParams(searchParams.toString());
+    if (searchQuery) {
+      params.set("q", searchQuery);
+    } else {
+      params.delete("q");
+    }
+    router.push(`/dashboard?${params.toString()}`, { scroll: false });
+    
+    performSearch(searchQuery);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults(null);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("q");
+    router.push(`/dashboard?${params.toString()}`, { scroll: false });
+  };
+
   // Filter suppliers based on plan
-  const filteredSuppliers = suppliers.filter(s => {
+  const baseSuppliers = searchResults || suppliers;
+  const filteredSuppliers = baseSuppliers.filter(s => {
     // Platform restriction
     if (features.access.suppliers === 'platforms' && s.platform === 'Direct') return false;
     
@@ -38,7 +97,7 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
   });
 
   const displaySuppliers = filteredSuppliers.slice(0, 12); // Show some initially
-  const lockedCount = suppliers.length - filteredSuppliers.length;
+  const lockedCount = baseSuppliers.length - filteredSuppliers.length;
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30">
@@ -57,25 +116,44 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
           </p>
 
           {/* Premium Omnibar Search */}
-          <div className="relative group max-w-3xl">
+          <form onSubmit={handleSearch} className="relative group max-w-3xl">
             <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-              <Search className="text-gray-400 group-focus-within:text-red-500 transition-colors duration-300" size={20} />
+              {searching ? (
+                <Loader2 className="text-red-500 animate-spin" size={20} />
+              ) : (
+                <Search className="text-gray-400 group-focus-within:text-red-500 transition-colors duration-300" size={20} />
+              )}
             </div>
             <input 
               type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t.dashboard.searchPlaceholder}
-              className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl py-4 pl-14 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:shadow-[0_0_30px_rgba(239,68,68,0.15)] transition-all text-sm md:text-base"
+              className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:shadow-[0_0_30px_rgba(239,68,68,0.15)] transition-all text-sm md:text-base"
             />
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2">
+              {searchQuery && (
+                <button 
+                  type="button"
+                  onClick={clearSearch}
+                  className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
               <kbd className="hidden sm:inline-flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-lg text-[10px] font-medium text-gray-400 border border-white/5">
-                <span className="text-xs">⌘</span> K
+                <span className="text-xs">ENTER</span>
               </kbd>
-              <button className="lg:hidden p-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors">
-                <SlidersHorizontal size={16} className="text-gray-300" />
-              </button>
             </div>
-          </div>
+          </form>
         </div>
+
+        {/* RECOMMENDATIONS (Show if not searching) */}
+        {!searchResults && (
+          <div className="mb-16">
+            <Recommendations type="supplier" />
+          </div>
+        )}
 
         {/* TOP STATS ROW */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
@@ -116,7 +194,7 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
             {/* PLAN UPSELL IN SIDEBAR */}
             {features.access.suppliers === 'platforms' && (
               <div className="mt-8 p-6 bg-red-500/5 border border-red-500/20 rounded-3xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3"></div>
                 <div className="relative z-10">
                   <Lock className="text-red-500 mb-4" size={20} />
                   <h3 className="text-sm font-bold mb-2">{t.dashboard.lockedTitle}</h3>
@@ -133,7 +211,7 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                {t.dashboard.discoveryGrid}
+                {searchResults ? "Search Results" : t.dashboard.discoveryGrid}
                 <span className="bg-white/10 text-xs px-2 py-0.5 rounded-md text-gray-400 font-normal">{filteredSuppliers.length} {t.common.results}</span>
               </h2>
               
@@ -146,14 +224,20 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
 
             {/* SUPPLIERS GRID */}
             <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {displaySuppliers.map((supplier, i) => (
-                <div key={i} className="animate-in fade-in zoom-in-95 duration-500" style={{ animationDelay: `${i * 50}ms` }}>
-                  <SupplierCard supplier={supplier} />
+              {displaySuppliers.length > 0 ? (
+                displaySuppliers.map((supplier, i) => (
+                  <div key={i} className="animate-in fade-in zoom-in-95 duration-500" style={{ animationDelay: `${i * 50}ms` }}>
+                    <SupplierCard supplier={supplier} />
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-20 text-center bg-white/5 border border-dashed border-white/10 rounded-[2rem]">
+                  <p className="text-gray-400">No suppliers found matching your criteria.</p>
                 </div>
-              ))}
+              )}
               
               {/* Locked Suppliers Placeholders */}
-              {lockedCount > 0 && Array.from({ length: 3 }).map((_, i) => (
+              {!searchResults && lockedCount > 0 && Array.from({ length: 3 }).map((_, i) => (
                 <div key={`locked-supplier-${i}`} className="bg-white/5 border border-dashed border-white/10 rounded-[2rem] h-[280px] flex flex-col items-center justify-center p-8 text-center opacity-60">
                    <Lock className="text-gray-600 mb-4" size={24} />
                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{t.dashboard.lockedSupplier}</p>
@@ -163,11 +247,13 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
             </div>
 
             {/* Load More Trigger (Mock) */}
-            <div className="mt-12 flex justify-center">
-              <button className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300">
-                {t.common.loadMore}
-              </button>
-            </div>
+            {!searchResults && displaySuppliers.length < filteredSuppliers.length && (
+              <div className="mt-12 flex justify-center">
+                <button className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300">
+                  {t.common.loadMore}
+                </button>
+              </div>
+            )}
 
           </main>
         </div>
