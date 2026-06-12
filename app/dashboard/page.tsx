@@ -1,5 +1,8 @@
 import DashboardClient from "@/components/dashboard/dashboard-client";
 import { getSuppliers, getStats, getUserProfile } from "@/lib/supabase/queries";
+import { Suspense } from "react";
+
+export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
   const [suppliers, stats, profile] = await Promise.all([
@@ -9,10 +12,12 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <DashboardClient 
-      suppliers={suppliers} 
-      stats={stats} 
-      profile={profile} 
-    />
+    <Suspense>
+      <DashboardClient 
+        suppliers={suppliers} 
+        stats={stats} 
+        profile={profile} 
+      />
+    </Suspense>
   );
 }

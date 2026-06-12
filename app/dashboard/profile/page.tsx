@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import ProfileSidebar from "@/components/dashboard/profile-sidebar";
 import SupplierCard from "@/components/dashboard/supplier-card";
 import ProductCard from "@/components/dashboard/product-card";
@@ -14,8 +14,7 @@ import { PLANS, PlanType } from "@/lib/plans";
 /* ================= SETTINGS ================= */
 const SETTINGS_KEY = "nexusply_settings";
 
-/* ================= PAGE ================= */
-export default function ProfilePage() {
+function ProfileContent() {
   const { t, lang, setLanguage } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -355,6 +354,19 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/* ================= PAGE ================= */
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-red-500" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }
 
