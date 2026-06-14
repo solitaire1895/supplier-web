@@ -49,6 +49,38 @@ function ProfileContent() {
     }
   }, []);
 
+  const loadContactedSuppliers = useCallback(async (userId: string) => {
+    try {
+      // Fetch unique suppliers from sourcing_requests
+      const { data, error } = await supabase
+        .from('sourcing_requests')
+        .select(`
+          suppliers (*)
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        // Filter out duplicates if a user contacted same supplier multiple times
+        const uniqueSuppliers: any[] = [];
+        const seenIds = new Set();
+        
+        data.forEach(item => {
+          if (item.suppliers && !seenIds.has(item.suppliers.id)) {
+            uniqueSuppliers.push(item.suppliers);
+            seenIds.add(item.suppliers.id);
+          }
+        });
+        
+        setContactedSuppliers(uniqueSuppliers);
+      }
+    } catch (err) {
+      console.error("Error loading contacted suppliers:", err);
+    }
+  }, []);
+
   /* INITIALIZATION */
   useEffect(() => {
     if (userLoading) return;
@@ -59,13 +91,15 @@ function ProfileContent() {
 
     const initPage = async () => {
       setLoading(true);
-      await loadFavorites(userProfile.id);
-      setContactedSuppliers([]); // Placeholder
+      await Promise.all([
+        loadFavorites(userProfile.id),
+        loadContactedSuppliers(userProfile.id)
+      ]);
       setLoading(false);
     };
 
     initPage();
-  }, [userProfile, userLoading, loadFavorites]);
+  }, [userProfile, userLoading, loadFavorites, loadContactedSuppliers]);
 
   // Sync tab with URL
   useEffect(() => {
@@ -353,6 +387,41 @@ function ProfileContent() {
 
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ================= PAGE ================= */
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-red-500" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
+  );
+}
+
+/* ================= UI COMPONENTS ================= */
+function Box({ title, icon, children }: any) {
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
+      <div className="flex items-center gap-2 mb-4">
+        {icon}
+        <h3 className="font-medium text-gray-200">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Empty({ text, icon }: { text: string, icon?: React.ReactNode }) {
+  return (
+    <div className="bg-white/5 border border-white/10 border-dashed rounded-3xl p-16 flex flex-col items-center justify-center text-center">
+      {icon}
+      <p className="text-gray-400 font-medium">{text}</p>
     </div>
   );
 }

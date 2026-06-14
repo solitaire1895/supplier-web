@@ -9,7 +9,7 @@ import { getPlanFeatures } from "@/lib/plans";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useState, useEffect, useCallback } from "react";
-import { searchSuppliersAction } from "@/lib/supabase/actions";
+import { searchSuppliersAction, recordSourcingRequest } from "@/lib/supabase/actions";
 import { useSearchParams, useRouter } from "next/navigation";
 
 interface DashboardClientProps {
@@ -26,6 +26,7 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [searchResults, setSearchResults] = useState<any[] | null>(null);
   const [searching, setSearching] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -81,6 +82,42 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
     const params = new URLSearchParams(searchParams.toString());
     params.delete("q");
     router.push(`/dashboard?${params.toString()}`, { scroll: false });
+  };
+
+  const handleContactSupplier = async (supplier: any) => {
+    if (submitting) return;
+    setSubmitting(true);
+
+    const plan = profile?.active_plan || "Free";
+    const features = getPlanFeatures(plan);
+
+    // 1. Record the sourcing request
+    await recordSourcingRequest({
+      supplier_id: supplier.id,
+      notes: `Contacted via Dashboard Discovery Grid: ${supplier.name}`
+    });
+
+    // 2. Determine redirect URL
+    let contactUrl = supplier.contact_url;
+
+    // Premium users might get direct WhatsApp/Email if available
+    if (features.access.directContacts) {
+       if (supplier.whatsapp) {
+          const cleanPhone = supplier.whatsapp.replace(/\D/g, '');
+          contactUrl = `https://wa.me/${cleanPhone}?text=Hello, I found you on Nexusply and I'm interested in your services.`;
+       } else if (supplier.private_email) {
+          contactUrl = `mailto:${supplier.private_email}?subject=Nexusply Sourcing Inquiry&body=Hello, I am interested in your services...`;
+       }
+    }
+
+    if (contactUrl) {
+      window.open(contactUrl, '_blank');
+    } else {
+      // Fallback to details page if no contact URL
+      router.push(`/dashboard/suppliers/${supplier.id}`);
+    }
+
+    setSubmitting(false);
   };
 
   // Filter suppliers based on plan
@@ -227,7 +264,7 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
               {displaySuppliers.length > 0 ? (
                 displaySuppliers.map((supplier, i) => (
                   <div key={i} className="animate-in fade-in zoom-in-95 duration-500" style={{ animationDelay: `${i * 50}ms` }}>
-                    <SupplierCard supplier={supplier} />
+                    <SupplierCard supplier={supplier} onContact={handleContactSupplier} />
                   </div>
                 ))
               ) : (

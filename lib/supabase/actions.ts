@@ -205,6 +205,35 @@ export async function submitReview(data: {
   return { success: true }
 }
 
+/* ================= SOURCING ACTIONS ================= */
+
+export async function recordSourcingRequest(data: { 
+  supplier_id: string, 
+  product_id?: string,
+  notes?: string 
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { error: 'Unauthorized' }
+
+  // Check if request already exists to avoid duplicates in the feed (optional logic)
+  const { error } = await supabase.from('sourcing_requests').insert({
+    user_id: user.id,
+    supplier_id: data.supplier_id,
+    product_id: data.product_id,
+    notes: data.notes
+  })
+
+  if (error) {
+    console.error('Error recording sourcing request:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/dashboard/profile')
+  return { success: true }
+}
+
 /* ================= SEARCH & ACTIVITY ACTIONS ================= */
 
 export async function trackActivityAction(type: 'view_product' | 'view_supplier' | 'search', targetId?: string, metaData?: any) {

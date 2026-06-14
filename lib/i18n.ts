@@ -52,6 +52,7 @@ export const translations = {
       month: "mo",
       free: "Free",
       active: "Active",
+      unavailable: "Unavailable",
     },
     navbar: {
       home: "Home",
@@ -113,6 +114,44 @@ export const translations = {
       submitReview: "Submit Review",
       similarSuppliers: "Similar Suppliers",
       viewDetails: "View Details",
+      backToResults: "Back to Results",
+      communityFeed: "Community Feed",
+      noReviews: "No reviews yet. Be the first to share your experience!",
+      anonymous: "Anonymous",
+      upgradeToPartner: "Upgrade to Partner",
+      whatsappPhone: "WhatsApp / Phone",
+      wechatId: "WeChat ID",
+      enterpriseEmail: "Enterprise Email",
+      supplierNotFound: "Supplier Not Found",
+      supplierNotFoundDesc: "We couldn't find a supplier with ID: {id}. It may have been removed.",
+      returnToDashboard: "Return to Dashboard",
+      tryAgain: "Try Again",
+      indexedPortfolio: "Indexed Portfolio",
+    },
+    product: {
+      backToProducts: "Back to Products",
+      demandLevel: "Demand",
+      viewMatchingSuppliers: "View Matching Suppliers",
+      intelligenceCore: "Intelligence Core",
+      profitScore: "Profit Score",
+      marketTrend: "Market Trend",
+      competition: "Competition",
+      low: "Low",
+      avgDelivery: "Avg Delivery",
+      verifiedSuppliers: "Verified Suppliers",
+      noSuppliers: "No verified suppliers indexed for this product category yet.",
+      sourceThisProduct: "Source This Product",
+      sourceThisProductDesc: "Connect with verified suppliers instantly to request samples and negotiate bulk pricing.",
+      beginSourcing: "Begin Sourcing Process",
+      communityInsights: "Community Insights",
+      addInsight: "Add your insight",
+      insightPlaceholder: "Share your sourcing experience...",
+      submitInsight: "Submit Insight",
+      productNotFound: "Product Not Found",
+      productNotFoundDesc: "We couldn't find a product with ID: {id}. It may have been removed.",
+      browseAllProducts: "Browse All Products",
+      tryAgain: "Try Again",
+      indexedPortfolio: "Indexed Portfolio",
     },
     search: {
       placeholder: "Search suppliers, products...",
@@ -458,6 +497,10 @@ export const translations = {
       justNow: "À l'instant",
       daysAgo: "jours",
       weekAgo: "semaine",
+      month: "mo",
+      free: "Gratuit",
+      active: "Actif",
+      unavailable: "Indisponible",
     },
     navbar: {
       home: "Accueil",
@@ -519,6 +562,42 @@ export const translations = {
       submitReview: "Envoyer l'avis",
       similarSuppliers: "Fournisseurs similaires",
       viewDetails: "Voir détails",
+      backToResults: "Retour aux résultats",
+      communityFeed: "Flux communautaire",
+      noReviews: "Aucun avis pour le moment. Soyez le premier à partager votre expérience !",
+      anonymous: "Anonyme",
+      upgradeToPartner: "Passer au plan Partenaire",
+      whatsappPhone: "WhatsApp / Téléphone",
+      wechatId: "ID WeChat",
+      enterpriseEmail: "E-mail d'entreprise",
+      supplierNotFound: "Fournisseur non trouvé",
+      supplierNotFoundDesc: "Nous n'avons pas pu trouver de fournisseur avec l'ID : {id}. Il a peut-être été supprimé.",
+      returnToDashboard: "Retour au tableau de bord",
+      tryAgain: "Réessayer",
+    },
+    product: {
+      backToProducts: "Retour aux produits",
+      demandLevel: "Demande",
+      viewMatchingSuppliers: "Voir les fournisseurs correspondants",
+      intelligenceCore: "Noyau d'intelligence",
+      profitScore: "Score de profit",
+      marketTrend: "Tendance du marché",
+      competition: "Concurrence",
+      low: "Faible",
+      avgDelivery: "Livraison moyenne",
+      verifiedSuppliers: "Fournisseurs vérifiés",
+      noSuppliers: "Aucun fournisseur vérifié indexé pour cette catégorie de produits pour le moment.",
+      sourceThisProduct: "Sourcer ce produit",
+      sourceThisProductDesc: "Connectez-vous instantanément avec des fournisseurs vérifiés pour demander des échantillons et négocier des prix de gros.",
+      beginSourcing: "Lancer le processus de sourcing",
+      communityInsights: "Avis de la communauté",
+      addInsight: "Ajoutez votre avis",
+      insightPlaceholder: "Partagez votre expérience de sourcing...",
+      submitInsight: "Envoyer l'avis",
+      productNotFound: "Produit non trouvé",
+      productNotFoundDesc: "Nous n'avons pas pu trouver de produit avec l'ID : {id}. Il a peut-être été supprimé.",
+      browseAllProducts: "Parcourir tous les produits",
+      tryAgain: "Réessayer",
     },
     search: {
       placeholder: "Rechercher fournisseurs, produits...",
@@ -647,29 +726,29 @@ export const translations = {
       badge: "À propos de Nexusply",
       title: "Redéfinir",
       highlight: "l'intelligence fournisseur",
-      description1: "Nexusply est une plateforme d'intelligence fournisseur de nouvelle génération conçue pour aider les entrepreneurs à découvrir des fournisseurs performants, identifier des produits gagnants et maximiser les marges bénéficiaires grâce à des analyses basées sur l'IA.",
-      description2: "Au lieu de deviner, vous opérez avec des données. Au lieu de tester à l'aveugle, vous exécutez avec précision.",
+      description1: "Nexusply is a next-generation supplier intelligence platform built to help entrepreneurs discover high-performing suppliers, identify winning products, and maximize profit margins using AI-driven insights.",
+      description2: "Instead of guessing, you operate with data. Instead of testing blindly, you execute with precision.",
       stats: {
         suppliers: {
           value: "10K+",
-          label: "Fournisseurs analysés"
+          label: "Suppliers analyzed"
         },
         profit: {
           value: "+45%",
-          label: "Augmentation moyenne du profit"
+          label: "Avg profit increase"
         },
         ai: {
-          value: "IA",
-          label: "Moteur de sourcing intelligent"
+          value: "AI",
+          label: "Smart sourcing engine"
         },
         global: {
           value: "Global",
-          label: "Réseau de fournisseurs"
+          label: "Supplier network"
         }
       }
     },
     howItWorks: {
-      title: "Comment Nexusply",
+      title: "How Nexusply",
       highlight: "Fonctionne",
       description: "Nous avons simplifié le monde complexe du sourcing mondial en un processus rationalisé en 4 étapes, alimenté par l'intelligence des données avancée.",
       step1: {
@@ -776,6 +855,28 @@ export const translations = {
     auth: {
       agreeTerms: "J'accepte les Conditions d'Utilisation et la Politique de Confidentialité",
       mustAgree: "Vous devez accepter les Conditions d'Utilisation et la Politique de Confidentialité",
+      loginTitle: "Bon retour",
+      loginSubtitle: "Entrez vos identifiants pour accéder à Nexusply",
+      emailLabel: "E-mail",
+      passwordLabel: "Mot de passe",
+      confirmPasswordLabel: "Confirmer le mot de passe",
+      loginButton: "Se connecter",
+      loggingIn: "Connexion...",
+      noAccount: "Vous n'avez pas de compte ?",
+      signupLink: "S'inscrire",
+      signupTitle: "Créer un compte",
+      signupSubtitle: "Commencez à optimiser votre stratégie fournisseur dès aujourd'hui",
+      signupButton: "Démarrer",
+      signingUp: "Création du compte...",
+      hasAccount: "Vous avez déjà un compte ?",
+      loginLink: "Connexion",
+      allFieldsRequired: "Tous les champs sont obligatoires",
+      passwordsDoNotMatch: "Les mots de passe ne correspondent pas",
+      checkEmail: "Vérifiez vos e-mails pour confirmer votre compte",
+      loginSuccess: "Connexion réussie",
+      signupSuccess: "Compte créé avec succès",
+      panelTitle: "Accédez à votre centre de commande fournisseur",
+      panelDesc: "Découvrez, comparez et optimisez vos décisions de sourcing avec précision.",
     },
     policies: {
       privacy: {
@@ -811,8 +912,8 @@ export const translations = {
             content: "En accédant à notre plateforme ou en l'utilisant, vous acceptez d'être lié par ces Conditions d'Utilisation et par toutes les lois et réglementations applicables."
           },
           {
-            title: "2. Comptes d'utilisateurs",
-            content: "Vous êtes responsable du maintien de la confidentialité de votre compte et de votre mot de passe. Vous devez avoir au moins 18 ans pour utiliser nos services."
+            title: "2. User Accounts",
+            content: "Vous êtes responsable du maintien de la confidentialité de votre compte and de votre mot de passe. Vous devez avoir au moins 18 ans pour utiliser nos services."
           },
           {
             title: "3. Abonnement et facturation",
@@ -842,6 +943,10 @@ export const translations = {
       justNow: "刚刚",
       daysAgo: "天前",
       weekAgo: "周前",
+      month: "月",
+      free: "免费",
+      active: "激活",
+      unavailable: "不可用",
     },
     navbar: {
       home: "首页",
@@ -863,7 +968,7 @@ export const translations = {
         topCategory: "热门类目",
       },
       upgrade: "升级方案",
-      searchPlaceholder: "搜索类目、产品或供应商名称...",
+      searchPlaceholder: "搜索类目、产品 or 供应商名称...",
       discoveryGrid: "发现网格",
       lockedTitle: "直接联系方式已锁定",
       lockedDesc: "升级到进口商方案以解锁制造商的电话号码和微信 ID。",
@@ -903,6 +1008,37 @@ export const translations = {
       submitReview: "提交评论",
       similarSuppliers: "相似供应商",
       viewDetails: "查看详情",
+      backToResults: "返回结果",
+      communityFeed: "社区动态",
+      noReviews: "暂无评论。抢先分享您的体验吧！",
+      anonymous: "匿名",
+      upgradeToPartner: "升级到合伙人方案",
+      whatsappPhone: "WhatsApp / 电话",
+      wechatId: "微信 ID",
+      enterpriseEmail: "企业邮箱",
+    },
+    product: {
+      backToProducts: "返回产品列表",
+      demandLevel: "需求",
+      viewMatchingSuppliers: "查看匹配的供应商",
+      intelligenceCore: "智能核心",
+      profitScore: "利润评分",
+      marketTrend: "市场趋势",
+      competition: "竞争程度",
+      low: "低",
+      avgDelivery: "平均时效",
+      verifiedSuppliers: "经过验证的供应商",
+      noSuppliers: "该产品类别暂无经过验证的供应商。",
+      sourceThisProduct: "采购此产品",
+      sourceThisProductDesc: "立即与经过验证的供应商联系，索取样品并洽谈批量价格。",
+      beginSourcing: "开始采购流程",
+      communityInsights: "社区见解",
+      addInsight: "添加您的见解",
+      insightPlaceholder: "分享您的采购经验...",
+      submitInsight: "提交见解",
+      productNotFound: "未找到产品",
+      browseAllProducts: "浏览所有产品",
+      tryAgain: "重试",
     },
     search: {
       placeholder: "搜索供应商、产品...",
@@ -912,6 +1048,7 @@ export const translations = {
     },
     profile: {
       contacts: "已联系的供应商",
+      contacted: "已联系",
       favoritesProducts: "收藏的产品",
       favoritesSuppliers: "收藏的供应商",
       settings: "账户设置",
@@ -919,6 +1056,16 @@ export const translations = {
       subtitle: "管理您的偏好和平台数据。",
       activity: "活动",
       logout: "登出",
+      notLoggedIn: "请登录以查看您的个人资料",
+      login: "登录",
+      emptyContacts: "您还没有联系过任何供应商。",
+      emptyFavProducts: "您还没有保存过任何爆款产品。",
+      emptyFavSuppliers: "还没有收藏的供应商。开始采购吧！",
+      currentPlan: "当前有效方案",
+      trialEnds: "试用结束",
+      mostPopular: "最受欢迎",
+      currentPlanBtn: "当前方案",
+      upgradeTo: "升级到",
     },
     settings: {
       account: "账户",
@@ -929,6 +1076,7 @@ export const translations = {
       alerts: "警报与通知",
       username: "用户名",
       email: "电子邮件地址",
+      role: "角色",
       push: "推送通知",
     },
     subscription: {
@@ -1148,12 +1296,34 @@ export const translations = {
     auth: {
       agreeTerms: "我同意服务条款和隐私政策",
       mustAgree: "您必须同意服务条款和隐私政策",
+      loginTitle: "欢迎回来",
+      loginSubtitle: "输入您的凭据以访问 Nexusply",
+      emailLabel: "电子邮件",
+      passwordLabel: "密码",
+      confirmPasswordLabel: "确认密码",
+      loginButton: "登录",
+      loggingIn: "登录中...",
+      noAccount: "没有账号？",
+      signupLink: "注册",
+      signupTitle: "创建账号",
+      signupSubtitle: "立即开始优化您的供应商策略",
+      signupButton: "立即开始",
+      signingUp: "正在创建账号...",
+      hasAccount: "已有账号？",
+      loginLink: "登录",
+      allFieldsRequired: "所有字段均为必填项",
+      passwordsDoNotMatch: "密码不匹配",
+      checkEmail: "检查您的电子邮件以确认您的账号",
+      loginSuccess: "登录成功",
+      signupSuccess: "账号创建成功",
+      panelTitle: "访问您的供应商指挥中心",
+      panelDesc: "精准发现、比较并优化采购决策。",
     },
     policies: {
       privacy: {
         title: "隐私政策",
         lastUpdated: "最后更新：2026年6月",
-        intro: "在 Nexusply，我们非常重视您的隐私。本政策解释了我们如何收集、使用和保护您的个人信息。",
+        intro: "在 Nexusply，我们非常重视您的隐私. 本政策解释了我们如何收集、使用和保护您的个人信息。",
         sections: [
           {
             title: "1. 我们收集的信息",
@@ -1161,7 +1331,7 @@ export const translations = {
           },
           {
             title: "2. 我们如何使用您的信息",
-            content: "我们使用您的信息来提供和维护我们的服务，处理交易，并向您传达有关更新或促销优惠的信息。"
+            content: "我们使用您的信息来提供 and 维护我们的服务，处理交易，并向您传达有关更新或促销优惠的信息。"
           },
           {
             title: "3. 数据安全",
@@ -1184,7 +1354,7 @@ export const translations = {
           },
           {
             title: "2. 用户账户",
-            content: "您有责任维护您的账户和密码的机密性。您必须年满 18 岁才能使用我们的服务。"
+            content: "您有责任维护您的账户 and 密码的机密性。您必须年满 18 岁才能使用我们的服务。"
           },
           {
             title: "3. 订阅和计费",

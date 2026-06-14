@@ -31,7 +31,10 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
     status: "active",
     image_url: "",
     contact_url: "",
-    supplied_products: ""
+    supplied_products: "",
+    whatsapp: "",
+    wechat: "",
+    private_email: ""
   });
 
   const filtered = suppliers.filter(s => 
@@ -62,7 +65,10 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
         status: supplier.status || "active",
         image_url: supplier.image_url || "",
         contact_url: supplier.contact_url || "",
-        supplied_products: supplier.supplied_products || ""
+        supplied_products: supplier.supplied_products || "",
+        whatsapp: supplier.whatsapp || "",
+        wechat: supplier.wechat || "",
+        private_email: supplier.private_email || ""
       });
     } else {
       setEditingSupplier(null);
@@ -74,7 +80,10 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
         status: "active",
         image_url: "",
         contact_url: "",
-        supplied_products: ""
+        supplied_products: "",
+        whatsapp: "",
+        wechat: "",
+        private_email: ""
       });
     }
     setIsFormOpen(true);
@@ -200,8 +209,7 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
               <AlertCircle size={14} className="text-red-500" /> Import Guidelines
             </h4>
             <ul className="text-xs text-gray-400 space-y-3 list-disc pl-4">
-              <li>Header row required: <code className="text-red-400">name, platform, category, moq, status, image_url, contact_url, supplied_products, contact_info</code></li>
-              <li><code className="text-red-400">contact_info</code> should be a JSON string like <code className="text-gray-300">{"{\"whatsapp\": \"...\"}"}</code></li>
+              <li>Header row required: <code className="text-red-400">name, platform, category, moq, status, image_url, contact_url, supplied_products, whatsapp, wechat, private_email</code></li>
               <li>Platform must be one of: Alibaba, 1688, Pinduoduo, Xianyu, AliExpress, or Direct.</li>
             </ul>
           </div>
@@ -259,7 +267,44 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
                     </select>
                   </div>
                 </div>
-                <div className="space-y-1">
+                
+                <div className="border-t border-white/5 pt-4 mt-4">
+                  <h4 className="text-xs font-bold text-red-500 uppercase tracking-widest mb-4">Direct Factory Access (Premium)</h4>
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">WhatsApp / Phone</label>
+                      <input 
+                        type="text" 
+                        value={formData.whatsapp}
+                        onChange={e => setFormData({...formData, whatsapp: e.target.value})}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
+                        placeholder="+86..."
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">WeChat ID</label>
+                      <input 
+                        type="text" 
+                        value={formData.wechat}
+                        onChange={e => setFormData({...formData, wechat: e.target.value})}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
+                        placeholder="ID..."
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Private Email</label>
+                      <input 
+                        type="email" 
+                        value={formData.private_email}
+                        onChange={e => setFormData({...formData, private_email: e.target.value})}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
+                        placeholder="factory@direct.com"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1 pt-4">
                   <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Category</label>
                   <input 
                     type="text" 
@@ -270,13 +315,13 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Contact URL</label>
+                  <label className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">Public Contact URL</label>
                   <input 
                     type="text" 
                     value={formData.contact_url}
                     onChange={e => setFormData({...formData, contact_url: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-red-500/50"
-                    placeholder="https://wa.me/..."
+                    placeholder="https://..."
                   />
                 </div>
                 <div className="space-y-1">

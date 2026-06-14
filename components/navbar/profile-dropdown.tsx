@@ -22,7 +22,7 @@ const languages = [
 export default function ProfileDropdown() {
   const router = useRouter();
   const { t, lang, setLanguage } = useI18n();
-  const { profile } = useUser();
+  const { profile, user } = useUser();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -30,6 +30,8 @@ export default function ProfileDropdown() {
   };
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+  const displayEmail = profile?.email || user?.email;
+  const displayName = profile?.full_name || displayEmail?.split('@')[0] || "User";
 
   return (
     <div
@@ -43,10 +45,10 @@ export default function ProfileDropdown() {
       {/* USER */}
       <div className="mb-4 px-2">
         <p className="text-white font-medium capitalize">
-          {profile?.email?.split('@')[0] || "User"}
+          {displayName}
         </p>
         <p className="text-gray-400 text-sm truncate">
-          {profile?.email || "No email"}
+          {displayEmail || "No email"}
         </p>
       </div>
 

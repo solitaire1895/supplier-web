@@ -98,7 +98,7 @@ export const PLANS: Record<PlanType, PlanFeatures> = {
       tablets: true,
       computers: 'basic',
       suppliers: 'all',
-      directContacts: true,
+      directContacts: false,
     },
     support: 'community',
   },

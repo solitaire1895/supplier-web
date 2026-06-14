@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, Loader2, CheckCircle, ShieldCheck } from "lucide-react";
+import { Star, Loader2, CheckCircle, ShieldCheck, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { toggleFavorite } from "@/lib/supabase/actions";
@@ -16,7 +16,12 @@ type Supplier = {
   category: string;
 };
 
-export default function SupplierCard({ supplier }: { supplier: Supplier }) {
+interface SupplierCardProps {
+  supplier: Supplier;
+  onContact?: (supplier: Supplier) => void;
+}
+
+export default function SupplierCard({ supplier, onContact }: SupplierCardProps) {
   const [favorite, setFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -34,7 +39,7 @@ export default function SupplierCard({ supplier }: { supplier: Supplier }) {
         .select("id")
         .eq("user_id", user.id)
         .eq("supplier_id", supplier.id)
-        .single();
+        .maybeSingle();
 
       setFavorite(!!data);
     };
@@ -144,16 +149,30 @@ export default function SupplierCard({ supplier }: { supplier: Supplier }) {
           </div>
         </div>
 
-        {/* ACTION */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleNavigate();
-          }}
-          className="w-full py-3.5 rounded-2xl text-xs font-bold uppercase tracking-widest bg-red-500 text-white shadow-neon hover:shadow-neon-strong hover:bg-red-600 transition-all active:scale-95"
-        >
-          {t?.supplier?.viewDetails || "View Details"}
-        </button>
+        {/* ACTIONS */}
+        <div className="flex gap-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNavigate();
+            }}
+            className="flex-1 py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest bg-white/5 text-white border border-white/10 hover:bg-white/10 transition-all active:scale-95"
+          >
+            {t?.supplier?.viewDetails || "Details"}
+          </button>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onContact) onContact(supplier);
+              else handleNavigate();
+            }}
+            className="flex-1 py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest bg-red-500 text-white shadow-neon hover:shadow-neon-strong hover:bg-red-600 transition-all active:scale-95 flex items-center justify-center gap-2"
+          >
+            <MessageSquare size={14} />
+            {t?.supplier?.contact || "Contact"}
+          </button>
+        </div>
       </div>
     </motion.div>
   );
