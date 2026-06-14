@@ -425,38 +425,3 @@ function Empty({ text, icon }: { text: string, icon?: React.ReactNode }) {
     </div>
   );
 }
-
-/* ================= PAGE ================= */
-export default function ProfilePage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-red-500" />
-      </div>
-    }>
-      <ProfileContent />
-    </Suspense>
-  );
-}
-
-/* ================= UI COMPONENTS ================= */
-function Box({ title, icon, children }: any) {
-  return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
-      <div className="flex items-center gap-2 mb-4">
-        {icon}
-        <h3 className="font-medium text-gray-200">{title}</h3>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function Empty({ text, icon }: { text: string, icon?: React.ReactNode }) {
-  return (
-    <div className="bg-white/5 border border-white/10 border-dashed rounded-3xl p-16 flex flex-col items-center justify-center text-center">
-      {icon}
-      <p className="text-gray-400 font-medium">{text}</p>
-    </div>
-  );
-}
