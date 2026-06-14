@@ -67,10 +67,13 @@ function ProfileContent() {
         const uniqueSuppliers: any[] = [];
         const seenIds = new Set();
         
-        data.forEach(item => {
-          if (item.suppliers && !seenIds.has(item.suppliers.id)) {
-            uniqueSuppliers.push(item.suppliers);
-            seenIds.add(item.suppliers.id);
+        data.forEach((item: any) => {
+          // Supabase join can sometimes return an array even for 1-to-1 if types are ambiguous
+          const sup = Array.isArray(item.suppliers) ? item.suppliers[0] : item.suppliers;
+          
+          if (sup && !seenIds.has(sup.id)) {
+            uniqueSuppliers.push(sup);
+            seenIds.add(sup.id);
           }
         });
         
