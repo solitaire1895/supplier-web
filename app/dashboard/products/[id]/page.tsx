@@ -277,7 +277,14 @@ export default function ProductDetailPage() {
               <div className="relative z-10 flex flex-col md:flex-row gap-8">
                 {/* Image */}
                 <div className="w-full md:w-72 h-72 rounded-[1.5rem] overflow-hidden bg-black/50 border border-white/5 shrink-0 relative">
-                  <img src={product.image_url || "/placeholder-product.png"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={product.name} />
+                  <img 
+                    src={product.image_url || "https://via.placeholder.com/600x600?text=No+Image"} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                    alt={product.name}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/600x600?text=Image+Not+Found";
+                    }}
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none"></div>
                 </div>
 

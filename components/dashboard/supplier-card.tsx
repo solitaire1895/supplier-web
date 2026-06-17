@@ -14,6 +14,7 @@ type Supplier = {
   platform: string;
   moq: number;
   category: string;
+  image_url?: string;
 };
 
 interface SupplierCardProps {
@@ -98,12 +99,29 @@ export default function SupplierCard({ supplier, onContact }: SupplierCardProps)
         </div>
       </div>
 
-      <div className="p-6">
+      {/* IMAGE SECTION */}
+      <div className="relative h-48 w-full overflow-hidden bg-white/5">
+        {supplier.image_url ? (
+          <img 
+            src={supplier.image_url} 
+            alt={supplier.name}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${supplier.name}&background=random`;
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500/5 to-transparent">
+             <CheckCircle className="text-white/5 w-12 h-12" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        
         {/* ⭐ FAVORITE */}
         <button
           onClick={handleFavorite}
           disabled={loading}
-          className="absolute top-[4.5rem] right-6 p-2 rounded-full bg-black/20 hover:bg-black/40 border border-white/5 transition active:scale-90"
+          className="absolute top-4 right-6 p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition active:scale-90 z-10 hover:bg-black/60"
         >
           {loading ? (
             <Loader2 className="w-5 h-5 animate-spin text-white" />
@@ -117,9 +135,11 @@ export default function SupplierCard({ supplier, onContact }: SupplierCardProps)
             />
           )}
         </button>
+      </div>
 
+      <div className="p-6">
         {/* CONTENT */}
-        <div className="mb-6 pr-10">
+        <div className="mb-6 pr-4">
           <h3 className="text-white text-xl font-bold mb-1 line-clamp-1 group-hover:text-red-400 transition-colors">
             {supplier.name}
           </h3>

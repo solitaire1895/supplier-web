@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Nexusply",
   description: "Supplier Intelligence Platform",
+  icons: {
+    icon: "/favicon.jpg",
+  },
 };
 
 export default function RootLayout({

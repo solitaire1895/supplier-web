@@ -3,6 +3,53 @@
 import { createClient } from './server'
 import { revalidatePath } from 'next/cache'
 
+/* ================= STORAGE ACTIONS ================= */
+
+export async function uploadImage(file: File, path: string) {
+  const supabase = await createClient()
+  
+  // 1. Verify Authentication
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    console.error('Upload authentication error:', authError)
+    return { error: 'You must be logged in to upload images.' }
+  }
+
+  // 2. Verify Admin Status
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  
+  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+    return { error: 'Unauthorized: Only admins can upload images.' }
+  }
+  
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
+  const filePath = `${path}/${fileName}`
+
+  // 3. Perform Upload
+  const { data, error } = await supabase.storage
+    .from('uploads')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    })
+
+  if (error) {
+    console.error('Supabase storage upload error:', error)
+    return { error: error.message }
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('uploads')
+    .getPublicUrl(filePath)
+
+  return { success: true, url: publicUrl }
+}
+
 /* ================= SUPPLIERS ACTIONS ================= */
 
 export async function addSupplier(formData: any) {
@@ -25,6 +72,20 @@ export async function updateSupplier(id: string, formData: any) {
 
   if (error) {
     console.error('Error updating supplier:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function updateSuppliersBulk(ids: string[], formData: any) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('suppliers').update(formData).in('id', ids)
+
+  if (error) {
+    console.error('Error updating suppliers bulk:', error)
     return { error: error.message }
   }
 
@@ -69,6 +130,20 @@ export async function updateProduct(id: string, formData: any) {
 
   if (error) {
     console.error('Error updating product:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/dashboard/winning-products')
+  return { success: true }
+}
+
+export async function updateProductsBulk(ids: string[], formData: any) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('products').update(formData).in('id', ids)
+
+  if (error) {
+    console.error('Error updating products bulk:', error)
     return { error: error.message }
   }
 

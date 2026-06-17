@@ -125,6 +125,9 @@ export default function ProductCard({ product }: { product: Product }) {
               src={product.image_url || product.image}
               alt={product.name}
               className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out drop-shadow-2xl"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "https://via.placeholder.com/400x400?text=No+Image";
+              }}
             />
           ) : (
             <ShoppingBag className="w-12 h-12 text-white/5" />
