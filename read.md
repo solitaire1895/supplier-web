@@ -204,4 +204,3 @@ Whenever you make changes locally:
 - **Webhook signature errors:** Ensure `STRIPE_WEBHOOK_SECRET` matches the signing secret of the exact endpoint receiving the events, and that your server is reachable over HTTPS.
 - **Plan not updating after payment:** Confirm the Price IDs in `.env` exactly match those in the Stripe Dashboard, and that `SUPABASE_SERVICE_ROLE_KEY` is set (the webhook needs it to update the `profiles` table).
 - **Env changes not taking effect:** After editing `.env`, restart the app (`pm2 restart nexusply`). For any `NEXT_PUBLIC_*` variable, you must also rebuild (`npm run build`).
-```
