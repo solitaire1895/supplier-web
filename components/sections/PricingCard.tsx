@@ -29,17 +29,30 @@ export default function PricingCard({
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ priceId }),
       })
 
-      const data = await res.json()
+      // Safely parse the JSON body (it may be empty / non-JSON on errors)
+      let data: { url?: string; error?: string } = {}
+      try {
+        data = await res.json()
+      } catch {
+        data = {}
+      }
+
+      // Not signed in -> send the user to sign up / login
+      if (res.status === 401) {
+        router.push("/auth/signup")
+        return
+      }
+
       if (data.url) {
         window.location.href = data.url
-      } else if (data.error === "Unauthorized") {
-        router.push("/auth/signup")
-      } else {
-        alert(data.error || "Something went wrong")
+        return
       }
+
+      alert(data.error || "Something went wrong")
     } catch (error) {
       console.error("Subscription error:", error)
       alert("Failed to initiate checkout")
