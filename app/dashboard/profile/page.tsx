@@ -14,6 +14,16 @@ import { PLANS, PlanType } from "@/lib/plans";
 /* ================= SETTINGS ================= */
 const SETTINGS_KEY = "nexusply_settings";
 
+/* Helper to log Supabase errors with useful detail instead of "{}" */
+function logSupabaseError(context: string, error: any) {
+  console.error(context, {
+    message: error?.message,
+    details: error?.details,
+    hint: error?.hint,
+    code: error?.code,
+  });
+}
+
 function ProfileContent() {
   const { t, lang, setLanguage } = useI18n();
   const router = useRouter();
@@ -38,29 +48,44 @@ function ProfileContent() {
         `)
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (error) {
+        logSupabaseError("Error loading favorites:", error);
+        return;
+      }
 
       if (favorites) {
-        setFavoriteProducts(favorites.map(f => f.products).filter(Boolean));
-        setFavoriteSuppliers(favorites.map(f => f.suppliers).filter(Boolean));
+        const products = favorites
+          .map((f: any) => (Array.isArray(f.products) ? f.products[0] : f.products))
+          .filter(Boolean);
+        const suppliers = favorites
+          .map((f: any) => (Array.isArray(f.suppliers) ? f.suppliers[0] : f.suppliers))
+          .filter(Boolean);
+
+        setFavoriteProducts(products);
+        setFavoriteSuppliers(suppliers);
       }
     } catch (err) {
-      console.error("Error loading favorites:", err);
+      logSupabaseError("Error loading favorites:", err);
     }
   }, []);
 
   const loadContactedSuppliers = useCallback(async (userId: string) => {
     try {
-      // Fetch unique suppliers from sourcing_requests
+      // Be explicit about which foreign key to follow for the embed.
+      // Using `suppliers:supplier_id (*)` avoids ambiguous-relationship errors.
       const { data, error } = await supabase
         .from('sourcing_requests')
         .select(`
-          suppliers (*)
+          supplier_id,
+          suppliers:supplier_id (*)
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        logSupabaseError("Error loading contacted suppliers:", error);
+        return;
+      }
 
       if (data) {
         // Filter out duplicates if a user contacted same supplier multiple times
@@ -80,7 +105,7 @@ function ProfileContent() {
         setContactedSuppliers(uniqueSuppliers);
       }
     } catch (err) {
-      console.error("Error loading contacted suppliers:", err);
+      logSupabaseError("Error loading contacted suppliers:", err);
     }
   }, []);
 
