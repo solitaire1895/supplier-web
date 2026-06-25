@@ -39,6 +39,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 })
     }
 
+    // Assign to a local const so TypeScript keeps the non-null narrowing
+    // inside the closures passed to withRetry().
+    const stripeClient = stripe
+
     let body: { priceId?: string }
     try {
       body = await req.json()
@@ -78,7 +82,7 @@ export async function POST(req: Request) {
     if (!customerId) {
       // Create a new customer in Stripe (with retry for transient network errors)
       const customer = await withRetry(() =>
-        stripe.customers.create({
+        stripeClient.customers.create({
           email: user.email || profile?.email || undefined,
           metadata: {
             supabase_uid: user.id,
@@ -102,7 +106,7 @@ export async function POST(req: Request) {
 
     // Create checkout session (with retry for transient network errors)
     const session = await withRetry(() =>
-      stripe.checkout.sessions.create({
+      stripeClient.checkout.sessions.create({
         customer: customerId,
         line_items: [
           {
