@@ -16,12 +16,33 @@ const SETTINGS_KEY = "nexusply_settings";
 
 /* Helper to log Supabase errors with useful detail instead of "{}" */
 function logSupabaseError(context: string, error: any) {
-  console.error(context, {
+  // Build a readable payload. Some thrown values are plain Supabase
+  // PostgREST errors (message/details/hint/code), others are generic
+  // Errors or non-standard objects that serialize to "{}".
+  const info: Record<string, any> = {
     message: error?.message,
     details: error?.details,
     hint: error?.hint,
     code: error?.code,
-  });
+  };
+
+  // If none of the standard fields are present, fall back to other forms
+  const hasStandard = Object.values(info).some((v) => v !== undefined && v !== null);
+
+  if (!hasStandard) {
+    try {
+      info.raw = typeof error === "string" ? error : JSON.stringify(error);
+    } catch {
+      info.raw = String(error);
+    }
+    info.toString = error?.toString?.();
+    // Surface any enumerable own properties that JSON.stringify dropped
+    if (error && typeof error === "object") {
+      info.keys = Object.keys(error);
+    }
+  }
+
+  console.error(context, info);
 }
 
 function ProfileContent() {
@@ -71,39 +92,55 @@ function ProfileContent() {
 
   const loadContactedSuppliers = useCallback(async (userId: string) => {
     try {
-      // Be explicit about which foreign key to follow for the embed.
-      // Using `suppliers:supplier_id (*)` avoids ambiguous-relationship errors.
-      const { data, error } = await supabase
+      // Step 1: get the supplier ids this user has contacted.
+      // We avoid a PostgREST embedded join here because the relationship
+      // may not be defined, which surfaces as an empty "{}" error.
+      const { data: requests, error: reqError } = await supabase
         .from('sourcing_requests')
-        .select(`
-          supplier_id,
-          suppliers:supplier_id (*)
-        `)
+        .select('supplier_id, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        logSupabaseError("Error loading contacted suppliers:", error);
+      if (reqError) {
+        logSupabaseError("Error loading contacted suppliers (requests):", reqError);
         return;
       }
 
-      if (data) {
-        // Filter out duplicates if a user contacted same supplier multiple times
-        const uniqueSuppliers: any[] = [];
-        const seenIds = new Set();
-        
-        data.forEach((item: any) => {
-          // Supabase join can sometimes return an array even for 1-to-1 if types are ambiguous
-          const sup = Array.isArray(item.suppliers) ? item.suppliers[0] : item.suppliers;
-          
-          if (sup && !seenIds.has(sup.id)) {
-            uniqueSuppliers.push(sup);
-            seenIds.add(sup.id);
-          }
-        });
-        
-        setContactedSuppliers(uniqueSuppliers);
+      // Collect unique supplier ids, preserving the most-recent-first order.
+      const supplierIds: string[] = [];
+      const seenIds = new Set<string>();
+      (requests || []).forEach((r: any) => {
+        if (r?.supplier_id && !seenIds.has(r.supplier_id)) {
+          supplierIds.push(r.supplier_id);
+          seenIds.add(r.supplier_id);
+        }
+      });
+
+      if (supplierIds.length === 0) {
+        setContactedSuppliers([]);
+        return;
       }
+
+      // Step 2: fetch the supplier rows for those ids.
+      const { data: suppliers, error: supError } = await supabase
+        .from('suppliers')
+        .select('*')
+        .in('id', supplierIds);
+
+      if (supError) {
+        logSupabaseError("Error loading contacted suppliers (suppliers):", supError);
+        return;
+      }
+
+      // Re-order suppliers to match the contacted (most recent) order.
+      const supplierMap = new Map<string, any>();
+      (suppliers || []).forEach((s: any) => supplierMap.set(s.id, s));
+
+      const ordered = supplierIds
+        .map((id) => supplierMap.get(id))
+        .filter(Boolean);
+
+      setContactedSuppliers(ordered);
     } catch (err) {
       logSupabaseError("Error loading contacted suppliers:", err);
     }
