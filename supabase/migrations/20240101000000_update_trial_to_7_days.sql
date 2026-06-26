@@ -18,8 +18,11 @@ ALTER TABLE public.profiles
 -- ------------------------------------------------------------
 -- STEP 2: Recreate the handle_new_user trigger function
 --
--- Fix: SET search_path must use = and a quoted string when used
--- as a function-level option (not the SET statement form).
+-- Notes:
+--   - search_path option removed; all table refs are fully
+--     schema-qualified (public.profiles) so it is not needed.
+--   - ON CONFLICT (id) used instead of ON CONSTRAINT to avoid
+--     dependency on the exact constraint name.
 --
 -- ⚠️  If your existing function sets additional fields
 --     (e.g. stripe_customer_id, avatar_url, referral_code, etc.)
@@ -29,7 +32,6 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = 'public'
 AS $$
 BEGIN
   INSERT INTO public.profiles (
@@ -50,7 +52,7 @@ BEGIN
     'trialing',
     now() + interval '7 days'
   )
-  ON CONFLICT ON CONSTRAINT profiles_pkey DO NOTHING;
+  ON CONFLICT (id) DO NOTHING;
 
   RETURN NEW;
 END;
@@ -60,13 +62,13 @@ $$;
 -- ------------------------------------------------------------
 -- STEP 3: Ensure the trigger exists (safe to re-run)
 --
--- Uses a distinct dollar-quote delimiter ($trigger$) to avoid
--- any ambiguity with the $$ used in the function body above.
+-- Uses standard $$ delimiter for the DO block (the function
+-- body above is already closed so there is no nesting issue).
 -- Wrapped in an exception handler so that if the migration
 -- runner lacks DDL rights on auth.users the rest of the
 -- migration still completes successfully.
 -- ------------------------------------------------------------
-DO $trigger$
+DO $$
 BEGIN
   -- Drop the old trigger if it exists
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -87,7 +89,7 @@ EXCEPTION
     RAISE WARNING
       'Unexpected error while (re)creating on_auth_user_created trigger: %', SQLERRM;
 END;
-$trigger$;
+$$;
 
 
 -- ------------------------------------------------------------
