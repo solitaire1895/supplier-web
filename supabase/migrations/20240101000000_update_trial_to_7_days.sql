@@ -19,14 +19,13 @@ ALTER TABLE public.profiles
 -- STEP 2: Recreate the handle_new_user trigger function
 --
 -- Notes:
---   - search_path option removed; all table refs are fully
---     schema-qualified (public.profiles) so it is not needed.
+--   - All table refs are fully schema-qualified (public.profiles).
 --   - A named dollar-quote tag ($func$) is used for the body so
---     it can never be confused with the $$ used in the DO block
---     below.
---   - ON CONFLICT (id) DO NOTHING silently handles the case
---     where a profile row already exists, so no additional
---     EXCEPTION block is needed.
+--     it can never be confused with any $$ used elsewhere.
+--   - Instead of ON CONFLICT (which some Supabase migration
+--     runners reject inside SECURITY DEFINER functions), we guard
+--     the INSERT with a NOT EXISTS check so duplicate rows are
+--     silently skipped without relying on conflict handling.
 --
 -- ⚠️  If your existing function sets additional fields
 --     (e.g. stripe_customer_id, avatar_url, referral_code, etc.)
@@ -38,25 +37,28 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $func$
 BEGIN
-  INSERT INTO public.profiles (
-    id,
-    email,
-    full_name,
-    role,
-    active_plan,
-    subscription_status,
-    trial_ends_at
-  )
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-    'user',
-    'free',
-    'trialing',
-    now() + interval '7 days'
-  )
-  ON CONFLICT (id) DO NOTHING;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles WHERE id = NEW.id
+  ) THEN
+    INSERT INTO public.profiles (
+      id,
+      email,
+      full_name,
+      role,
+      active_plan,
+      subscription_status,
+      trial_ends_at
+    )
+    VALUES (
+      NEW.id,
+      NEW.email,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+      'user',
+      'free',
+      'trialing',
+      now() + interval '7 days'
+    );
+  END IF;
 
   RETURN NEW;
 END;
@@ -64,37 +66,24 @@ $func$;
 
 
 -- ------------------------------------------------------------
--- STEP 3: Ensure the trigger exists (safe to re-run)
+-- STEP 3: Trigger on auth.users
 --
--- Uses the standard $$ delimiter for the DO block. Because the
--- function body above uses $func$ as its delimiter, there is
--- zero ambiguity between the two.
--- Wrapped in an exception handler so that if the migration
--- runner lacks DDL rights on auth.users the rest of the
--- migration still completes successfully.
+-- ⚠️  Supabase restricts DDL on the auth schema from migration
+--     files run via the CLI or dashboard SQL editor.
+--     You MUST create (or re-create) this trigger manually:
+--
+--     Option A — Supabase Dashboard
+--       Authentication → Hooks → "After user created"
+--       Point it at: public.handle_new_user
+--
+--     Option B — SQL Editor (as a superuser / postgres role)
+--       DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+--       CREATE TRIGGER on_auth_user_created
+--         AFTER INSERT ON auth.users
+--         FOR EACH ROW
+--         EXECUTE FUNCTION public.handle_new_user();
+--
 -- ------------------------------------------------------------
-DO $$
-BEGIN
-  -- Drop the old trigger if it exists
-  DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
-  -- Recreate it pointing at the updated function
-  CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW
-    EXECUTE FUNCTION public.handle_new_user();
-
-EXCEPTION
-  WHEN insufficient_privilege THEN
-    RAISE WARNING
-      'Could not (re)create on_auth_user_created trigger on auth.users — '
-      'insufficient privilege. Create it manually in the Supabase dashboard '
-      'or via the Auth → Hooks UI.';
-  WHEN others THEN
-    RAISE WARNING
-      'Unexpected error while (re)creating on_auth_user_created trigger: %', SQLERRM;
-END;
-$$;
 
 
 -- ------------------------------------------------------------
