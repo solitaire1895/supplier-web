@@ -96,7 +96,9 @@ $$;
 -- STEP 4: Backfill existing trialing users
 --
 -- Logic:
---   - Only touches rows where subscription_status = 'trialing'
+--   - Only touches rows where subscription_status is 'free' or
+--     'trialing', and active_plan is 'free'
+--   - Never touches paid plans, even if their status is odd
 --   - Only shrinks the window — never extends it
 --   - Sets trial_ends_at = created_at + 7 days
 --   - If that date is already in the past, sets it to NOW()
@@ -113,7 +115,10 @@ SET trial_ends_at =
     ELSE now()
   END
 WHERE
-  subscription_status = 'trialing'
+  -- Apply to free/trialing users only
+  subscription_status IN ('free', 'trialing')
+  -- Never touch paid plans, even if their status is odd
+  AND active_plan = 'free'
   -- Only shorten trials that are currently set beyond 7 days
   AND trial_ends_at > (created_at + interval '7 days');
 
@@ -123,6 +128,6 @@ WHERE
 -- ------------------------------------------------------------
 -- SELECT id, email, created_at, trial_ends_at, subscription_status
 -- FROM public.profiles
--- WHERE subscription_status = 'trialing'
+-- WHERE subscription_status IN ('free', 'trialing')
 -- ORDER BY created_at DESC
 -- LIMIT 20;
