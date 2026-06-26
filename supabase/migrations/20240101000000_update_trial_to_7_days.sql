@@ -21,12 +21,16 @@ ALTER TABLE public.profiles
 -- ⚠️  If your existing function sets additional fields
 --     (e.g. stripe_customer_id, avatar_url, referral_code, etc.)
 --     add those columns/values to the INSERT below before running.
+--
+-- Fix: use SET search_path TO (not =) in the function header.
+-- All table references are already schema-qualified (public.profiles)
+-- so the search_path clause is kept only for safety.
 -- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path TO public
 AS $$
 BEGIN
   INSERT INTO public.profiles (
@@ -56,13 +60,33 @@ $$;
 
 -- ------------------------------------------------------------
 -- STEP 3: Ensure the trigger exists (safe to re-run)
+--
+-- Fix: wrap in an anonymous DO block with an exception handler
+-- so that if the migration runner lacks DDL rights on auth.users
+-- the rest of the migration still completes successfully.
 -- ------------------------------------------------------------
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DO $$
+BEGIN
+  -- Drop the old trigger if it exists
+  DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
+  -- Recreate it pointing at the updated function
+  CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();
+
+EXCEPTION
+  WHEN insufficient_privilege THEN
+    RAISE WARNING
+      'Could not (re)create on_auth_user_created trigger on auth.users — '
+      'insufficient privilege. Create it manually in the Supabase dashboard '
+      'or via the Auth → Hooks UI.';
+  WHEN others THEN
+    RAISE WARNING
+      'Unexpected error while (re)creating on_auth_user_created trigger: %', SQLERRM;
+END;
+$$;
 
 
 -- ------------------------------------------------------------
