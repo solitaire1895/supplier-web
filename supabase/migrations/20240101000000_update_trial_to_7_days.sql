@@ -18,19 +18,18 @@ ALTER TABLE public.profiles
 -- ------------------------------------------------------------
 -- STEP 2: Recreate the handle_new_user trigger function
 --
+-- Fix: SET search_path must use = and a quoted string when used
+-- as a function-level option (not the SET statement form).
+--
 -- ⚠️  If your existing function sets additional fields
 --     (e.g. stripe_customer_id, avatar_url, referral_code, etc.)
 --     add those columns/values to the INSERT below before running.
---
--- Fix: use SET search_path TO (not =) in the function header.
--- All table references are already schema-qualified (public.profiles)
--- so the search_path clause is kept only for safety.
 -- ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path TO public
+SET search_path = 'public'
 AS $$
 BEGIN
   INSERT INTO public.profiles (
@@ -51,7 +50,7 @@ BEGIN
     'trialing',
     now() + interval '7 days'
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT ON CONSTRAINT profiles_pkey DO NOTHING;
 
   RETURN NEW;
 END;
@@ -61,11 +60,13 @@ $$;
 -- ------------------------------------------------------------
 -- STEP 3: Ensure the trigger exists (safe to re-run)
 --
--- Fix: wrap in an anonymous DO block with an exception handler
--- so that if the migration runner lacks DDL rights on auth.users
--- the rest of the migration still completes successfully.
+-- Uses a distinct dollar-quote delimiter ($trigger$) to avoid
+-- any ambiguity with the $$ used in the function body above.
+-- Wrapped in an exception handler so that if the migration
+-- runner lacks DDL rights on auth.users the rest of the
+-- migration still completes successfully.
 -- ------------------------------------------------------------
-DO $$
+DO $trigger$
 BEGIN
   -- Drop the old trigger if it exists
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -86,7 +87,7 @@ EXCEPTION
     RAISE WARNING
       'Unexpected error while (re)creating on_auth_user_created trigger: %', SQLERRM;
 END;
-$$;
+$trigger$;
 
 
 -- ------------------------------------------------------------
