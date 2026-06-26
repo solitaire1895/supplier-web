@@ -61,6 +61,10 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
 
   const features = getPlanFeatures(profile?.active_plan);
 
+  // The server already caps the suppliers array by supplierLimit.
+  // We keep a client-side reference for UX (locked placeholders, etc.)
+  const supplierLimit = features.access.supplierLimit;
+
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
@@ -120,7 +124,8 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
     setSubmitting(false);
   };
 
-  // Filter suppliers based on plan
+  // The server already enforces supplierLimit, so `suppliers` is pre-capped.
+  // We apply additional client-side category/platform filters on top.
   const baseSuppliers = searchResults || suppliers;
   const filteredSuppliers = baseSuppliers.filter(s => {
     // Platform restriction
@@ -133,8 +138,11 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
     return true;
   });
 
-  const displaySuppliers = filteredSuppliers.slice(0, 12); // Show some initially
-  const lockedCount = baseSuppliers.length - filteredSuppliers.length;
+  const displaySuppliers = filteredSuppliers.slice(0, 12);
+
+  // Show locked placeholders only when server-side limit is in effect and not searching
+  const isLimited = supplierLimit !== 'unlimited';
+  const lockedCount = isLimited && !searchResults ? 3 : 0;
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30">
@@ -229,7 +237,7 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
             <FilterSidebar />
             
             {/* PLAN UPSELL IN SIDEBAR */}
-            {features.access.suppliers === 'platforms' && (
+            {(features.access.suppliers === 'platforms' || isLimited) && (
               <div className="mt-8 p-6 bg-red-500/5 border border-red-500/20 rounded-3xl relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3"></div>
                 <div className="relative z-10">
@@ -273,8 +281,8 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
                 </div>
               )}
               
-              {/* Locked Suppliers Placeholders */}
-              {!searchResults && lockedCount > 0 && Array.from({ length: 3 }).map((_, i) => (
+              {/* Locked Suppliers Placeholders — shown when plan limits suppliers */}
+              {!searchResults && lockedCount > 0 && Array.from({ length: lockedCount }).map((_, i) => (
                 <div key={`locked-supplier-${i}`} className="bg-white/5 border border-dashed border-white/10 rounded-[2rem] h-[280px] flex flex-col items-center justify-center p-8 text-center opacity-60">
                    <Lock className="text-gray-600 mb-4" size={24} />
                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{t.dashboard.lockedSupplier}</p>
@@ -289,6 +297,26 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
                 <button className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300">
                   {t.common.loadMore}
                 </button>
+              </div>
+            )}
+
+            {/* Upgrade CTA when supplier limit is in effect */}
+            {!searchResults && isLimited && (
+              <div className="mt-12 bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+                <div className="relative z-10">
+                  <Lock className="text-red-500 mx-auto mb-4" size={28} />
+                  <h2 className="text-2xl font-bold mb-3">Unlock More Suppliers</h2>
+                  <p className="text-gray-400 mb-8 max-w-xl mx-auto text-sm">
+                    You are viewing a limited set of suppliers on the <span className="text-white font-semibold">{features.name.EN}</span> plan. Upgrade to access our full supplier network.
+                  </p>
+                  <Link 
+                    href="/dashboard/profile?tab=plan"
+                    className="px-10 py-4 bg-red-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all inline-block"
+                  >
+                    {t.common.upgrade} Plan Now
+                  </Link>
+                </div>
               </div>
             )}
 

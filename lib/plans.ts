@@ -15,6 +15,7 @@ export interface PlanFeatures {
     tablets: boolean;
     computers: 'none' | 'basic' | 'all';
     suppliers: 'platforms' | 'all';
+    supplierLimit: number | 'unlimited';
     directContacts: boolean;
   };
   support: 'community' | 'priority';
@@ -44,6 +45,7 @@ export const PLANS: Record<PlanType, PlanFeatures> = {
       tablets: false,
       computers: 'none',
       suppliers: 'platforms',
+      supplierLimit: 5,
       directContacts: false,
     },
     support: 'community',
@@ -71,6 +73,7 @@ export const PLANS: Record<PlanType, PlanFeatures> = {
       tablets: false,
       computers: 'none',
       suppliers: 'platforms',
+      supplierLimit: 'unlimited',
       directContacts: false,
     },
     support: 'community',
@@ -98,6 +101,7 @@ export const PLANS: Record<PlanType, PlanFeatures> = {
       tablets: true,
       computers: 'basic',
       suppliers: 'all',
+      supplierLimit: 'unlimited',
       directContacts: false,
     },
     support: 'community',
@@ -125,6 +129,7 @@ export const PLANS: Record<PlanType, PlanFeatures> = {
       tablets: true,
       computers: 'all',
       suppliers: 'all',
+      supplierLimit: 'unlimited',
       directContacts: true,
     },
     support: 'priority',
