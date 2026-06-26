@@ -21,8 +21,12 @@ ALTER TABLE public.profiles
 -- Notes:
 --   - search_path option removed; all table refs are fully
 --     schema-qualified (public.profiles) so it is not needed.
---   - ON CONFLICT (id) used instead of ON CONSTRAINT to avoid
---     dependency on the exact constraint name.
+--   - A named dollar-quote tag ($func$) is used for the body so
+--     it can never be confused with the outer $$ used elsewhere.
+--   - ON CONFLICT (id) DO NOTHING is retained but the INSERT is
+--     wrapped in its own BEGIN/EXCEPTION block so that any
+--     unexpected unique-violation is silently swallowed rather
+--     than aborting the trigger.
 --
 -- ⚠️  If your existing function sets additional fields
 --     (e.g. stripe_customer_id, avatar_url, referral_code, etc.)
@@ -32,43 +36,50 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS $$
+AS $func$
 BEGIN
-  INSERT INTO public.profiles (
-    id,
-    email,
-    full_name,
-    role,
-    active_plan,
-    subscription_status,
-    trial_ends_at
-  )
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-    'user',
-    'free',
-    'trialing',
-    now() + interval '7 days'
-  )
-  ON CONFLICT (id) DO NOTHING;
+  BEGIN
+    INSERT INTO public.profiles (
+      id,
+      email,
+      full_name,
+      role,
+      active_plan,
+      subscription_status,
+      trial_ends_at
+    )
+    VALUES (
+      NEW.id,
+      NEW.email,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+      'user',
+      'free',
+      'trialing',
+      now() + interval '7 days'
+    )
+    ON CONFLICT (id) DO NOTHING;
+  EXCEPTION
+    WHEN unique_violation THEN
+      -- Profile already exists; nothing to do.
+      NULL;
+  END;
 
   RETURN NEW;
 END;
-$$;
+$func$;
 
 
 -- ------------------------------------------------------------
 -- STEP 3: Ensure the trigger exists (safe to re-run)
 --
--- Uses standard $$ delimiter for the DO block (the function
--- body above is already closed so there is no nesting issue).
+-- A distinct dollar-quote tag ($migration$) is used here so
+-- there is zero ambiguity with the $func$ tag above or any
+-- other $$ usage in the same migration file.
 -- Wrapped in an exception handler so that if the migration
 -- runner lacks DDL rights on auth.users the rest of the
 -- migration still completes successfully.
 -- ------------------------------------------------------------
-DO $$
+DO $migration$
 BEGIN
   -- Drop the old trigger if it exists
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -89,7 +100,7 @@ EXCEPTION
     RAISE WARNING
       'Unexpected error while (re)creating on_auth_user_created trigger: %', SQLERRM;
 END;
-$$;
+$migration$;
 
 
 -- ------------------------------------------------------------
