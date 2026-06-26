@@ -22,11 +22,11 @@ ALTER TABLE public.profiles
 --   - search_path option removed; all table refs are fully
 --     schema-qualified (public.profiles) so it is not needed.
 --   - A named dollar-quote tag ($func$) is used for the body so
---     it can never be confused with the outer $$ used elsewhere.
---   - ON CONFLICT (id) DO NOTHING is retained but the INSERT is
---     wrapped in its own BEGIN/EXCEPTION block so that any
---     unexpected unique-violation is silently swallowed rather
---     than aborting the trigger.
+--     it can never be confused with the $$ used in the DO block
+--     below.
+--   - ON CONFLICT (id) DO NOTHING silently handles the case
+--     where a profile row already exists, so no additional
+--     EXCEPTION block is needed.
 --
 -- ⚠️  If your existing function sets additional fields
 --     (e.g. stripe_customer_id, avatar_url, referral_code, etc.)
@@ -38,31 +38,25 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $func$
 BEGIN
-  BEGIN
-    INSERT INTO public.profiles (
-      id,
-      email,
-      full_name,
-      role,
-      active_plan,
-      subscription_status,
-      trial_ends_at
-    )
-    VALUES (
-      NEW.id,
-      NEW.email,
-      COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-      'user',
-      'free',
-      'trialing',
-      now() + interval '7 days'
-    )
-    ON CONFLICT (id) DO NOTHING;
-  EXCEPTION
-    WHEN unique_violation THEN
-      -- Profile already exists; nothing to do.
-      NULL;
-  END;
+  INSERT INTO public.profiles (
+    id,
+    email,
+    full_name,
+    role,
+    active_plan,
+    subscription_status,
+    trial_ends_at
+  )
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    'user',
+    'free',
+    'trialing',
+    now() + interval '7 days'
+  )
+  ON CONFLICT (id) DO NOTHING;
 
   RETURN NEW;
 END;
@@ -72,14 +66,14 @@ $func$;
 -- ------------------------------------------------------------
 -- STEP 3: Ensure the trigger exists (safe to re-run)
 --
--- A distinct dollar-quote tag ($migration$) is used here so
--- there is zero ambiguity with the $func$ tag above or any
--- other $$ usage in the same migration file.
+-- Uses the standard $$ delimiter for the DO block. Because the
+-- function body above uses $func$ as its delimiter, there is
+-- zero ambiguity between the two.
 -- Wrapped in an exception handler so that if the migration
 -- runner lacks DDL rights on auth.users the rest of the
 -- migration still completes successfully.
 -- ------------------------------------------------------------
-DO $migration$
+DO $$
 BEGIN
   -- Drop the old trigger if it exists
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -100,7 +94,7 @@ EXCEPTION
     RAISE WARNING
       'Unexpected error while (re)creating on_auth_user_created trigger: %', SQLERRM;
 END;
-$migration$;
+$$;
 
 
 -- ------------------------------------------------------------
