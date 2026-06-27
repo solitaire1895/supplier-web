@@ -1,10 +1,10 @@
 -- ============================================================
--- Nexusply: RLS + Full-Text Search hardening
+-- Nexusply: Full database hardening script
 -- Safe to run multiple times (idempotent).
 -- ============================================================
 
 -- ------------------------------------------------------------
--- 0. ADMIN CHECK HELPER
+-- 0a. ADMIN CHECK HELPER
 --    A security-definer function so every policy can call
 --    is_admin() instead of repeating the profiles subquery.
 --    This also prevents recursive RLS on the profiles table.
@@ -24,9 +24,63 @@ AS $$
 $$;
 
 -- ------------------------------------------------------------
+-- 0b. CREATE MISSING TABLES
+--    Must run BEFORE ENABLE ROW LEVEL SECURITY and policies.
+--    All statements are idempotent (CREATE TABLE IF NOT EXISTS).
+-- ------------------------------------------------------------
+
+-- Core tables (products, suppliers, profiles) are assumed to
+-- already exist from the initial Supabase project setup.
+-- We only create the auxiliary tables that may be missing.
+
+CREATE TABLE IF NOT EXISTS public.user_favorites (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  supplier_id  uuid REFERENCES public.suppliers(id) ON DELETE CASCADE,
+  product_id   uuid REFERENCES public.products(id)  ON DELETE CASCADE,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT user_favorites_has_target CHECK (
+    (supplier_id IS NOT NULL AND product_id IS NULL) OR
+    (supplier_id IS NULL     AND product_id IS NOT NULL)
+  )
+);
+
+CREATE TABLE IF NOT EXISTS public.reviews (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  supplier_id  uuid REFERENCES public.suppliers(id) ON DELETE CASCADE,
+  product_id   uuid REFERENCES public.products(id)  ON DELETE CASCADE,
+  rating       smallint NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  content      text NOT NULL,
+  created_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT reviews_has_target CHECK (
+    (supplier_id IS NOT NULL AND product_id IS NULL) OR
+    (supplier_id IS NULL     AND product_id IS NOT NULL)
+  )
+);
+
+CREATE TABLE IF NOT EXISTS public.sourcing_requests (
+  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  supplier_id  uuid NOT NULL REFERENCES public.suppliers(id) ON DELETE CASCADE,
+  product_id   uuid REFERENCES public.products(id) ON DELETE SET NULL,
+  notes        text,
+  created_at   timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.user_activity (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  activity_type text NOT NULL CHECK (activity_type IN ('view_product', 'view_supplier', 'search')),
+  target_id     uuid,
+  meta_data     jsonb,
+  created_at    timestamptz NOT NULL DEFAULT now()
+);
+
+-- ------------------------------------------------------------
 -- 1. ENABLE RLS
 --    ENABLE ROW LEVEL SECURITY is idempotent in Postgres —
---    it is a no-op when RLS is already enabled, so no guard needed.
+--    it is a no-op when RLS is already enabled.
 -- ------------------------------------------------------------
 ALTER TABLE public.products          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.suppliers         ENABLE ROW LEVEL SECURITY;
@@ -318,7 +372,6 @@ SET search_vector =
 
 -- ============================================================
 -- 10. Performance indexes for ordering / joins
---     Plain single-column indexes for maximum compatibility.
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_products_created_at  ON public.products(created_at);
 CREATE INDEX IF NOT EXISTS idx_suppliers_created_at ON public.suppliers(created_at);
@@ -328,3 +381,33 @@ CREATE INDEX IF NOT EXISTS idx_sourcing_created_at  ON public.sourcing_requests(
 CREATE INDEX IF NOT EXISTS idx_reviews_product_id   ON public.reviews(product_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_supplier_id  ON public.reviews(supplier_id);
 CREATE INDEX IF NOT EXISTS idx_activity_user_id     ON public.user_activity(user_id);
+
+-- ============================================================
+-- 11. AUTO-CREATE PROFILE ON SIGNUP (auth trigger)
+--    Ensures a profiles row always exists for every new user.
+--    Safe to re-run — uses CREATE OR REPLACE + DROP IF EXISTS.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, role, active_plan, subscription_status)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+    'user',
+    'free',
+    'active'
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
