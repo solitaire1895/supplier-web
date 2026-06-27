@@ -92,19 +92,19 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
     if (submitting) return;
     setSubmitting(true);
 
+    // Open synchronously to avoid popup blocking
+    const newTab = window.open('', '_blank');
+
     const plan = profile?.active_plan || "Free";
     const features = getPlanFeatures(plan);
 
-    // 1. Record the sourcing request
     await recordSourcingRequest({
       supplier_id: supplier.id,
       notes: `Contacted via Dashboard Discovery Grid: ${supplier.name}`
     });
 
-    // 2. Determine redirect URL
     let contactUrl = supplier.contact_url;
 
-    // Premium users might get direct WhatsApp/Email if available
     if (features.access.directContacts) {
        if (supplier.whatsapp) {
           const cleanPhone = supplier.whatsapp.replace(/\D/g, '');
@@ -114,10 +114,10 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
        }
     }
 
-    if (contactUrl) {
-      window.open(contactUrl, '_blank');
+    if (contactUrl && newTab) {
+      newTab.location.href = contactUrl;
     } else {
-      // Fallback to details page if no contact URL
+      if (newTab) newTab.close();
       router.push(`/dashboard/suppliers/${supplier.id}`);
     }
 

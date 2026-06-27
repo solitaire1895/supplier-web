@@ -33,8 +33,8 @@ export default function SupplierPage() {
   const fetchSupplierData = useCallback(async () => {
     if (!id) return;
 
-    // UUID regex check
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    // UUID regex check (any version)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
       console.warn(`SupplierPage: Invalid UUID format for ID: ${id}`);
       setError(`Invalid ID format: ${id}`);
@@ -139,16 +139,16 @@ export default function SupplierPage() {
     if (!supplier || submitting) return;
     setSubmitting(true);
 
-    // 1. Record the sourcing request
+    // Open synchronously to avoid popup blocking
+    const newTab = window.open('', '_blank');
+
     await recordSourcingRequest({
       supplier_id: supplier.id,
       notes: `Contacted via Supplier Page: ${supplier.name}`
     });
 
-    // 2. Determine redirect URL
     let contactUrl = supplier.contact_url;
 
-    // Premium users might get direct WhatsApp/Email if available
     if (features.access.directContacts) {
        if (supplier.whatsapp) {
           const cleanPhone = supplier.whatsapp.replace(/\D/g, '');
@@ -158,9 +158,10 @@ export default function SupplierPage() {
        }
     }
 
-    if (contactUrl) {
-      window.open(contactUrl, '_blank');
+    if (contactUrl && newTab) {
+      newTab.location.href = contactUrl;
     } else {
+      if (newTab) newTab.close();
       alert("No direct contact method found. Please use the platform contact link.");
     }
 

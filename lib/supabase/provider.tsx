@@ -98,11 +98,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
 
         if (session?.user) {
-          // Only re-fetch profile if the user ID changed or it's a critical auth event
-          if (user?.id !== session.user.id || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            setUser(session.user);
-            await fetchProfile(session.user.id);
-          }
+          setUser(session.user);
+          // Always ensure profile is loaded for the current session user.
+          await fetchProfile(session.user.id);
         } else {
           setUser(null);
           setProfile(null);
@@ -114,8 +112,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     // 3. Absolute Safety Timeout
     const timeout = setTimeout(() => {
-      if (mounted && (loading || authLoading)) {
-        console.warn("UserProvider: Initialization timeout reached");
+      if (mounted) {
         setLoading(false);
         setAuthLoading(false);
       }
@@ -126,7 +123,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
       clearTimeout(timeout);
     };
-  }, [fetchProfile, user?.id, loading, authLoading]);
+  }, [fetchProfile]);
 
   return (
     <UserContext.Provider value={{ user, profile, loading, authLoading, refreshProfile }}>

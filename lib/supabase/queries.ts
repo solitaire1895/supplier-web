@@ -2,23 +2,37 @@ import { createClient } from './server'
 import { cache } from 'react'
 import { getPlanFeatures } from '../plans'
 
+// ---------------------------------------------------------------------------
+// Cached per-request auth helpers — avoids redundant round-trips when multiple
+// query functions are called in the same React Server Component render.
+// ---------------------------------------------------------------------------
+
+const getCachedUser = cache(async () => {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
+})
+
+const getCachedPlan = cache(async () => {
+  const user = await getCachedUser()
+  if (!user) return null
+  const supabase = await createClient()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('active_plan')
+    .eq('id', user.id)
+    .maybeSingle()
+  return profile?.active_plan ?? null
+})
+
+// ---------------------------------------------------------------------------
+
 export const getSuppliers = cache(async () => {
   const supabase = await createClient()
 
   // Determine the current user's plan to enforce supplier limits server-side.
-  const { data: { user } } = await supabase.auth.getUser()
-  let supplierLimit: number | 'unlimited' = 'unlimited'
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('active_plan')
-      .eq('id', user.id)
-      .maybeSingle()
-    supplierLimit = getPlanFeatures(profile?.active_plan).access.supplierLimit
-  } else {
-    supplierLimit = getPlanFeatures(null).access.supplierLimit
-  }
+  const plan = await getCachedPlan()
+  const supplierLimit: number | 'unlimited' = getPlanFeatures(plan).access.supplierLimit
 
   let query = supabase
     .from('suppliers')
@@ -43,17 +57,7 @@ export const getProducts = cache(async () => {
   const supabase = await createClient()
 
   // Block winning products entirely for plans with a 0 limit (free/trial).
-  const { data: { user } } = await supabase.auth.getUser()
-  let plan: string | null = null
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('active_plan')
-      .eq('id', user.id)
-      .maybeSingle()
-    plan = profile?.active_plan ?? null
-  }
+  const plan = await getCachedPlan()
 
   if (getPlanFeatures(plan).winningProducts.limit === 0) {
     return []
@@ -98,7 +102,7 @@ export const getReviews = cache(async (type: 'product' | 'supplier', id: string)
 
 export const getFavoriteSuppliers = cache(async () => {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) return []
 
   const { data, error } = await supabase
@@ -119,7 +123,7 @@ export const getFavoriteSuppliers = cache(async () => {
 
 export const getFavoriteProducts = cache(async () => {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) return []
 
   const { data, error } = await supabase
@@ -178,7 +182,7 @@ export const getStats = cache(async () => {
 
 export const getUserProfile = cache(async () => {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   
   if (!user) return null
 
@@ -200,17 +204,7 @@ export const searchProducts = cache(async (query: string) => {
   const supabase = await createClient()
 
   // Block winning products entirely for plans with a 0 limit (free/trial).
-  const { data: { user } } = await supabase.auth.getUser()
-  let plan: string | null = null
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('active_plan')
-      .eq('id', user.id)
-      .maybeSingle()
-    plan = profile?.active_plan ?? null
-  }
+  const plan = await getCachedPlan()
 
   if (getPlanFeatures(plan).winningProducts.limit === 0) {
     return []
@@ -237,19 +231,8 @@ export const searchSuppliers = cache(async (query: string) => {
   const supabase = await createClient()
 
   // Determine the current user's plan to enforce supplier limits server-side.
-  const { data: { user } } = await supabase.auth.getUser()
-  let supplierLimit: number | 'unlimited' = 'unlimited'
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('active_plan')
-      .eq('id', user.id)
-      .maybeSingle()
-    supplierLimit = getPlanFeatures(profile?.active_plan).access.supplierLimit
-  } else {
-    supplierLimit = getPlanFeatures(null).access.supplierLimit
-  }
+  const plan = await getCachedPlan()
+  const supplierLimit: number | 'unlimited' = getPlanFeatures(plan).access.supplierLimit
 
   let query_ = supabase
     .from('suppliers')
@@ -276,7 +259,7 @@ export const searchSuppliers = cache(async (query: string) => {
 
 export const trackActivity = async (type: 'view_product' | 'view_supplier' | 'search', targetId?: string, metaData?: any) => {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) return
 
   const { error } = await supabase
@@ -293,7 +276,7 @@ export const trackActivity = async (type: 'view_product' | 'view_supplier' | 'se
 
 export const getRecommendedProducts = cache(async (limit: number = 4) => {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) return []
 
   const { data, error } = await supabase
@@ -312,7 +295,7 @@ export const getRecommendedProducts = cache(async (limit: number = 4) => {
 
 export const getRecommendedSuppliers = cache(async (limit: number = 4) => {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getCachedUser()
   if (!user) return []
 
   const { data, error } = await supabase

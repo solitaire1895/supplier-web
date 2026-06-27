@@ -36,8 +36,8 @@ export default function ProductDetailPage() {
   const fetchProductData = useCallback(async () => {
     if (!id) return;
     
-    // UUID regex check
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    // UUID regex check (any version)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
       console.warn(`ProductDetailPage: Invalid UUID format for ID: ${id}`);
       setError(`Invalid ID format: ${id}`);
@@ -184,20 +184,20 @@ export default function ProductDetailPage() {
     if (submitting) return;
     setSubmitting(true);
 
+    // Open synchronously to avoid popup blocking
+    const newTab = window.open('', '_blank');
+
     const plan = profile?.active_plan || "Free";
     const features = getPlanFeatures(plan);
 
-    // 1. Record the sourcing request
     await recordSourcingRequest({
       supplier_id: supplier.id,
       product_id: product.id,
       notes: `Contacted via Product Page: ${product.name}`
     });
 
-    // 2. Determine redirect URL
     let contactUrl = supplier.contact_url;
 
-    // Premium users might get direct WhatsApp/Email if available
     if (features.access.directContacts) {
        if (supplier.whatsapp) {
           const cleanPhone = supplier.whatsapp.replace(/\D/g, '');
@@ -207,9 +207,10 @@ export default function ProductDetailPage() {
        }
     }
 
-    if (contactUrl) {
-      window.open(contactUrl, '_blank');
+    if (contactUrl && newTab) {
+      newTab.location.href = contactUrl;
     } else {
+      if (newTab) newTab.close();
       alert("No direct contact method found. Please use the platform contact link.");
     }
 
