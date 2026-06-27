@@ -61,14 +61,11 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
 
   const features = getPlanFeatures(profile?.active_plan);
 
-  // The server already caps the suppliers array by supplierLimit.
-  // We keep a client-side reference for UX (locked placeholders, etc.)
   const supplierLimit = features.access.supplierLimit;
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
-    // Update URL without reloading to support back/forward
     const params = new URLSearchParams(searchParams.toString());
     if (searchQuery) {
       params.set("q", searchQuery);
@@ -92,55 +89,59 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
     if (submitting) return;
     setSubmitting(true);
 
-    // Open synchronously to avoid popup blocking
-    const newTab = window.open('', '_blank');
-
     const plan = profile?.active_plan || "Free";
-    const features = getPlanFeatures(plan);
+    const planFeatures = getPlanFeatures(plan);
 
-    await recordSourcingRequest({
-      supplier_id: supplier.id,
-      notes: `Contacted via Dashboard Discovery Grid: ${supplier.name}`
-    });
+    // Resolve the contact URL synchronously before any async work
+    let contactUrl: string | null = supplier.contact_url || null;
 
-    let contactUrl = supplier.contact_url;
-
-    if (features.access.directContacts) {
-       if (supplier.whatsapp) {
-          const cleanPhone = supplier.whatsapp.replace(/\D/g, '');
-          contactUrl = `https://wa.me/${cleanPhone}?text=Hello, I found you on Nexusply and I'm interested in your services.`;
-       } else if (supplier.private_email) {
-          contactUrl = `mailto:${supplier.private_email}?subject=Nexusply Sourcing Inquiry&body=Hello, I am interested in your services...`;
-       }
+    if (planFeatures.access.directContacts) {
+      if (supplier.whatsapp) {
+        const cleanPhone = supplier.whatsapp.replace(/\D/g, '');
+        contactUrl = `https://wa.me/${cleanPhone}?text=Hello, I found you on Nexusply and I'm interested in your services.`;
+      } else if (supplier.private_email) {
+        contactUrl = `mailto:${supplier.private_email}?subject=Nexusply Sourcing Inquiry&body=Hello, I am interested in your services...`;
+      }
     }
 
-    if (contactUrl && newTab) {
-      newTab.location.href = contactUrl;
+    if (contactUrl) {
+      // Open and immediately navigate — must happen synchronously in the user gesture
+      // to avoid popup blockers. Fire the async tracking after.
+      const newTab = window.open(contactUrl, '_blank');
+
+      // Fire-and-forget: record after navigation so it never blocks the UX
+      recordSourcingRequest({
+        supplier_id: supplier.id,
+        notes: `Contacted via Dashboard Discovery Grid: ${supplier.name}`
+      }).catch((err) => console.error("recordSourcingRequest error:", err));
+
+      // If the browser blocked the popup, fall back to same-tab navigation
+      if (!newTab || newTab.closed || typeof newTab.closed === 'undefined') {
+        router.push(`/dashboard/suppliers/${supplier.id}`);
+      }
     } else {
-      if (newTab) newTab.close();
+      // No contact URL available — go to the supplier detail page instead
+      recordSourcingRequest({
+        supplier_id: supplier.id,
+        notes: `Viewed via Dashboard Discovery Grid: ${supplier.name}`
+      }).catch((err) => console.error("recordSourcingRequest error:", err));
+
       router.push(`/dashboard/suppliers/${supplier.id}`);
     }
 
     setSubmitting(false);
   };
 
-  // The server already enforces supplierLimit, so `suppliers` is pre-capped.
-  // We apply additional client-side category/platform filters on top.
   const baseSuppliers = searchResults || suppliers;
   const filteredSuppliers = baseSuppliers.filter(s => {
-    // Platform restriction
     if (features.access.suppliers === 'platforms' && s.platform === 'Direct') return false;
-    
-    // Category restriction
     if (!features.access.tablets && s.category === 'Tablets') return false;
     if (features.access.computers === 'none' && s.category === 'Computers') return false;
-    
     return true;
   });
 
   const displaySuppliers = filteredSuppliers.slice(0, 12);
 
-  // Show locked placeholders only when server-side limit is in effect and not searching
   const isLimited = supplierLimit !== 'unlimited';
   const lockedCount = isLimited && !searchResults ? 3 : 0;
 
@@ -148,7 +149,6 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
     <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30">
       <Navbar />
 
-      {/* MAIN CONTENT AREA */}
       <div className="pt-28 pb-24 px-4 md:px-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
 
         {/* HERO SEARCH & HEADER */}
@@ -281,7 +281,7 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
                 </div>
               )}
               
-              {/* Locked Suppliers Placeholders — shown when plan limits suppliers */}
+              {/* Locked Suppliers Placeholders */}
               {!searchResults && lockedCount > 0 && Array.from({ length: lockedCount }).map((_, i) => (
                 <div key={`locked-supplier-${i}`} className="bg-white/5 border border-dashed border-white/10 rounded-[2rem] h-[280px] flex flex-col items-center justify-center p-8 text-center opacity-60">
                    <Lock className="text-gray-600 mb-4" size={24} />
@@ -291,7 +291,7 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
               ))}
             </div>
 
-            {/* Load More Trigger (Mock) */}
+            {/* Load More */}
             {!searchResults && displaySuppliers.length < filteredSuppliers.length && (
               <div className="mt-12 flex justify-center">
                 <button className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300">
