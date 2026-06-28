@@ -35,28 +35,37 @@ export default function SearchBar({ close }: { close: () => void }) {
     const currentRequest = ++requestId.current
     setLoadingSuggestions(true)
 
+    // Escape % and _ so user input can't break the LIKE pattern.
+    const safe = trimmed.replace(/[%_]/g, (m) => `\\${m}`)
+    const pattern = `%${safe}%`
+
     try {
       const [productsRes, suppliersRes] = await Promise.all([
         supabase
           .from("products")
           .select("id, name, category")
-          .textSearch("search_vector", trimmed, { type: "websearch", config: "english" })
-          .limit(4),
+          .or(`name.ilike.${pattern},category.ilike.${pattern}`)
+          .limit(5),
         supabase
           .from("suppliers")
           .select("id, name, category")
-          .textSearch("search_vector", trimmed, { type: "websearch", config: "english" })
-          .limit(4),
+          .or(`name.ilike.${pattern},category.ilike.${pattern}`)
+          .limit(5),
       ])
 
       // Ignore if a newer request has started.
       if (currentRequest !== requestId.current) return
 
+      if (productsRes.error) console.error("Product suggestions error:", productsRes.error)
+      if (suppliersRes.error) console.error("Supplier suggestions error:", suppliersRes.error)
+
       const products = (productsRes.data || []).map((p) => ({ ...p, _type: "product" as const }))
       const suppliers = (suppliersRes.data || []).map((s) => ({ ...s, _type: "supplier" as const }))
 
+      // Interleave so both types are visible, products first.
       setSuggestions([...products, ...suppliers])
-    } catch {
+    } catch (err) {
+      console.error("Suggestion fetch failed:", err)
       if (currentRequest === requestId.current) setSuggestions([])
     } finally {
       if (currentRequest === requestId.current) setLoadingSuggestions(false)
