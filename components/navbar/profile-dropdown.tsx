@@ -29,7 +29,8 @@ export default function ProfileDropdown() {
     router.refresh();
   };
 
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+  const normalizedRole = profile?.role?.toString().trim().toLowerCase();
+  const isAdmin = normalizedRole === 'admin' || normalizedRole === 'super_admin';
   const displayEmail = profile?.email || user?.email;
   const displayName = profile?.full_name || displayEmail?.split('@')[0] || "User";
 
