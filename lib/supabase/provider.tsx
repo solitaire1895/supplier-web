@@ -32,7 +32,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [authLoading, setAuthLoading] = useState(true);
   const isInitialized = useRef(false);
 
-  const fetchProfile = useCallback(async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string, retry = true) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -42,13 +42,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error("UserProvider: Error fetching profile:", error);
-        setProfile(null);
-      } else {
+        if (retry) {
+          await new Promise((r) => setTimeout(r, 800));
+          return fetchProfile(userId, false);
+        }
+        // Do NOT clobber an existing profile on a transient failure.
+        setProfile((prev) => prev);
+      } else if (data) {
         setProfile(data);
       }
+      // If data is null but no error, the row may not exist yet; leave as-is.
     } catch (err) {
       console.error("UserProvider: Unexpected error fetching profile:", err);
-      setProfile(null);
+      if (retry) {
+        await new Promise((r) => setTimeout(r, 800));
+        return fetchProfile(userId, false);
+      }
     } finally {
       setLoading(false);
     }
@@ -97,11 +106,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         if (!mounted) return;
 
+        // TOKEN_REFRESHED fires periodically; the user/profile are unchanged,
+        // so don't re-trigger loading states or refetch needlessly.
+        if (event === "TOKEN_REFRESHED") {
+          if (session?.user) setUser(session.user);
+          setAuthLoading(false);
+          return;
+        }
+
         if (session?.user) {
           setUser(session.user);
-          // Always ensure profile is loaded for the current session user.
           await fetchProfile(session.user.id);
-        } else {
+        } else if (event === "SIGNED_OUT") {
           setUser(null);
           setProfile(null);
           setLoading(false);

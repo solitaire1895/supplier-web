@@ -16,9 +16,6 @@ const SETTINGS_KEY = "nexusply_settings";
 
 /* Helper to log Supabase errors with useful detail instead of "{}" */
 function logSupabaseError(context: string, error: any) {
-  // Build a readable payload. Some thrown values are plain Supabase
-  // PostgREST errors (message/details/hint/code), others are generic
-  // Errors or non-standard objects that serialize to "{}".
   const info: Record<string, any> = {
     message: error?.message,
     details: error?.details,
@@ -26,7 +23,6 @@ function logSupabaseError(context: string, error: any) {
     code: error?.code,
   };
 
-  // If none of the standard fields are present, fall back to other forms
   const hasStandard = Object.values(info).some((v) => v !== undefined && v !== null);
 
   if (!hasStandard) {
@@ -36,7 +32,6 @@ function logSupabaseError(context: string, error: any) {
       info.raw = String(error);
     }
     info.toString = error?.toString?.();
-    // Surface any enumerable own properties that JSON.stringify dropped
     if (error && typeof error === "object") {
       info.keys = Object.keys(error);
     }
@@ -49,7 +44,8 @@ function ProfileContent() {
   const { t, lang, setLanguage } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { profile: userProfile, loading: userLoading } = useUser();
+  // Pull both `user` (auth session) and `profile` (DB row) from the provider.
+  const { user, profile: userProfile, loading: userLoading } = useUser();
   
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "contacts");
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -92,9 +88,6 @@ function ProfileContent() {
 
   const loadContactedSuppliers = useCallback(async (userId: string) => {
     try {
-      // Step 1: get the supplier ids this user has contacted.
-      // We avoid a PostgREST embedded join here because the relationship
-      // may not be defined, which surfaces as an empty "{}" error.
       const { data: requests, error: reqError } = await supabase
         .from('sourcing_requests')
         .select('supplier_id, created_at')
@@ -106,7 +99,6 @@ function ProfileContent() {
         return;
       }
 
-      // Collect unique supplier ids, preserving the most-recent-first order.
       const supplierIds: string[] = [];
       const seenIds = new Set<string>();
       (requests || []).forEach((r: any) => {
@@ -121,7 +113,6 @@ function ProfileContent() {
         return;
       }
 
-      // Step 2: fetch the supplier rows for those ids.
       const { data: suppliers, error: supError } = await supabase
         .from('suppliers')
         .select('*')
@@ -132,7 +123,6 @@ function ProfileContent() {
         return;
       }
 
-      // Re-order suppliers to match the contacted (most recent) order.
       const supplierMap = new Map<string, any>();
       (suppliers || []).forEach((s: any) => supplierMap.set(s.id, s));
 
@@ -146,10 +136,12 @@ function ProfileContent() {
     }
   }, []);
 
-  /* INITIALIZATION */
+  /* INITIALIZATION — gate on `user` (auth session), not `userProfile` (DB row).
+     This prevents the false "Please log in" screen when the profile row is
+     transiently null while the session is perfectly valid. */
   useEffect(() => {
     if (userLoading) return;
-    if (!userProfile) {
+    if (!user) {
       setLoading(false);
       return;
     }
@@ -157,14 +149,14 @@ function ProfileContent() {
     const initPage = async () => {
       setLoading(true);
       await Promise.all([
-        loadFavorites(userProfile.id),
-        loadContactedSuppliers(userProfile.id)
+        loadFavorites(user.id),
+        loadContactedSuppliers(user.id)
       ]);
       setLoading(false);
     };
 
     initPage();
-  }, [userProfile, userLoading, loadFavorites, loadContactedSuppliers]);
+  }, [user, userLoading, loadFavorites, loadContactedSuppliers]);
 
   // Sync tab with URL
   useEffect(() => {
@@ -175,7 +167,7 @@ function ProfileContent() {
   }, [searchParams, activeTab]);
 
   const updateSetting = async (key: string, value: any) => {
-    if (!userProfile) return;
+    if (!user) return;
 
     if (key === "language") {
       setLanguage(value as any);
@@ -208,7 +200,8 @@ function ProfileContent() {
     }
   ];
 
-  if (userLoading || (loading && !userProfile)) {
+  // Show spinner while auth is resolving or data is loading for a confirmed user.
+  if (userLoading || (loading && !user)) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-red-500" />
@@ -216,7 +209,8 @@ function ProfileContent() {
     );
   }
 
-  if (!userProfile) {
+  // Only show the login wall when we are certain there is no authenticated user.
+  if (!user) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
         <AlertCircle className="text-red-500 mb-4" size={48} />
@@ -301,8 +295,7 @@ function ProfileContent() {
                   {favoriteSuppliers.length === 0 ? (
                     <Empty text={t.profile.emptyFavSuppliers} icon={<Shield size={40} className="mb-4 text-gray-600" />} />
                   ) : (
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {favoriteSuppliers.map((s, i) => (
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{favoriteSuppliers.map((s, i) => (
                         <SupplierCard key={i} supplier={s} />
                       ))}
                     </div>
