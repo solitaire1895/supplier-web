@@ -36,11 +36,15 @@ CREATE POLICY "Users can update their own profile"
 -- ============================================================
 -- 6. Backfill profile rows for any existing auth users who are
 --    missing one (e.g. signed up before the trigger existed).
---    Plain SQL INSERT ... ON CONFLICT is used here because
---    ON CONFLICT is not valid inside a PL/pgSQL anonymous block
---    when combined with INSERT ... SELECT.
 -- ============================================================
-INSERT INTO public.profiles (id, email, full_name, role, active_plan, subscription_status)
+INSERT INTO public.profiles (
+  id,
+  email,
+  full_name,
+  role,
+  active_plan,
+  subscription_status
+)
 SELECT
   u.id,
   u.email,
@@ -55,21 +59,37 @@ ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================
 -- 7. Auto-create a profile whenever a new auth user signs up.
---    SECURITY DEFINER + explicit search_path set at the function
---    level (most portable across Supabase Postgres versions).
+--
+--    NOTE: search_path is set *inside* the function body via
+--    set_config() rather than as a function-level option, which
+--    is the most portable approach across all Supabase Postgres
+--    versions and avoids the "syntax error at or near SET" bug.
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, role, active_plan, subscription_status)
+  -- Pin search_path for this invocation (safe alternative to the
+  -- function-level SET search_path option).
+  PERFORM set_config('search_path', 'public', true);
+
+  INSERT INTO public.profiles (
+    id,
+    email,
+    full_name,
+    role,
+    active_plan,
+    subscription_status
+  )
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+    COALESCE(
+      NEW.raw_user_meta_data->>'full_name',
+      NEW.raw_user_meta_data->>'name'
+    ),
     'user',
     'Free',
     'active'
@@ -81,20 +101,28 @@ END;
 $$;
 
 -- ============================================================
--- 8. Drop and recreate the trigger. Wrapped in a DO block so
---    that if Supabase restricts the DROP on auth.users for your
---    role, it raises a notice instead of aborting the script.
+-- 8. Drop then recreate the trigger on auth.users.
+--
+--    • OR REPLACE on CREATE TRIGGER requires PG14+ and is not
+--      universally available on Supabase, so we drop first.
+--    • The EXCEPTION block silences insufficient_privilege so
+--      the rest of the script still runs even if the Supabase
+--      role cannot DROP triggers on auth.users (superuser can
+--      run this block separately if needed).
 -- ============================================================
 DO $$
 BEGIN
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 EXCEPTION
   WHEN insufficient_privilege THEN
-    RAISE NOTICE 'Could not drop trigger on auth.users — may need superuser. Continuing.';
+    RAISE NOTICE
+      'Skipped DROP TRIGGER on auth.users — insufficient privilege. '
+      'Ask a superuser to run: '
+      'DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;';
 END;
 $$;
 
-CREATE OR REPLACE TRIGGER on_auth_user_created
+CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
