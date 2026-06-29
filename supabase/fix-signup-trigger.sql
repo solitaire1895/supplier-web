@@ -13,35 +13,41 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path TO public
-AS $func$
+SET search_path = 'public'
+AS $$
+DECLARE
+  v_full_name text;
 BEGIN
-  <<insert_profile>>
+  v_full_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'name'
+  );
+
   BEGIN
     INSERT INTO public.profiles (id, email, full_name, role, active_plan, subscription_status)
-    VALUES (
+    SELECT
       NEW.id,
       NEW.email,
-      COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+      v_full_name,
       'user',
       'Free',
       'active'
-    )
-    ON CONFLICT (id) DO NOTHING;
+    WHERE NOT EXISTS (
+      SELECT 1 FROM public.profiles WHERE id = NEW.id
+    );
   EXCEPTION
     WHEN OTHERS THEN
-      -- Never block signup because of a profile-row issue.
       RAISE WARNING 'handle_new_user failed for %: %', NEW.id, SQLERRM;
-  END insert_profile;
+  END;
 
   RETURN NEW;
 END;
-$func$;
+$$;
 
 -- 2. Reattach the trigger cleanly.
---    Wrapped in a DO block so a permission error on auth schema does not
+--    Wrapped in a DO block so a permission error on the auth schema does not
 --    abort the rest of the migration.
-DO $attach_trigger$
+DO $$
 BEGIN
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
@@ -53,7 +59,7 @@ EXCEPTION
   WHEN insufficient_privilege THEN
     RAISE WARNING 'Could not (re)create trigger on auth.users — run this as a superuser or via the Supabase dashboard SQL editor with elevated privileges.';
 END;
-$attach_trigger$;
+$$;
 
 -- ============================================================
 -- 3. Make the profiles table tolerant of partial inserts so the
@@ -66,7 +72,7 @@ ALTER TABLE public.profiles
   ALTER COLUMN active_plan SET DEFAULT 'Free';
 
 -- Only run these if the columns exist in your table; otherwise remove them.
-DO $set_defaults$
+DO $$
 BEGIN
   IF EXISTS (
     SELECT 1
@@ -75,7 +81,10 @@ BEGIN
       AND table_name   = 'profiles'
       AND column_name  = 'subscription_status'
   ) THEN
-    EXECUTE $sql$ALTER TABLE public.profiles ALTER COLUMN subscription_status SET DEFAULT 'active'$sql$;
+    EXECUTE format(
+      'ALTER TABLE %I.%I ALTER COLUMN subscription_status SET DEFAULT %L',
+      'public', 'profiles', 'active'
+    );
   END IF;
 
   IF EXISTS (
@@ -85,7 +94,10 @@ BEGIN
       AND table_name   = 'profiles'
       AND column_name  = 'status'
   ) THEN
-    EXECUTE $sql$ALTER TABLE public.profiles ALTER COLUMN status SET DEFAULT 'active'$sql$;
+    EXECUTE format(
+      'ALTER TABLE %I.%I ALTER COLUMN status SET DEFAULT %L',
+      'public', 'profiles', 'active'
+    );
   END IF;
 END;
-$set_defaults$;
+$$;
