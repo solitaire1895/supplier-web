@@ -46,8 +46,10 @@ function ProfileContent() {
   const searchParams = useSearchParams();
   // Pull both `user` (auth session) and `profile` (DB row) from the provider.
   const { user, profile: userProfile, loading: userLoading } = useUser();
-  
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "contacts");
+
+  // Derive activeTab directly from the URL every render — no stale state, no race.
+  const activeTab = searchParams.get("tab") || "contacts";
+
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [favoriteProducts, setFavoriteProducts] = useState<any[]>([]);
   const [favoriteSuppliers, setFavoriteSuppliers] = useState<any[]>([]);
@@ -158,14 +160,6 @@ function ProfileContent() {
     initPage();
   }, [user, userLoading, loadFavorites, loadContactedSuppliers]);
 
-  // Sync tab with URL
-  useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab && tab !== activeTab) {
-      setActiveTab(tab);
-    }
-  }, [searchParams, activeTab]);
-
   const updateSetting = async (key: string, value: any) => {
     if (!user) return;
 
@@ -220,8 +214,8 @@ function ProfileContent() {
     );
   }
 
+  // URL is the single source of truth — just navigate, no local state needed.
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
     router.push(`/dashboard/profile?tab=${tab}`, { scroll: false });
   };
 
