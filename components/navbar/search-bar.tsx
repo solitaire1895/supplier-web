@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { X, Clock, Search, Loader2, Package, Factory, CornerDownLeft } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
-import { supabase } from "@/lib/supabase/client"
+import { searchAction } from "@/lib/supabase/actions"
 
 export default function SearchBar({ close }: { close: () => void }) {
   const [query, setQuery] = useState("")
@@ -35,32 +35,17 @@ export default function SearchBar({ close }: { close: () => void }) {
     const currentRequest = ++requestId.current
     setLoadingSuggestions(true)
 
-    // Escape % and _ so user input can't break the LIKE pattern.
-    const safe = trimmed.replace(/[%_]/g, (m) => `\\${m}`)
-    const pattern = `%${safe}%`
-
     try {
-      const [productsRes, suppliersRes] = await Promise.all([
-        supabase
-          .from("products")
-          .select("id, name, category")
-          .or(`name.ilike.${pattern},category.ilike.${pattern}`)
-          .limit(5),
-        supabase
-          .from("suppliers")
-          .select("id, name, category")
-          .or(`name.ilike.${pattern},category.ilike.${pattern}`)
-          .limit(5),
-      ])
+      // Plan enforcement happens server-side: this only returns items the
+      // current user's plan is allowed to see. Free users with a product
+      // limit of 0 will receive an empty products array, etc.
+      const { products: prod, suppliers: sup } = await searchAction(trimmed)
 
       // Ignore if a newer request has started.
       if (currentRequest !== requestId.current) return
 
-      if (productsRes.error) console.error("Product suggestions error:", productsRes.error)
-      if (suppliersRes.error) console.error("Supplier suggestions error:", suppliersRes.error)
-
-      const products = (productsRes.data || []).map((p) => ({ ...p, _type: "product" as const }))
-      const suppliers = (suppliersRes.data || []).map((s) => ({ ...s, _type: "supplier" as const }))
+      const products = (prod || []).map((p: any) => ({ ...p, _type: "product" as const }))
+      const suppliers = (sup || []).map((s: any) => ({ ...s, _type: "supplier" as const }))
 
       // Interleave so both types are visible, products first.
       setSuggestions([...products, ...suppliers])
@@ -72,7 +57,7 @@ export default function SearchBar({ close }: { close: () => void }) {
     }
   }, [])
 
-  // Debounce suggestion fetching to avoid hammering the DB on every keystroke.
+  // Debounce suggestion fetching to avoid hammering the server on every keystroke.
   useEffect(() => {
     setActiveIndex(-1)
     if (debounceRef.current) clearTimeout(debounceRef.current)

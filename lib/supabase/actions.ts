@@ -2,6 +2,7 @@
 
 import { createClient } from './server'
 import { revalidatePath } from 'next/cache'
+import { getPlanFeatures } from '@/lib/plans'
 
 /* ================= STORAGE ACTIONS ================= */
 
@@ -309,7 +310,95 @@ export async function recordSourcingRequest(data: {
   return { success: true }
 }
 
-/* ================= SEARCH & ACTIVITY ACTIONS ================= */
+/* ================= PLAN-AWARE SEARCH ================= */
+
+export async function searchAction(rawTerm: string): Promise<{ products: any[]; suppliers: any[] }> {
+  const term = (rawTerm || '').trim()
+  if (term.length < 2) {
+    return { products: [], suppliers: [] }
+  }
+
+  const supabase = await createClient()
+
+  // Resolve the current user's plan. Anonymous / unauthenticated users get 'free'.
+  const { data: { user } } = await supabase.auth.getUser()
+
+  let plan = 'free'
+  if (user) {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('active_plan')
+      .eq('id', user.id)
+      .single()
+    plan = profileData?.active_plan || 'free'
+  }
+
+  const features = getPlanFeatures(plan)
+
+  // Escape LIKE wildcards so user input can't break the pattern.
+  const safe = term.replace(/[%_\\]/g, (m) => `\\${m}`)
+  const pattern = `%${safe}%`
+
+  // ---- PRODUCTS (winning products) ----------------------------------------
+  let products: any[] = []
+  const productLimit = features.winningProducts.limit
+
+  // Only query products at all if the plan grants at least some access.
+  const canSeeProducts =
+    productLimit === 'unlimited' ||
+    (typeof productLimit === 'number' && productLimit > 0)
+
+  if (canSeeProducts) {
+    let pq = supabase
+      .from('products')
+      .select('id, name, category, created_at')
+      .or(`name.ilike.${pattern},category.ilike.${pattern}`)
+
+    // Enforce the publish delay: hide products newer than `delay` hours.
+    if (features.winningProducts.delay > 0) {
+      const cutoff = new Date(
+        Date.now() - features.winningProducts.delay * 3600 * 1000
+      ).toISOString()
+      pq = pq.lte('created_at', cutoff)
+    }
+
+    pq = pq.order('created_at', { ascending: false })
+
+    // Honour the numeric product limit; cap suggestions at 5 for unlimited plans.
+    if (productLimit !== 'unlimited' && typeof productLimit === 'number') {
+      pq = pq.limit(productLimit)
+    } else {
+      pq = pq.limit(5)
+    }
+
+    const { data, error } = await pq
+    if (error) console.error('searchAction products error:', error)
+    products = data || []
+  }
+
+  // ---- SUPPLIERS -----------------------------------------------------------
+  const supplierLimit = features.access.supplierLimit
+
+  let sq = supabase
+    .from('suppliers')
+    .select('id, name, category')
+    .or(`name.ilike.${pattern},category.ilike.${pattern}`)
+
+  // Cap suggestions at 5 for unlimited plans; honour numeric limits otherwise.
+  if (supplierLimit !== 'unlimited' && typeof supplierLimit === 'number') {
+    sq = sq.limit(supplierLimit)
+  } else {
+    sq = sq.limit(5)
+  }
+
+  const { data: supData, error: supErr } = await sq
+  if (supErr) console.error('searchAction suppliers error:', supErr)
+  const suppliers = supData || []
+
+  return { products, suppliers }
+}
+
+/* ================= ACTIVITY ACTIONS ================= */
 
 export async function trackActivityAction(type: 'view_product' | 'view_supplier' | 'search', targetId?: string, metaData?: any) {
   const supabase = await createClient()
@@ -326,46 +415,6 @@ export async function trackActivityAction(type: 'view_product' | 'view_supplier'
     })
 
   if (error) console.error('Error tracking activity:', error)
-}
-
-export async function searchProductsAction(query: string) {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .textSearch('search_vector', query, {
-      type: 'websearch',
-      config: 'english'
-    })
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error searching products:', error)
-    return []
-  }
-
-  return data
-}
-
-export async function searchSuppliersAction(query: string) {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
-    .from('suppliers')
-    .select('*')
-    .textSearch('search_vector', query, {
-      type: 'websearch',
-      config: 'english'
-    })
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error searching suppliers:', error)
-    return []
-  }
-
-  return data
 }
 
 export async function getRecommendedProductsAction(limit: number = 4) {
