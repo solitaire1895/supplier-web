@@ -14,7 +14,7 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $func$
 BEGIN
   BEGIN
     INSERT INTO public.profiles (id, email, full_name, role, active_plan, subscription_status)
@@ -35,15 +35,24 @@ BEGIN
 
   RETURN NEW;
 END;
-$$;
+$func$;
 
 -- 2. Reattach the trigger cleanly.
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+--    Wrapped in a DO block so a permission error on auth schema does not
+--    abort the rest of the migration.
+DO $body$
+BEGIN
+  DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_new_user();
+  CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();
+EXCEPTION
+  WHEN insufficient_privilege THEN
+    RAISE WARNING 'Could not (re)create trigger on auth.users — run this as a superuser or via the Supabase dashboard SQL editor with elevated privileges.';
+END;
+$body$;
 
 -- ============================================================
 -- 3. Make the profiles table tolerant of partial inserts so the
@@ -52,23 +61,30 @@ CREATE TRIGGER on_auth_user_created
 --    requiring a value at insert time.
 -- ============================================================
 ALTER TABLE public.profiles
-  ALTER COLUMN role            SET DEFAULT 'user',
-  ALTER COLUMN active_plan     SET DEFAULT 'Free';
+  ALTER COLUMN role         SET DEFAULT 'user',
+  ALTER COLUMN active_plan  SET DEFAULT 'Free';
 
 -- Only run these if the columns exist in your table; otherwise remove them.
-DO $$
+DO $body$
 BEGIN
   IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'subscription_status'
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name   = 'profiles'
+      AND column_name  = 'subscription_status'
   ) THEN
-    EXECUTE 'ALTER TABLE public.profiles ALTER COLUMN subscription_status SET DEFAULT ''active''';
+    EXECUTE $$ALTER TABLE public.profiles ALTER COLUMN subscription_status SET DEFAULT 'active'$$;
   END IF;
 
   IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'status'
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name   = 'profiles'
+      AND column_name  = 'status'
   ) THEN
-    EXECUTE 'ALTER TABLE public.profiles ALTER COLUMN status SET DEFAULT ''active''';
+    EXECUTE $$ALTER TABLE public.profiles ALTER COLUMN status SET DEFAULT 'active'$$;
   END IF;
-END $$;
+END;
+$body$;
