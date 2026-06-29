@@ -312,7 +312,19 @@ export async function recordSourcingRequest(data: {
 
 /* ================= PLAN-AWARE SEARCH ================= */
 
-export async function searchAction(rawTerm: string): Promise<{ products: any[]; suppliers: any[] }> {
+/**
+ * Core plan-aware search used by both the suggestion dropdown and the full
+ * results pages.
+ *
+ * @param rawTerm   - The user's search string.
+ * @param mode      - 'suggest' caps unlimited plans at 5 results (dropdown).
+ *                    'full' removes that cap so full results pages aren't
+ *                    artificially limited for unlimited-plan users.
+ */
+export async function searchAction(
+  rawTerm: string,
+  mode: 'suggest' | 'full' = 'suggest'
+): Promise<{ products: any[]; suppliers: any[] }> {
   const term = (rawTerm || '').trim()
   if (term.length < 2) {
     return { products: [], suppliers: [] }
@@ -364,12 +376,14 @@ export async function searchAction(rawTerm: string): Promise<{ products: any[]; 
 
     pq = pq.order('created_at', { ascending: false })
 
-    // Honour the numeric product limit; cap suggestions at 5 for unlimited plans.
     if (productLimit !== 'unlimited' && typeof productLimit === 'number') {
+      // Always honour numeric plan limits.
       pq = pq.limit(productLimit)
-    } else {
+    } else if (mode === 'suggest') {
+      // Unlimited plan in suggest mode → cap at 5 for the dropdown.
       pq = pq.limit(5)
     }
+    // Unlimited plan in 'full' mode → no artificial cap.
 
     const { data, error } = await pq
     if (error) console.error('searchAction products error:', error)
@@ -384,18 +398,40 @@ export async function searchAction(rawTerm: string): Promise<{ products: any[]; 
     .select('id, name, category')
     .or(`name.ilike.${pattern},category.ilike.${pattern}`)
 
-  // Cap suggestions at 5 for unlimited plans; honour numeric limits otherwise.
   if (supplierLimit !== 'unlimited' && typeof supplierLimit === 'number') {
+    // Always honour numeric plan limits.
     sq = sq.limit(supplierLimit)
-  } else {
+  } else if (mode === 'suggest') {
+    // Unlimited plan in suggest mode → cap at 5 for the dropdown.
     sq = sq.limit(5)
   }
+  // Unlimited plan in 'full' mode → no artificial cap.
 
   const { data: supData, error: supErr } = await sq
   if (supErr) console.error('searchAction suppliers error:', supErr)
   const suppliers = supData || []
 
   return { products, suppliers }
+}
+
+/**
+ * Returns a plan-gated array of products matching `rawTerm`.
+ * Used by `winning-products-client.tsx` for full-page search results.
+ * Passes mode='full' so unlimited plans are not capped at 5.
+ */
+export async function searchProductsAction(rawTerm: string): Promise<any[]> {
+  const { products } = await searchAction(rawTerm, 'full')
+  return products
+}
+
+/**
+ * Returns a plan-gated array of suppliers matching `rawTerm`.
+ * Used by `dashboard-client.tsx` for full-page search results.
+ * Passes mode='full' so unlimited plans are not capped at 5.
+ */
+export async function searchSuppliersAction(rawTerm: string): Promise<any[]> {
+  const { suppliers } = await searchAction(rawTerm, 'full')
+  return suppliers
 }
 
 /* ================= ACTIVITY ACTIONS ================= */
