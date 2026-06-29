@@ -32,7 +32,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [authLoading, setAuthLoading] = useState(true);
   const isInitialized = useRef(false);
 
-  const fetchProfile = useCallback(async (userId: string, retry = true) => {
+  const fetchProfile = useCallback(async (authUser: User, retry = true) => {
+    const userId = authUser.id;
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -44,19 +45,46 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         console.error("UserProvider: Error fetching profile:", error);
         if (retry) {
           await new Promise((r) => setTimeout(r, 800));
-          return fetchProfile(userId, false);
+          return fetchProfile(authUser, false);
         }
         // Do NOT clobber an existing profile on a transient failure.
         setProfile((prev) => prev);
       } else if (data) {
         setProfile(data);
+      } else {
+        // No row exists yet for this authenticated user. Create one so the
+        // profile card always has data, then use the returned row.
+        const fallback = {
+          id: userId,
+          email: authUser.email ?? null,
+          full_name:
+            (authUser.user_metadata?.full_name as string) ??
+            (authUser.user_metadata?.name as string) ??
+            null,
+          role: "user",
+          active_plan: "Free",
+          subscription_status: "active",
+        };
+
+        const { data: created, error: upsertError } = await supabase
+          .from("profiles")
+          .upsert(fallback, { onConflict: "id" })
+          .select("*")
+          .maybeSingle();
+
+        if (upsertError) {
+          console.error("UserProvider: Error creating profile:", upsertError);
+          // As a last resort, surface the fallback so the UI isn't blank.
+          setProfile(fallback as UserProfile);
+        } else if (created) {
+          setProfile(created);
+        }
       }
-      // If data is null but no error, the row may not exist yet; leave as-is.
     } catch (err) {
       console.error("UserProvider: Unexpected error fetching profile:", err);
       if (retry) {
         await new Promise((r) => setTimeout(r, 800));
-        return fetchProfile(userId, false);
+        return fetchProfile(authUser, false);
       }
     } finally {
       setLoading(false);
@@ -65,7 +93,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await fetchProfile(user);
     }
   }, [user, fetchProfile]);
 
@@ -84,7 +112,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           if (session?.user) {
             setUser(session.user);
-            await fetchProfile(session.user.id);
+            await fetchProfile(session.user);
           } else {
             setUser(null);
             setProfile(null);
@@ -116,7 +144,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
         if (session?.user) {
           setUser(session.user);
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user);
         } else if (event === "SIGNED_OUT") {
           setUser(null);
           setProfile(null);

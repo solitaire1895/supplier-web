@@ -47,8 +47,14 @@ function ProfileContent() {
   // Pull both `user` (auth session) and `profile` (DB row) from the provider.
   const { user, profile: userProfile, loading: userLoading } = useUser();
 
-  // Derive activeTab directly from the URL every render — no stale state, no race.
-  const activeTab = searchParams.get("tab") || "contacts";
+  // Keep activeTab in state but always sync it from the URL so query-only
+  // navigations (e.g. ?tab=plan from the navbar) reliably update the view.
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "contacts");
+
+  useEffect(() => {
+    const urlTab = searchParams.get("tab") || "contacts";
+    setActiveTab(urlTab);
+  }, [searchParams]);
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [favoriteProducts, setFavoriteProducts] = useState<any[]>([]);
@@ -214,8 +220,8 @@ function ProfileContent() {
     );
   }
 
-  // URL is the single source of truth — just navigate, no local state needed.
   const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
     router.push(`/dashboard/profile?tab=${tab}`, { scroll: false });
   };
 
