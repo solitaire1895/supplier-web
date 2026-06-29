@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Home, Package, BarChart3, Users, X } from "lucide-react"
+import { Home, Package, BarChart3, Users, X, LifeBuoy } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 
 export default function MobileNavMenu({ close }: { close: () => void }) {
@@ -10,9 +10,8 @@ export default function MobileNavMenu({ close }: { close: () => void }) {
 
   const items = [
     { label: "Dashboard", icon: Home, path: "/dashboard" },
-    { label: "Suppliers", icon: Users, path: "/suppliers" },
-    { label: "Products", icon: Package, path: "/products" },
-    { label: "Analytics", icon: BarChart3, path: "/analytics" },
+    { label: "Winning Products", icon: Package, path: "/dashboard/winning-products" },
+    { label: "Support", icon: LifeBuoy, path: "/dashboard/support" },
   ]
 
   return (
