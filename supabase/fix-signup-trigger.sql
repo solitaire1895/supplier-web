@@ -13,9 +13,10 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path TO public
 AS $func$
 BEGIN
+  <<insert_profile>>
   BEGIN
     INSERT INTO public.profiles (id, email, full_name, role, active_plan, subscription_status)
     VALUES (
@@ -31,7 +32,7 @@ BEGIN
     WHEN OTHERS THEN
       -- Never block signup because of a profile-row issue.
       RAISE WARNING 'handle_new_user failed for %: %', NEW.id, SQLERRM;
-  END;
+  END insert_profile;
 
   RETURN NEW;
 END;
@@ -40,7 +41,7 @@ $func$;
 -- 2. Reattach the trigger cleanly.
 --    Wrapped in a DO block so a permission error on auth schema does not
 --    abort the rest of the migration.
-DO $body$
+DO $attach_trigger$
 BEGIN
   DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
@@ -52,7 +53,7 @@ EXCEPTION
   WHEN insufficient_privilege THEN
     RAISE WARNING 'Could not (re)create trigger on auth.users — run this as a superuser or via the Supabase dashboard SQL editor with elevated privileges.';
 END;
-$body$;
+$attach_trigger$;
 
 -- ============================================================
 -- 3. Make the profiles table tolerant of partial inserts so the
@@ -61,11 +62,11 @@ $body$;
 --    requiring a value at insert time.
 -- ============================================================
 ALTER TABLE public.profiles
-  ALTER COLUMN role         SET DEFAULT 'user',
-  ALTER COLUMN active_plan  SET DEFAULT 'Free';
+  ALTER COLUMN role        SET DEFAULT 'user',
+  ALTER COLUMN active_plan SET DEFAULT 'Free';
 
 -- Only run these if the columns exist in your table; otherwise remove them.
-DO $body$
+DO $set_defaults$
 BEGIN
   IF EXISTS (
     SELECT 1
@@ -74,7 +75,7 @@ BEGIN
       AND table_name   = 'profiles'
       AND column_name  = 'subscription_status'
   ) THEN
-    EXECUTE $$ALTER TABLE public.profiles ALTER COLUMN subscription_status SET DEFAULT 'active'$$;
+    EXECUTE $sql$ALTER TABLE public.profiles ALTER COLUMN subscription_status SET DEFAULT 'active'$sql$;
   END IF;
 
   IF EXISTS (
@@ -84,7 +85,7 @@ BEGIN
       AND table_name   = 'profiles'
       AND column_name  = 'status'
   ) THEN
-    EXECUTE $$ALTER TABLE public.profiles ALTER COLUMN status SET DEFAULT 'active'$$;
+    EXECUTE $sql$ALTER TABLE public.profiles ALTER COLUMN status SET DEFAULT 'active'$sql$;
   END IF;
 END;
-$body$;
+$set_defaults$;
