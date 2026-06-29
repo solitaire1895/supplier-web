@@ -156,11 +156,16 @@ function ProfileContent() {
 
     const initPage = async () => {
       setLoading(true);
-      await Promise.all([
-        loadFavorites(user.id),
-        loadContactedSuppliers(user.id)
-      ]);
-      setLoading(false);
+      try {
+        await Promise.all([
+          loadFavorites(user.id),
+          loadContactedSuppliers(user.id)
+        ]);
+      } catch (err) {
+        logSupabaseError("Error initializing profile page:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     initPage();
@@ -253,7 +258,9 @@ function ProfileContent() {
         </div>
 
         <div className="animate-in fade-in duration-500">
-          {loading ? (
+          {/* The plan and settings tabs don't depend on favorites/contacts data,
+              so we never block them behind the loading spinner. */}
+          {loading && activeTab !== "plan" && activeTab !== "settings" ? (
              <div className="flex justify-center py-20">
                 <Loader2 className="w-8 h-8 animate-spin text-red-500" />
              </div>
