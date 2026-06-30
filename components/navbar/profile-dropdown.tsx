@@ -129,13 +129,13 @@ export default function ProfileDropdown() {
           onClick={() => router.push("/dashboard/profile")}
         />
 
+        <div className="border-t border-white/10 my-2" />
+
         <DropdownItem
           icon={<LifeBuoy size={16} />}
           label={t.navbar.support}
           onClick={() => router.push("/dashboard/support")}
         />
-
-        <div className="border-t border-white/10 my-2" />
 
         <DropdownItem
           icon={<LogOut size={16} />}
