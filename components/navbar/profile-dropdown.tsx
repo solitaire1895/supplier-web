@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -22,7 +23,15 @@ const languages = [
 export default function ProfileDropdown() {
   const router = useRouter();
   const { t, lang, setLanguage } = useI18n();
-  const { profile, user } = useUser();
+  const { profile, user, refreshProfile } = useUser();
+
+  // Self-heal: if the session exists but the profile row didn't load
+  // (transient null), refetch it so the card always shows user info.
+  useEffect(() => {
+    if (user && !profile) {
+      refreshProfile();
+    }
+  }, [user, profile, refreshProfile]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
