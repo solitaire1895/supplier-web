@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
   Shield,
+  LifeBuoy,
 } from "lucide-react";
 import { useI18n, Lang } from "@/lib/i18n";
 import { useUser } from "@/lib/supabase/provider";
@@ -126,6 +127,12 @@ export default function ProfileDropdown() {
           icon={<Settings size={16} />}
           label={t.settings.account}
           onClick={() => router.push("/dashboard/profile")}
+        />
+
+        <DropdownItem
+          icon={<LifeBuoy size={16} />}
+          label={t.navbar.support}
+          onClick={() => router.push("/dashboard/support")}
         />
 
         <div className="border-t border-white/10 my-2" />

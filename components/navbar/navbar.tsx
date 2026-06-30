@@ -109,11 +109,12 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* NAV LINKS - Fixed visibility on large screens by changing lg:flex to md:flex */}
+          {/* NAV LINKS */}
           <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full p-1 shadow-inner hidden md:flex">
             {[
               { label: t.navbar?.home || "Home", path: "/dashboard" },
               { label: t.navbar?.winning || "Winning", path: "/dashboard/winning-products" },
+              { label: t.navbar?.support || "Support", path: "/dashboard/support" },
             ].map((item) => {
               const isActive = pathname === item.path;
               return (

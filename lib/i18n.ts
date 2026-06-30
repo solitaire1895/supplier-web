@@ -57,6 +57,7 @@ export const translations = {
     navbar: {
       home: "Home",
       winning: "Winning",
+      support: "Support",
       profile: "Profile",
       features: "Features",
       pricing: "Pricing",
@@ -505,6 +506,7 @@ export const translations = {
     navbar: {
       home: "Accueil",
       winning: "Tendances",
+      support: "Support",
       profile: "Profil",
       features: "Fonctionnalités",
       pricing: "Tarifs",
@@ -951,6 +953,7 @@ export const translations = {
     navbar: {
       home: "首页",
       winning: "爆款产品",
+      support: "支持",
       profile: "个人资料",
       features: "功能介绍",
       pricing: "价格方案",

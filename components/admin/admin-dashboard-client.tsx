@@ -5,7 +5,7 @@ import {
   Bell, Settings, Home, BarChart2, 
   Users, Activity, Database, Zap, 
   ChevronDown, ArrowUpRight, 
-  Truck, Package, LogOut
+  Truck, Package, LogOut, LifeBuoy, Mail
 } from "lucide-react";
 import SuppliersAdmin from "./suppliers-admin";
 import ProductsAdmin from "./products-admin";
@@ -46,6 +46,33 @@ export default function AdminDashboardClient({
         return <SuppliersAdmin initialSuppliers={initialSuppliers} />;
       case "Product":
         return <ProductsAdmin initialProducts={initialProducts} />;
+      case "Support":
+        return (
+          <div className="max-w-3xl">
+            <div className="bg-white/5 border border-white/10 p-8 rounded-3xl">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
+                  <LifeBuoy size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-white tracking-tight">User Support</h3>
+                  <p className="text-xs text-gray-500 font-medium">Assist users and manage incoming requests</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-400 leading-relaxed mb-6">
+                User support requests will appear here. Reach out to users directly or respond to their inquiries to keep your community thriving.
+              </p>
+
+              <a
+                href="mailto:support@nexusply.com"
+                className="inline-flex items-center gap-2 px-5 py-3 bg-red-500 text-white rounded-2xl text-sm font-bold border border-red-400/50 shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:bg-red-600 transition-all"
+              >
+                <Mail size={16} /> Contact Support Inbox
+              </a>
+            </div>
+          </div>
+        );
       case "Dashboard":
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -135,4 +162,3 @@ export default function AdminDashboardClient({
     </div>
   );
 }
-
