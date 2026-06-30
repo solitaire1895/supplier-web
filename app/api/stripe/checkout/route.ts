@@ -120,6 +120,11 @@ export async function POST(req: Request) {
         metadata: {
           supabase_uid: user.id,
         },
+        subscription_data: {
+          metadata: {
+            supabase_uid: user.id,
+          },
+        },
       })
     )
 
