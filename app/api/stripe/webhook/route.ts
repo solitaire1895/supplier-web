@@ -14,6 +14,17 @@ function computeExpiry(subscription: any): string {
   return d.toISOString()
 }
 
+function computeExpiryFromInvoice(invoice: any): string {
+  // For invoice events, read period end from the first line item.
+  const periodEnd = invoice?.lines?.data?.[0]?.period?.end
+  if (periodEnd) {
+    return new Date(periodEnd * 1000).toISOString()
+  }
+  const d = new Date()
+  d.setDate(d.getDate() + 30)
+  return d.toISOString()
+}
+
 export async function POST(req: Request) {
   if (!stripe) {
     return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 })
@@ -96,6 +107,42 @@ export async function POST(req: Request) {
             plan_expires_at: null,
           })
           .eq('stripe_subscription_id', subscription.id)
+        break
+      }
+
+      case 'invoice.paid': {
+        // Fires on every successful charge — most reliable way to extend access on renewal.
+        // Only process recurring subscription invoices (not one-off charges).
+        const invoice = session
+        if (!invoice.subscription) break
+
+        const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
+        const priceId = subscription.items.data[0].price.id
+        const plan = PRICE_ID_TO_PLAN[priceId] || 'free'
+
+        await supabaseAdmin
+          .from('profiles')
+          .update({
+            subscription_status: 'active',
+            active_plan: plan,
+            plan_expires_at: computeExpiryFromInvoice(invoice),
+          })
+          .eq('stripe_subscription_id', invoice.subscription)
+        break
+      }
+
+      case 'invoice.payment_failed': {
+        // Fires when a renewal charge fails. Flag the account for dunning.
+        // Stripe will retry according to your retry settings in the dashboard.
+        const invoice = session
+        if (!invoice.subscription) break
+
+        await supabaseAdmin
+          .from('profiles')
+          .update({
+            subscription_status: 'past_due',
+          })
+          .eq('stripe_subscription_id', invoice.subscription)
         break
       }
     }
