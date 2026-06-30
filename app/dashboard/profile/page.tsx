@@ -45,7 +45,7 @@ function ProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   // Pull both `user` (auth session) and `profile` (DB row) from the provider.
-  const { user, profile: userProfile, loading: userLoading } = useUser();
+  const { user, profile: userProfile, loading: userLoading, refreshProfile } = useUser();
 
   // Keep activeTab in state but always sync it from the URL so query-only
   // navigations (e.g. ?tab=plan from the navbar) reliably update the view.
@@ -55,6 +55,17 @@ function ProfileContent() {
     const urlTab = searchParams.get("tab") || "contacts";
     setActiveTab(urlTab);
   }, [searchParams]);
+
+  // Refresh the profile whenever the user (re-)lands on this page while
+  // authenticated. This covers the Stripe success redirect case where the
+  // webhook may have updated active_plan / plan_expires_at after the session
+  // was originally loaded.
+  useEffect(() => {
+    if (user) {
+      refreshProfile();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [favoriteProducts, setFavoriteProducts] = useState<any[]>([]);
@@ -376,6 +387,26 @@ function ProfileContent() {
                         </div>
                       </div>
                     </div>
+
+                    {/* 30-day countdown from plan_expires_at */}
+                    {userProfile?.plan_expires_at && userProfile.subscription_status === 'active' && (
+                      <div className="text-left md:text-right">
+                        <p className="text-sm text-gray-400">{(t.profile as any).renewsIn ?? "Renews in"}</p>
+                        <p className="font-medium">
+                          {(() => {
+                            const days = getDaysRemaining(userProfile.plan_expires_at);
+                            return days === null
+                              ? "—"
+                              : `${days} ${days === 1 ? ((t.common as any).day ?? "day") : ((t.common as any).days ?? "days")}`;
+                          })()}
+                          <span className="text-gray-500 text-sm ml-2">
+                            ({new Date(userProfile.plan_expires_at).toLocaleDateString()})
+                          </span>
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Trial countdown (kept for backward compatibility) */}
                     {userProfile?.trial_ends_at && userProfile.subscription_status === 'trialing' && (
                       <div className="text-left md:text-right">
                         <p className="text-sm text-gray-400">{t.profile.trialEnds}</p>
@@ -489,4 +520,11 @@ function Empty({ text, icon }: { text: string, icon?: React.ReactNode }) {
       <p className="text-gray-400 font-medium">{text}</p>
     </div>
   );
+}
+
+function getDaysRemaining(expiresAt: string | null | undefined): number | null {
+  if (!expiresAt) return null;
+  const diffMs = new Date(expiresAt).getTime() - Date.now();
+  if (diffMs <= 0) return 0;
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 }

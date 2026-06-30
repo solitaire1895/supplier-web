@@ -13,6 +13,7 @@ interface UserProfile {
   trial_ends_at: string | null;
   subscription_status: string;
   stripe_customer_id: string | null;
+  plan_expires_at: string | null;
 }
 
 interface UserContextType {
@@ -113,6 +114,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       role: "user",
       active_plan: "Free",
       subscription_status: "active",
+      plan_expires_at: null,
     };
 
     const { data: created, error: upsertError } = await supabase

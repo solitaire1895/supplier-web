@@ -3,6 +3,17 @@ import { createClient } from '@supabase/supabase-js'
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+function computeExpiry(subscription: any): string {
+  // Prefer Stripe's billing period end; fallback to now + 30 days.
+  const periodEnd = subscription?.current_period_end
+  if (periodEnd) {
+    return new Date(periodEnd * 1000).toISOString()
+  }
+  const d = new Date()
+  d.setDate(d.getDate() + 30)
+  return d.toISOString()
+}
+
 export async function POST(req: Request) {
   if (!stripe) {
     return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 })
@@ -52,6 +63,7 @@ export async function POST(req: Request) {
             subscription_status: 'active',
             active_plan: plan,
             stripe_subscription_id: subscription.id,
+            plan_expires_at: computeExpiry(subscription),
           })
           .eq('id', userId)
         break
@@ -68,6 +80,7 @@ export async function POST(req: Request) {
           .update({
             subscription_status: status,
             active_plan: plan,
+            plan_expires_at: computeExpiry(subscription),
           })
           .eq('stripe_subscription_id', subscription.id)
         break
@@ -80,6 +93,7 @@ export async function POST(req: Request) {
           .update({
             subscription_status: 'canceled',
             active_plan: 'free',
+            plan_expires_at: null,
           })
           .eq('stripe_subscription_id', subscription.id)
         break
