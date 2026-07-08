@@ -182,6 +182,70 @@ export async function updateUser(id: string, formData: any) {
   return { success: true }
 }
 
+/**
+ * Admin-only: update a user's subscription plan.
+ * Verifies the caller is an admin/super_admin, validates the plan name,
+ * and sets subscription_status + plan_expires_at appropriately.
+ *
+ * - Paid plans (explorateur, importateur, partenaire) → status='active',
+ *   plan_expires_at = now + 30 days
+ * - Free plan → status='free', plan_expires_at = null
+ */
+export async function updateUserPlan(userId: string, plan: string) {
+  const supabase = await createClient()
+
+  // 1. Verify the caller is authenticated
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return { error: 'You must be logged in to perform this action.' }
+  }
+
+  // 2. Verify the caller is an admin or super_admin
+  const { data: adminProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!adminProfile || !['admin', 'super_admin'].includes(adminProfile.role)) {
+    return { error: 'Unauthorized: Only admins can update user plans.' }
+  }
+
+  // 3. Validate the plan value
+  const validPlans = ['free', 'explorateur', 'importateur', 'partenaire']
+  if (!validPlans.includes(plan)) {
+    return { error: `Invalid plan "${plan}". Must be one of: ${validPlans.join(', ')}.` }
+  }
+
+  // 4. Build the update payload
+  const isPaidPlan = plan !== 'free'
+  const updateData: Record<string, any> = {
+    active_plan: plan,
+    subscription_status: isPaidPlan ? 'active' : 'free',
+    plan_expires_at: isPaidPlan
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      : null,
+  }
+
+  // 5. Perform the update
+  const { error } = await supabase
+    .from('profiles')
+    .update(updateData)
+    .eq('id', userId)
+
+  if (error) {
+    console.error('Error updating user plan:', error)
+    return { error: error.message }
+  }
+
+  console.log(`Admin ${user.id} updated user ${userId} plan to: ${plan}`)
+
+  revalidatePath('/admin')
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/profile')
+  return { success: true, plan }
+}
+
 export async function deleteUser(id: string) {
   const supabase = await createClient()
   const { error } = await supabase.from('profiles').delete().eq('id', id)

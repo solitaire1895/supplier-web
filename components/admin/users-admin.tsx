@@ -7,8 +7,18 @@ import {
   TrendingUp, CreditCard, Calendar, UserCheck,
   Eye, Loader2
 } from "lucide-react";
-import { deleteUser, suspendUser, updateUser } from "@/lib/supabase/actions";
+import { deleteUser, suspendUser, updateUser, updateUserPlan } from "@/lib/supabase/actions";
+import { PLANS } from "@/lib/plans";
 import { useRouter } from "next/navigation";
+
+// Plan display config: maps internal plan names to badge colors and labels
+const PLAN_CONFIG: Record<string, { color: string; label: string }> = {
+  free: { color: 'bg-white/10 text-gray-400', label: 'Free' },
+  explorateur: { color: 'bg-blue-500 text-white', label: 'Explorer' },
+  importateur: { color: 'bg-purple-500 text-white', label: 'Importer' },
+  partenaire: { color: 'bg-red-500 text-white', label: 'Partner' },
+};
+
 export default function UsersAdmin({ initialUsers, currentUser }: { initialUsers: any[], currentUser: any }) {
   const [users, setUsers] = useState(initialUsers);
   const [search, setSearch] = useState("");
@@ -16,13 +26,23 @@ export default function UsersAdmin({ initialUsers, currentUser }: { initialUsers
   const router = useRouter();
 
   const isSuperAdmin = currentUser?.role === 'super_admin';
+  const isAdmin = isSuperAdmin || currentUser?.role === 'admin';
 
   const filtered = users.filter(u => 
     u.email?.toLowerCase().includes(search.toLowerCase()) ||
     u.id?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // ... (revenue calculations remain same)
+  // Calculate revenue from actual plan prices (in FCFA)
+  const monthlyRevenue = users.reduce((acc, user) => {
+    const plan = user.active_plan || 'free'
+    if (plan === 'explorateur') return acc + PLANS.explorateur.price
+    if (plan === 'importateur') return acc + PLANS.importateur.price
+    if (plan === 'partenaire') return acc + PLANS.partenaire.price
+    return acc
+  }, 0);
+
+  const yearlyRevenue = monthlyRevenue * 12;
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     if (!isSuperAdmin) return;
@@ -33,18 +53,28 @@ export default function UsersAdmin({ initialUsers, currentUser }: { initialUsers
     } else {
       alert("Error updating role: " + res.error);
     }
-    setIsProcessing(userId === null ? null : userId); // Fix: need to clear isProcessing
     setIsProcessing(null);
   };
 
-  // Calculate Mock Revenue (In a real app, this would come from Stripe or DB)
-  const monthlyRevenue = users.reduce((acc, user) => {
-    if (user.active_plan === 'pro') return acc + 29;
-    if (user.active_plan === 'enterprise') return acc + 99;
-    return acc;
-  }, 0);
-
-  const yearlyRevenue = monthlyRevenue * 12;
+  // Admin plan change handler — calls the secure server action
+  const handlePlanChange = async (userId: string, newPlan: string) => {
+    setIsProcessing(userId);
+    const res = await updateUserPlan(userId, newPlan);
+    if (res.success) {
+      setUsers(users.map(u => 
+        u.id === userId 
+          ? { 
+              ...u, 
+              active_plan: newPlan,
+              subscription_status: newPlan === 'free' ? 'free' : 'active',
+            } 
+          : u
+      ));
+    } else {
+      alert("Error updating plan: " + res.error);
+    }
+    setIsProcessing(null);
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this user? This action is irreversible.")) return;
@@ -79,7 +109,7 @@ export default function UsersAdmin({ initialUsers, currentUser }: { initialUsers
             <TrendingUp size={48} className="text-red-500" />
           </div>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Monthly Revenue</p>
-          <h4 className="text-2xl font-bold text-white">${monthlyRevenue.toLocaleString()}</h4>
+          <h4 className="text-2xl font-bold text-white">{monthlyRevenue.toLocaleString()} FCFA</h4>
           <p className="text-[10px] text-green-500 mt-2 flex items-center gap-1">
             <TrendingUp size={10} /> +12.5% from last month
           </p>
@@ -90,7 +120,7 @@ export default function UsersAdmin({ initialUsers, currentUser }: { initialUsers
             <CreditCard size={48} className="text-red-500" />
           </div>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Yearly Projection</p>
-          <h4 className="text-2xl font-bold text-white">${yearlyRevenue.toLocaleString()}</h4>
+          <h4 className="text-2xl font-bold text-white">{yearlyRevenue.toLocaleString()} FCFA</h4>
           <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
             Based on current {users.length} active users
           </p>
@@ -102,10 +132,10 @@ export default function UsersAdmin({ initialUsers, currentUser }: { initialUsers
           </div>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Active Subscriptions</p>
           <h4 className="text-2xl font-bold text-white">
-            {users.filter(u => u.active_plan !== 'free').length}
+            {users.filter(u => u.active_plan !== 'free' && u.active_plan).length}
           </h4>
           <p className="text-[10px] text-red-500 mt-2 flex items-center gap-1">
-            {Math.round((users.filter(u => u.active_plan !== 'free').length / users.length) * 100) || 0}% conversion rate
+            {Math.round((users.filter(u => u.active_plan !== 'free' && u.active_plan).length / users.length) * 100) || 0}% conversion rate
           </p>
         </div>
 
@@ -194,20 +224,34 @@ export default function UsersAdmin({ initialUsers, currentUser }: { initialUsers
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                      u.active_plan === 'pro' ? 'bg-red-500 text-white' : 
-                      u.active_plan === 'enterprise' ? 'bg-purple-500 text-white' : 
-                      'bg-white/10 text-gray-400'
-                    }`}>
-                      {u.active_plan || 'free'}
-                    </span>
+                    {isAdmin ? (
+                      <select 
+                        value={u.active_plan || 'free'}
+                        onChange={(e) => handlePlanChange(u.id, e.target.value)}
+                        disabled={isProcessing === u.id}
+                        className="bg-white/5 border border-white/10 rounded-lg py-1 px-2 text-[10px] focus:outline-none focus:border-red-500/50 transition-all text-gray-300 capitalize"
+                      >
+                        <option value="free" className="bg-black">Free</option>
+                        <option value="explorateur" className="bg-black">Explorer</option>
+                        <option value="importateur" className="bg-black">Importer</option>
+                        <option value="partenaire" className="bg-black">Partner</option>
+                      </select>
+                    ) : (
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        (PLAN_CONFIG[u.active_plan] || PLAN_CONFIG.free).color
+                      }`}>
+                        {(PLAN_CONFIG[u.active_plan] || PLAN_CONFIG.free).label}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5">
                       <div className={`w-1.5 h-1.5 rounded-full ${
-                        u.status === 'suspended' ? 'bg-red-500' : 'bg-green-500'
+                        u.subscription_status === 'canceled' || u.subscription_status === 'past_due' ? 'bg-red-500' :
+                        u.subscription_status === 'trialing' ? 'bg-yellow-500' :
+                        'bg-green-500'
                       }`} />
-                      <span className="capitalize text-gray-300">{u.status || 'active'}</span>
+                      <span className="capitalize text-gray-300">{u.subscription_status || 'free'}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-400">

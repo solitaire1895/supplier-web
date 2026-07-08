@@ -25,16 +25,84 @@ function computeExpiryFromInvoice(invoice: any): string {
   return d.toISOString()
 }
 
+/**
+ * Wraps a Supabase update call with error checking and retry logic.
+ * Throws on persistent failure so the outer catch returns 500 to Stripe,
+ * which causes Stripe to retry the webhook.
+ */
+async function updateProfileWithErrorCheck(
+  supabaseAdmin: any,
+  update: Record<string, any>,
+  matchColumn: string,
+  matchValue: string,
+  context: string
+): Promise<void> {
+  let lastError: any = null
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .update(update)
+      .eq(matchColumn, matchValue)
+      .select('id, active_plan, subscription_status')
+
+    if (error) {
+      lastError = error
+      console.error(`WEBHOOK [${context}] attempt ${attempt + 1} failed:`, {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      })
+      // Brief backoff before retry
+      await new Promise((r) => setTimeout(r, 500 * (attempt + 1)))
+      continue
+    }
+
+    console.log(`WEBHOOK [${context}] success:`, {
+      matched: matchColumn,
+      value: matchValue,
+      updatedRows: data?.length ?? 0,
+      newPlan: data?.[0]?.active_plan,
+      newStatus: data?.[0]?.subscription_status,
+    })
+
+    // If no rows were updated, the match column/value might be wrong
+    if (!data || data.length === 0) {
+      console.warn(`WEBHOOK [${context}] WARNING: 0 rows updated for ${matchColumn}=${matchValue}`)
+    }
+
+    return
+  }
+
+  // All retries exhausted — throw so Stripe retries the whole webhook
+  throw new Error(
+    `Failed to update profile (${context}) after 3 attempts: ${lastError?.message || 'unknown error'}`
+  )
+}
+
 export async function POST(req: Request) {
   if (!stripe) {
     return NextResponse.json({ error: 'Stripe is not configured' }, { status: 500 })
   }
 
+  // Validate that the Service Role Key is present
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('WEBHOOK FATAL: Missing Supabase environment variables.', {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+    })
+    return NextResponse.json(
+      { error: 'Server misconfigured: missing Supabase service role key' },
+      { status: 500 }
+    )
+  }
+
   // We use the Service Role Key to bypass RLS since webhooks are server-to-server
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-  )
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
   // Mapping Stripe Price IDs to internal Plan names
   const PRICE_ID_TO_PLAN: Record<string, string> = {
@@ -55,10 +123,13 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     )
   } catch (error: any) {
+    console.error('WEBHOOK SIGNATURE ERROR:', error.message)
     return NextResponse.json({ error: `Webhook Error: ${error.message}` }, { status: 400 })
   }
 
   const session = event.data.object as any
+
+  console.log(`WEBHOOK received event: ${event.type}`)
 
   try {
     switch (event.type) {
@@ -66,17 +137,27 @@ export async function POST(req: Request) {
         const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
         const priceId = subscription.items.data[0].price.id
         const plan = PRICE_ID_TO_PLAN[priceId] || 'free'
-        const userId = session.metadata.supabase_uid
+        const userId = session.metadata?.supabase_uid
 
-        await supabaseAdmin
-          .from('profiles')
-          .update({
+        if (!userId) {
+          console.error('WEBHOOK [checkout.session.completed] ERROR: No supabase_uid in session metadata')
+          throw new Error('Missing supabase_uid in checkout session metadata')
+        }
+
+        console.log(`WEBHOOK [checkout.session.completed] updating user ${userId} to plan: ${plan}`)
+
+        await updateProfileWithErrorCheck(
+          supabaseAdmin,
+          {
             subscription_status: 'active',
             active_plan: plan,
             stripe_subscription_id: subscription.id,
             plan_expires_at: computeExpiry(subscription),
-          })
-          .eq('id', userId)
+          },
+          'id',
+          userId,
+          'checkout.session.completed'
+        )
         break
       }
 
@@ -86,27 +167,38 @@ export async function POST(req: Request) {
         const plan = PRICE_ID_TO_PLAN[priceId] || 'free'
         const status = subscription.status === 'active' ? 'active' : 'past_due'
 
-        await supabaseAdmin
-          .from('profiles')
-          .update({
+        console.log(`WEBHOOK [customer.subscription.updated] sub ${subscription.id} → plan: ${plan}, status: ${status}`)
+
+        await updateProfileWithErrorCheck(
+          supabaseAdmin,
+          {
             subscription_status: status,
             active_plan: plan,
             plan_expires_at: computeExpiry(subscription),
-          })
-          .eq('stripe_subscription_id', subscription.id)
+          },
+          'stripe_subscription_id',
+          subscription.id,
+          'customer.subscription.updated'
+        )
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = session
-        await supabaseAdmin
-          .from('profiles')
-          .update({
+
+        console.log(`WEBHOOK [customer.subscription.deleted] sub ${subscription.id} → canceled/free`)
+
+        await updateProfileWithErrorCheck(
+          supabaseAdmin,
+          {
             subscription_status: 'canceled',
             active_plan: 'free',
             plan_expires_at: null,
-          })
-          .eq('stripe_subscription_id', subscription.id)
+          },
+          'stripe_subscription_id',
+          subscription.id,
+          'customer.subscription.deleted'
+        )
         break
       }
 
@@ -120,14 +212,19 @@ export async function POST(req: Request) {
         const priceId = subscription.items.data[0].price.id
         const plan = PRICE_ID_TO_PLAN[priceId] || 'free'
 
-        await supabaseAdmin
-          .from('profiles')
-          .update({
+        console.log(`WEBHOOK [invoice.paid] sub ${invoice.subscription} → plan: ${plan}`)
+
+        await updateProfileWithErrorCheck(
+          supabaseAdmin,
+          {
             subscription_status: 'active',
             active_plan: plan,
             plan_expires_at: computeExpiryFromInvoice(invoice),
-          })
-          .eq('stripe_subscription_id', invoice.subscription)
+          },
+          'stripe_subscription_id',
+          invoice.subscription,
+          'invoice.paid'
+        )
         break
       }
 
@@ -137,19 +234,27 @@ export async function POST(req: Request) {
         const invoice = session
         if (!invoice.subscription) break
 
-        await supabaseAdmin
-          .from('profiles')
-          .update({
+        console.log(`WEBHOOK [invoice.payment_failed] sub ${invoice.subscription} → past_due`)
+
+        await updateProfileWithErrorCheck(
+          supabaseAdmin,
+          {
             subscription_status: 'past_due',
-          })
-          .eq('stripe_subscription_id', invoice.subscription)
+          },
+          'stripe_subscription_id',
+          invoice.subscription,
+          'invoice.payment_failed'
+        )
         break
       }
+
+      default:
+        console.log(`WEBHOOK: unhandled event type "${event.type}" — skipping`)
     }
 
     return NextResponse.json({ received: true })
   } catch (error: any) {
-    console.error('WEBHOOK ERROR:', error)
+    console.error('WEBHOOK ERROR:', error.message || error)
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 }

@@ -112,7 +112,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         (authUser.user_metadata?.name as string) ??
         null,
       role: "user",
-      active_plan: "Free",
+      active_plan: "free",
       subscription_status: "active",
       plan_expires_at: null,
     };
