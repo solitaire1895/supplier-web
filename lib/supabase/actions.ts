@@ -374,6 +374,165 @@ export async function recordSourcingRequest(data: {
   return { success: true }
 }
 
+/* ================= SUPPORT CHAT ACTIONS ================= */
+
+/**
+ * Creates a new support conversation for the current user.
+ * Accepts an optional category (e.g. "Account & Profile", "Billing & Plan").
+ * Returns the new conversation row (including auto-generated ticket_id).
+ */
+export async function createConversation(subject?: string, category?: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'You must be logged in to start a conversation.' }
+
+  const { data, error } = await supabase
+    .from('support_conversations')
+    .insert({
+      user_id: user.id,
+      subject: subject?.trim() || 'Support Request',
+      category: category?.trim() || null,
+      status: 'open',
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating conversation:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/dashboard/support')
+  revalidatePath('/admin')
+  return { success: true, conversation: data }
+}
+
+/**
+ * Sends a message in a conversation.
+ * - Regular users can only send 'user' messages in their own conversations.
+ * - Admins can send 'admin' messages in any conversation.
+ */
+export async function sendMessage(
+  conversationId: string,
+  content: string,
+  isAdmin: boolean = false
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'You must be logged in to send a message.' }
+
+  const trimmed = content.trim()
+  if (!trimmed) return { error: 'Message cannot be empty.' }
+
+  // If admin, verify role
+  if (isAdmin) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+      return { error: 'Unauthorized: Only admins can send admin messages.' }
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('support_messages')
+    .insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      sender_role: isAdmin ? 'admin' : 'user',
+      content: trimmed,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error sending message:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/dashboard/support')
+  revalidatePath('/admin')
+  return { success: true, message: data }
+}
+
+/**
+ * Updates a conversation's status.
+ * Supports: 'open', 'waiting', 'resolved', 'closed'
+ * Both users and admins can update their own/all conversations.
+ */
+export async function updateConversationStatus(
+  conversationId: string,
+  status: 'open' | 'waiting' | 'resolved' | 'closed'
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'You must be logged in.' }
+
+  const validStatuses = ['open', 'waiting', 'resolved', 'closed']
+  if (!validStatuses.includes(status)) {
+    return { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` }
+  }
+
+  const { error } = await supabase
+    .from('support_conversations')
+    .update({ status })
+    .eq('id', conversationId)
+
+  if (error) {
+    console.error('Error updating conversation status:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/dashboard/support')
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+/**
+ * Backward-compatible alias for updateConversationStatus.
+ * @deprecated Use updateConversationStatus instead.
+ */
+export async function resolveConversation(conversationId: string, status: 'open' | 'resolved' = 'resolved') {
+  return updateConversationStatus(conversationId, status)
+}
+
+/**
+ * Admin-only: assigns a support agent to a conversation.
+ */
+export async function assignAgent(conversationId: string, agentName: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'You must be logged in.' }
+
+  // Verify admin role
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+    return { error: 'Unauthorized: Only admins can assign agents.' }
+  }
+
+  const { error } = await supabase
+    .from('support_conversations')
+    .update({ assigned_agent: agentName.trim() || null })
+    .eq('id', conversationId)
+
+  if (error) {
+    console.error('Error assigning agent:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/dashboard/support')
+  return { success: true }
+}
+
 /* ================= PLAN-AWARE SEARCH ================= */
 
 /**
@@ -529,7 +688,11 @@ export async function getRecommendedProductsAction(limit: number = 4) {
     })
 
   if (error) {
-    console.error('Error getting recommended products:', error)
+    // PGRST202 = function not found in schema cache — quietly return empty
+    // until the migration 0013_recommendation_functions.sql is run.
+    if (error.code !== 'PGRST202') {
+      console.error('Error getting recommended products:', error)
+    }
     return []
   }
 
@@ -548,7 +711,9 @@ export async function getRecommendedSuppliersAction(limit: number = 4) {
     })
 
   if (error) {
-    console.error('Error getting recommended suppliers:', error)
+    if (error.code !== 'PGRST202') {
+      console.error('Error getting recommended suppliers:', error)
+    }
     return []
   }
 

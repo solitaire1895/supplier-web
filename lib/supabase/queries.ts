@@ -286,7 +286,11 @@ export const getRecommendedProducts = cache(async (limit: number = 4) => {
     })
 
   if (error) {
-    console.error('Error getting recommended products:', error)
+    // PGRST202 = function not found in schema cache — quietly return empty
+    // until the migration 0013_recommendation_functions.sql is run.
+    if (error.code !== 'PGRST202') {
+      console.error('Error getting recommended products:', error)
+    }
     return []
   }
 
@@ -305,7 +309,9 @@ export const getRecommendedSuppliers = cache(async (limit: number = 4) => {
     })
 
   if (error) {
-    console.error('Error getting recommended suppliers:', error)
+    if (error.code !== 'PGRST202') {
+      console.error('Error getting recommended suppliers:', error)
+    }
     return []
   }
 
