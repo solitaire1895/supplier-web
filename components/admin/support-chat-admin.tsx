@@ -78,17 +78,63 @@ export default function SupportChatAdmin() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLTextAreaElement>(null);
 
-  /* ── Fetch all conversations (admin sees all) ── */
+  /* ── Fetch all conversations (admin sees all) ──
+   * NOTE: support_conversations.user_id references auth.users(id), NOT
+   * public.profiles(id), so we can't use a PostgREST relationship join.
+   * We fetch conversations first, then batch-fetch the matching profiles
+   * and merge them manually.
+   */
   const fetchConversations = useCallback(async () => {
     setLoadingConversations(true);
-    const { data } = await supabase
+
+    // 1. Fetch all conversations
+    const { data: convData, error: convError } = await supabase
       .from("support_conversations")
-      .select(`
-        *,
-        profiles!support_conversations_user_id_fkey ( email, full_name )
-      `)
+      .select("*")
       .order("updated_at", { ascending: false });
-    setConversations((data as Conversation[]) || []);
+
+    if (convError) {
+      console.error("Admin chat: Error fetching conversations:", convError);
+      setConversations([]);
+      setLoadingConversations(false);
+      return;
+    }
+
+    const conversationsRaw = (convData as Conversation[]) || [];
+
+    // 2. Batch-fetch profiles for all user_ids
+    const userIds = [...new Set(conversationsRaw.map((c) => c.user_id).filter(Boolean))];
+
+    if (userIds.length === 0) {
+      setConversations(conversationsRaw);
+      setLoadingConversations(false);
+      return;
+    }
+
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, email, full_name")
+      .in("id", userIds);
+
+    if (profilesError) {
+      console.error("Admin chat: Error fetching user profiles:", profilesError);
+      setConversations(conversationsRaw);
+      setLoadingConversations(false);
+      return;
+    }
+
+    // 3. Merge profile data onto conversations
+    const profileMap = new Map<string, { email: string; full_name: string }>();
+    (profilesData || []).forEach((p: any) => {
+      profileMap.set(p.id, { email: p.email || "", full_name: p.full_name || "" });
+    });
+
+    const merged = conversationsRaw.map((conv) => ({
+      ...conv,
+      profiles: profileMap.get(conv.user_id) || null,
+    }));
+
+    setConversations(merged);
     setLoadingConversations(false);
   }, []);
 
