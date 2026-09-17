@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useI18n, Lang } from "@/lib/i18n";
 import { useUser } from "@/lib/supabase/provider";
-import { supabase } from "@/lib/supabase/client";
+import { logoutAndRedirect } from "@/lib/logout";
 
 const languages = [
   { code: "EN" as Lang, label: "English", flag: "🇺🇸" },
@@ -34,10 +34,9 @@ export default function ProfileDropdown() {
     }
   }, [user, profile, refreshProfile]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.refresh();
-  };
+  // Resilient logout: never freezes on a hung network call, always clears
+  // the local session and hard-navigates to the login page.
+  const handleLogout = () => logoutAndRedirect();
 
   const normalizedRole = profile?.role?.toString().trim().toLowerCase();
   const isAdmin = normalizedRole === 'admin' || normalizedRole === 'super_admin';

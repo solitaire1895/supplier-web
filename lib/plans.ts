@@ -19,6 +19,8 @@ export interface PlanFeatures {
     directContacts: boolean;
   };
   support: 'community' | 'priority';
+  /** Partner-plan exclusive: access to the Training Center. */
+  training: boolean;
 }
 
 export const PLANS: Record<PlanType, PlanFeatures> = {
@@ -49,6 +51,7 @@ export const PLANS: Record<PlanType, PlanFeatures> = {
       directContacts: false,
     },
     support: 'community',
+    training: false,
   },
   explorateur: {
     name: {
@@ -77,6 +80,7 @@ export const PLANS: Record<PlanType, PlanFeatures> = {
       directContacts: false,
     },
     support: 'community',
+    training: false,
   },
   importateur: {
     name: {
@@ -105,6 +109,7 @@ export const PLANS: Record<PlanType, PlanFeatures> = {
       directContacts: false,
     },
     support: 'community',
+    training: false,
   },
   partenaire: {
     name: {
@@ -133,6 +138,7 @@ export const PLANS: Record<PlanType, PlanFeatures> = {
       directContacts: true,
     },
     support: 'priority',
+    training: true,
   },
 };
 

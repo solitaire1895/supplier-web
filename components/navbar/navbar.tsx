@@ -114,6 +114,7 @@ export default function Navbar() {
             {[
               { label: t.navbar?.home || "Home", path: "/dashboard" },
               { label: t.navbar?.winning || "Winning", path: "/dashboard/winning-products" },
+              { label: t.navbar?.training || "Training", path: "/dashboard/training" },
             ].map((item) => {
               const isActive = pathname === item.path;
               return (

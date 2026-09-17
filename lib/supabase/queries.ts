@@ -76,6 +76,79 @@ export const getProducts = cache(async () => {
   return data
 })
 
+export const getTrainings = cache(async () => {
+  const supabase = await createClient()
+
+  // Training is exclusive to the highest plan (partenaire). Enforced
+  // server-side so lower plans never receive any training data.
+  const plan = await getCachedPlan()
+  if (!getPlanFeatures(plan).training) return []
+
+  const { data, error } = await supabase
+    .from('trainings')
+    .select('*')
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching trainings:', error)
+    return []
+  }
+
+  // Training files live in a PRIVATE bucket. Generate short-lived signed
+  // URLs (1 hour) so the content is only accessible to this Partner user.
+  const trainings = await Promise.all(
+    (data || []).map(async (training) => {
+      if (!training.file_path) return { ...training, signed_url: null }
+      const { data: urlData, error: urlError } = await supabase.storage
+        .from('trainings')
+        .createSignedUrl(training.file_path, 3600)
+      if (urlError) {
+        console.error('Error signing training URL:', urlError)
+        return { ...training, signed_url: null }
+      }
+      return { ...training, signed_url: urlData?.signedUrl ?? null }
+    })
+  )
+
+  return trainings
+})
+
+export const getTrainingById = cache(async (id: string) => {
+  const supabase = await createClient()
+
+  // Same plan gate as the training list: Partner plan only.
+  const plan = await getCachedPlan()
+  if (!getPlanFeatures(plan).training) return null
+
+  const { data, error } = await supabase
+    .from('trainings')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Error fetching training:', error)
+    return null
+  }
+  if (!data) return null
+
+  // Fresh signed URL so the content stays private to this Partner user.
+  let signed_url: string | null = null
+  if (data.file_path) {
+    const { data: urlData, error: urlError } = await supabase.storage
+      .from('trainings')
+      .createSignedUrl(data.file_path, 3600)
+    if (urlError) {
+      console.error('Error signing training URL:', urlError)
+    } else {
+      signed_url = urlData?.signedUrl ?? null
+    }
+  }
+
+  return { ...data, signed_url }
+})
+
 export const getReviews = cache(async (type: 'product' | 'supplier', id: string) => {
   const supabase = await createClient()
   const column = type === 'product' ? 'product_id' : 'supplier_id'

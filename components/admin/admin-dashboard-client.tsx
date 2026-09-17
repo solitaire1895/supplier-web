@@ -11,8 +11,10 @@ import SuppliersAdmin from "./suppliers-admin";
 import ProductsAdmin from "./products-admin";
 import UsersAdmin from "./users-admin";
 import SupportChatAdmin from "./support-chat-admin";
+import TrainingAdmin from "./training-admin";
+import DashboardOverview from "./dashboard-overview";
 import AdminSidebar from "./admin-sidebar";
-import { supabase } from "@/lib/supabase/client";
+import { logoutAndRedirect } from "@/lib/logout";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AdminDashboardClient({ 
@@ -34,10 +36,9 @@ export default function AdminDashboardClient({
     router.push(`/admin?tab=${tab}`);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/auth/login");
-  };
+  // Resilient logout: never freezes on a hung network call, always clears
+  // the local session and hard-navigates to the login page.
+  const handleLogout = () => logoutAndRedirect();
 
   const renderView = () => {
     switch (activeTab) {
@@ -49,22 +50,16 @@ export default function AdminDashboardClient({
         return <ProductsAdmin initialProducts={initialProducts} />;
       case "Support":
         return <SupportChatAdmin />;
+      case "Training":
+        return <TrainingAdmin />;
       case "Dashboard":
         return (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-             <div className="bg-white/5 border border-white/10 p-8 rounded-3xl">
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Suppliers</p>
-                <h3 className="text-3xl font-black text-white">{initialSuppliers.length}</h3>
-             </div>
-             <div className="bg-white/5 border border-white/10 p-8 rounded-3xl">
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Winning Products</p>
-                <h3 className="text-3xl font-black text-white">{initialProducts.length}</h3>
-             </div>
-             <div className="bg-white/5 border border-white/10 p-8 rounded-3xl">
-                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Total Users</p>
-                <h3 className="text-3xl font-black text-red-500">{initialUsers.length}</h3>
-             </div>
-          </div>
+          <DashboardOverview
+            initialSuppliers={initialSuppliers}
+            initialProducts={initialProducts}
+            initialUsers={initialUsers}
+            setActiveTab={setActiveTab}
+          />
         );
       default:
         return (

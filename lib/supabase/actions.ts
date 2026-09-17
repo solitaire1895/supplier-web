@@ -719,3 +719,67 @@ export async function getRecommendedSuppliersAction(limit: number = 4) {
 
   return data
 }
+
+/* ================= TRAINING ACTIONS ================= */
+/* Training content is Partner-plan exclusive. Row-level security on the
+   'trainings' table restricts writes to admins; these actions rely on
+   that policy exactly like the supplier/product actions do. */
+
+export async function addTraining(trainingData: any) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('trainings').insert([trainingData])
+
+  if (error) {
+    console.error('Error adding training:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/dashboard/training')
+  return { success: true }
+}
+
+export async function updateTraining(id: string, trainingData: any) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('trainings').update(trainingData).eq('id', id)
+
+  if (error) {
+    console.error('Error updating training:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/dashboard/training')
+  return { success: true }
+}
+
+export async function deleteTraining(id: string) {
+  const supabase = await createClient()
+
+  // Look up the row first so we can also remove its file from storage.
+  const { data: training } = await supabase
+    .from('trainings')
+    .select('file_path')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (training?.file_path) {
+    const { error: storageError } = await supabase.storage
+      .from('trainings')
+      .remove([training.file_path])
+    if (storageError) {
+      console.error('Error deleting training file from storage:', storageError)
+    }
+  }
+
+  const { error } = await supabase.from('trainings').delete().eq('id', id)
+
+  if (error) {
+    console.error('Error deleting training:', error)
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin')
+  revalidatePath('/dashboard/training')
+  return { success: true }
+}

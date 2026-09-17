@@ -431,3 +431,53 @@ The SQL is idempotent (safe to run multiple times). It will:
 ### What Was Fixed in Code
 
 - **`lib/supabase/actions.ts`** and **`lib/supabase/queries.ts`**: Both `getRecommendedProductsAction`/`getRecommendedProducts` and `getRecommendedSuppliersAction`/`getRecommendedSuppliers` now silently return `[]` when the `PGRST202` error is encountered (function not found), instead of logging a noisy error. This prevents terminal spam while you run the migration. Once the migration is applied, recommendations will work normally.
+
+---
+
+## Training System (Partner-Plan Exclusive)
+
+### What Was Built
+
+A complete training system for the Nexusply trainers:
+
+- **Admin tab** (`/admin?tab=Training`): create, edit and delete training modules. Choose the content type (**Document / Video / Link**), upload files seamlessly (drag & drop, straight to Supabase Storage with progress states), or point to an external video (YouTube/Vimeo).
+- **Client page** (`/dashboard/training`): a premium Training Center matching the Nexusply design identity. Exclusive to the **Partner (partenaire)** plan — the highest tier. Lower plans see a locked state with an upgrade CTA.
+- **"Training" link** added to the dashboard navbar (desktop pill + mobile menu).
+
+### Security Model
+
+- Training files live in a **private** Supabase Storage bucket (`trainings`) — no public access.
+- Row Level Security: only Partner-plan users and admins can read training records and files.
+- The server generates **1-hour signed URLs** for eligible users only, so file links cannot be shared or leaked.
+- Plan gating is enforced in three layers: `lib/plans.ts` feature flag → `getTrainings()` server query (returns `[]` for non-Partners) → locked client UI.
+
+### Action Required (1 Step)
+
+#### Step 1: Run the Training Migration
+
+1. Go to your **Supabase Dashboard**: https://supabase.com/dashboard
+2. Select your project
+3. Navigate to: **SQL Editor**
+4. Click **New query**
+5. Open the file `supabase/migrations/0014_trainings.sql` from this project
+6. Copy and paste its entire contents into the SQL Editor
+7. Click **Run**
+
+The SQL is idempotent (safe to run multiple times). It will:
+- Create the `trainings` table (title, description, type, file path / external URL, duration, sort order)
+- Enable RLS with Partner + admin read policies and admin-only management
+- Create the **private** `trainings` storage bucket with admin upload/update/delete policies
+- Allow Partner-plan users and admins to read training files (this is what authorizes signed URLs)
+
+### How to Verify
+
+1. Run the SQL migration (Step 1 above)
+2. `npm run dev` and sign in as an admin
+3. Go to `/admin?tab=Training` → create a training (try each type: document, video, link)
+4. Sign in as a Partner-plan user → `/dashboard/training` → content is visible and downloadable
+5. Sign in as a lower-plan user → `/dashboard/training` → locked state with the upgrade CTA
+
+### Notes
+
+- Uploads go directly from the browser to Supabase Storage (not through server actions) so large files work — server actions cap at roughly 1 MB.
+- Max direct upload is 50 MB. For long videos, use the **Link** type (YouTube/Vimeo unlisted) — it also streams much better than self-hosted MP4.

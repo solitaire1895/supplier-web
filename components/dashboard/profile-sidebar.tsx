@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/lib/supabase/provider";
-import { supabase } from "@/lib/supabase/client";
+import { logoutAndRedirect } from "@/lib/logout";
 import { useI18n } from "@/lib/i18n";
 
 export default function ProfileSidebar({
@@ -30,10 +30,9 @@ export default function ProfileSidebar({
   const { profile } = useUser();
   const { t } = useI18n();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/auth/login");
-  };
+  // Resilient logout: never freezes on a hung network call, always clears
+  // the local session and hard-navigates to the login page.
+  const handleLogout = () => logoutAndRedirect();
 
   return (
     <div

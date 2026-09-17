@@ -3,7 +3,7 @@
 import React from "react";
 import { 
   Home, Users, Truck, Package, 
-  LogOut, Zap, ChevronRight, LifeBuoy
+  LogOut, Zap, ChevronRight, LifeBuoy, GraduationCap
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -73,6 +73,12 @@ export default function AdminSidebar({
               onClick={() => setActiveTab("Product")}
               icon={<Package size={20} />}
               label="Winning Products"
+            />
+            <SidebarButton 
+              active={activeTab === "Training"} 
+              onClick={() => setActiveTab("Training")}
+              icon={<GraduationCap size={20} />}
+              label="Training"
             />
           </div>
         </div>
