@@ -6,97 +6,24 @@
 - Local:         http://localhost:3000
 - Network:       http://192.168.1.116:3000
 - Environments: .env
-✓ Ready in 1198ms
+✓ Ready in 1255ms
 
-○ Compiling / ...
- GET / 200 in 6.0s (next.js: 5.5s, proxy.ts: 163ms, application-code: 358ms)
- GET /dashboard/training 500 in 1043ms (next.js: 932ms, proxy.ts: 6ms, application-code: 105ms)
- GET /auth/login 200 in 700ms (next.js: 594ms, proxy.ts: 6ms, application-code: 100ms)
- GET /dashboard 500 in 737ms (next.js: 663ms, proxy.ts: 6ms, application-code: 68ms)
- GET /dashboard/winning-products 500 in 638ms (next.js: 548ms, proxy.ts: 6ms, application-code: 84ms)
- GET / 200 in 101ms (next.js: 13ms, proxy.ts: 11ms, application-code: 77ms)
- GET /auth/login 200 in 50ms (next.js: 9ms, proxy.ts: 9ms, application-code: 32ms)
-  Reload env: .env
-✓ Compiled in 3ms
-✓ Compiled in 5ms
-✓ Compiled in 0ms
- GET /auth/login 200 in 435ms (next.js: 128ms, proxy.ts: 85ms, application-code: 221ms)
- GET /auth/login 200 in 480ms (next.js: 164ms, proxy.ts: 88ms, application-code: 228ms)
- GET /dashboard 200 in 1958ms (next.js: 168ms, proxy.ts: 567ms, application-code: 1223ms)
- POST /dashboard 200 in 716ms (next.js: 8ms, proxy.ts: 200ms, application-code: 507ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 483ms lib/supabase/actions.ts
- POST /dashboard 200 in 733ms (next.js: 8ms, proxy.ts: 242ms, application-code: 483ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 472ms lib/supabase/actions.ts
- GET /dashboard 200 in 1972ms (next.js: 8ms, proxy.ts: 646ms, application-code: 1318ms)
- POST /dashboard 200 in 757ms (next.js: 8ms, proxy.ts: 204ms, application-code: 546ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 535ms lib/supabase/actions.ts
- GET /dashboard 200 in 1917ms (next.js: 7ms, proxy.ts: 948ms, application-code: 961ms)
- POST /dashboard 200 in 751ms (next.js: 8ms, proxy.ts: 248ms, application-code: 494ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 485ms lib/supabase/actions.ts
-✓ Compiled in 171ms
-✓ Compiled in 229ms
- GET /dashboard 200 in 2.1s (next.js: 244ms, proxy.ts: 1727ms, application-code: 171ms)
- GET /dashboard 200 in 1180ms (next.js: 9ms, proxy.ts: 1041ms, application-code: 130ms)
- GET /dashboard 200 in 1016ms (next.js: 8ms, proxy.ts: 927ms, application-code: 80ms)
- GET /dashboard 200 in 361ms (next.js: 8ms, proxy.ts: 266ms, application-code: 87ms)
- GET /dashboard 200 in 312ms (next.js: 10ms, proxy.ts: 223ms, application-code: 80ms)
- GET /dashboard 200 in 347ms (next.js: 10ms, proxy.ts: 204ms, application-code: 133ms)
- GET /dashboard 200 in 1620ms (next.js: 7ms, proxy.ts: 398ms, application-code: 1215ms)
- POST /dashboard 200 in 755ms (next.js: 7ms, proxy.ts: 301ms, application-code: 447ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 436ms lib/supabase/actions.ts
- GET / 200 in 683ms (next.js: 120ms, proxy.ts: 316ms, application-code: 247ms)
- GET /dashboard 200 in 1135ms (next.js: 7ms, proxy.ts: 239ms, application-code: 889ms)
- POST /dashboard 200 in 703ms (next.js: 7ms, proxy.ts: 225ms, application-code: 470ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 460ms lib/supabase/actions.ts
- POST /dashboard 200 in 811ms (next.js: 8ms, proxy.ts: 296ms, application-code: 508ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 499ms lib/supabase/actions.ts
- GET /admin 200 in 4.4s (next.js: 654ms, proxy.ts: 392ms, application-code: 3.3s)
- GET /admin?tab=Training 200 in 1744ms (next.js: 8ms, proxy.ts: 430ms, application-code: 1307ms)
- POST /admin?tab=Training 200 in 3.5s (next.js: 8ms, proxy.ts: 1155ms, application-code: 2.3s)
-  └─ ƒ addTraining({"description":"Bienvenue sur la chaîne !\nSalut à tous ! Dans cette vidéo, je vais vous montrer commentutiliser xianyu encore apple idle fish de sote a la maitriser en quelque minutes. Si vous êtes nouveaux ici, n'oubliez pas de vous abonner pour ne rien manquer des prochaines vidéos ! 🎯","duration_minutes":31,"external_url":"https://youtu.be/OD1PAEdn21c?si=uHluMMXW76NLyTBm","...":"6 items not stringified"}) in 507ms lib/supabase/actions.ts
- GET /admin?tab=Dashboard 200 in 1566ms (next.js: 8ms, proxy.ts: 330ms, application-code: 1229ms)
- GET /admin?tab=User 200 in 1623ms (next.js: 8ms, proxy.ts: 388ms, application-code: 1226ms)
- GET /admin?tab=Dashboard 200 in 1717ms (next.js: 8ms, proxy.ts: 264ms, application-code: 1446ms)
- GET / 200 in 1331ms (next.js: 7ms, proxy.ts: 1262ms, application-code: 61ms)
- GET /dashboard 200 in 1442ms (next.js: 9ms, proxy.ts: 190ms, application-code: 1243ms)
- POST /dashboard 200 in 855ms (next.js: 9ms, proxy.ts: 382ms, application-code: 465ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 452ms lib/supabase/actions.ts
- POST /dashboard 200 in 663ms (next.js: 8ms, proxy.ts: 221ms, application-code: 435ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 426ms lib/supabase/actions.ts
- GET /dashboard/training 200 in 1504ms (next.js: 172ms, proxy.ts: 354ms, application-code: 977ms)
- GET /dashboard/winning-products 200 in 1369ms (next.js: 165ms, proxy.ts: 327ms, application-code: 878ms)
- POST /dashboard/winning-products 200 in 816ms (next.js: 8ms, proxy.ts: 231ms, application-code: 577ms)
-  └─ ƒ getRecommendedProductsAction(4) in 564ms lib/supabase/actions.ts
- POST /dashboard/winning-products 200 in 674ms (next.js: 7ms, proxy.ts: 207ms, application-code: 460ms)
-  └─ ƒ getRecommendedProductsAction(4) in 451ms lib/supabase/actions.ts
- GET /dashboard 200 in 1071ms (next.js: 8ms, proxy.ts: 200ms, application-code: 864ms)
- POST /dashboard 200 in 682ms (next.js: 8ms, proxy.ts: 264ms, application-code: 411ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 401ms lib/supabase/actions.ts
- POST /dashboard 200 in 623ms (next.js: 7ms, proxy.ts: 191ms, application-code: 424ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 415ms lib/supabase/actions.ts
- GET /dashboard/training 200 in 2.1s (next.js: 8ms, proxy.ts: 1091ms, application-code: 986ms)
- GET /dashboard 200 in 1200ms (next.js: 7ms, proxy.ts: 358ms, application-code: 835ms)
- POST /dashboard 200 in 676ms (next.js: 8ms, proxy.ts: 203ms, application-code: 465ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 455ms lib/supabase/actions.ts
- POST /dashboard 200 in 717ms (next.js: 8ms, proxy.ts: 206ms, application-code: 502ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 491ms lib/supabase/actions.ts
- GET / 200 in 1683ms (next.js: 73ms, proxy.ts: 1364ms, application-code: 247ms)
- GET /dashboard 200 in 2.8s (next.js: 72ms, proxy.ts: 587ms, application-code: 2.2s)
- POST /dashboard 200 in 937ms (next.js: 8ms, proxy.ts: 387ms, application-code: 541ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 528ms lib/supabase/actions.ts
- POST /dashboard 200 in 887ms (next.js: 8ms, proxy.ts: 493ms, application-code: 386ms)
-  └─ ƒ getRecommendedSuppliersAction(4) in 376ms lib/supabase/actions.ts
- GET /admin 200 in 3.1s (next.js: 173ms, proxy.ts: 1065ms, application-code: 1906ms)
- GET /admin?tab=Dashboard 200 in 3.4s (next.js: 8ms, proxy.ts: 605ms, application-code: 2.8s)
-✓ Compiled in 157ms
-  Reload env: .env
-  Reload env: .env
-  Reload env: .env
-  Reload env: .env
-  Reload env: .env
-  Reload env: .env
- GET /dashboard/training 200 in 3.3s (next.js: 197ms, proxy.ts: 1581ms, application-code: 1551ms)
- GET /dashboard/training/517ddca0-115e-43f3-a610-b98dec7fd8c9 200 in 2.7s (next.js: 1452ms, proxy.ts: 448ms, application-code: 809ms)
- GET /dashboard/training 200 in 1170ms (next.js: 7ms, proxy.ts: 294ms, application-code: 869ms)
- GET /dashboard/training/517ddca0-115e-43f3-a610-b98dec7fd8c9 200 in 988ms (next.js: 20ms, proxy.ts: 249ms, application-code: 719ms)
- GET /dashboard/training 200 in 1267ms (next.js: 9ms, proxy.ts: 442ms, application-code: 815ms)
+ GET / 200 in 888ms (next.js: 141ms, proxy.ts: 311ms, application-code: 436ms)
+ GET / 200 in 1508ms (next.js: 12ms, proxy.ts: 1426ms, application-code: 70ms)
+ GET /dashboard 200 in 3.2s (next.js: 95ms, proxy.ts: 981ms, application-code: 2.2s)
+ POST /dashboard 200 in 1327ms (next.js: 9ms, proxy.ts: 331ms, application-code: 987ms)
+  └─ ƒ getRecommendedSuppliersAction(4) in 963ms lib/supabase/actions.ts
+ POST /dashboard 200 in 1994ms (next.js: 8ms, proxy.ts: 228ms, application-code: 1758ms)
+  └─ ƒ getRecommendedSuppliersAction(4) in 1746ms lib/supabase/actions.ts
+ GET /dashboard/profile 200 in 1681ms (next.js: 882ms, proxy.ts: 765ms, application-code: 35ms)
+ GET /dashboard/profile?tab=plan 200 in 963ms (next.js: 9ms, proxy.ts: 932ms, application-code: 22ms)
+ GET /dashboard 200 in 1241ms (next.js: 8ms, proxy.ts: 337ms, application-code: 896ms)
+ POST /dashboard 200 in 796ms (next.js: 8ms, proxy.ts: 243ms, application-code: 544ms)
+  └─ ƒ getRecommendedSuppliersAction(4) in 533ms lib/supabase/actions.ts
+ POST /dashboard 200 in 670ms (next.js: 7ms, proxy.ts: 217ms, application-code: 446ms)
+  └─ ƒ getRecommendedSuppliersAction(4) in 435ms lib/supabase/actions.ts
+ GET /dashboard/profile 200 in 1643ms (next.js: 8ms, proxy.ts: 1609ms, application-code: 26ms)
+ GET /dashboard/profile?tab=plan 200 in 265ms (next.js: 7ms, proxy.ts: 236ms, application-code: 22ms)
+ GET /dashboard/subscribe 200 in 943ms (next.js: 635ms, proxy.ts: 280ms, application-code: 28ms)
+ GET / 200 in 750ms (next.js: 8ms, proxy.ts: 722ms, application-code: 20ms)
+[?25h

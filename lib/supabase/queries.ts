@@ -84,12 +84,23 @@ export const getTrainings = cache(async () => {
   const plan = await getCachedPlan()
   if (!getPlanFeatures(plan).training) return []
 
-  const { data, error } = await supabase
+  // parts_count needs the training_parts table (migration 0015) — fall
+  // back to a plain select if it hasn't been run yet.
+  let result = await supabase
     .from('trainings')
-    .select('*')
+    .select('*, parts_count:training_parts(count)')
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
 
+  if (result.error?.code === 'PGRST202') {
+    result = await supabase
+      .from('trainings')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false })
+  }
+
+  const { data, error } = result
   if (error) {
     console.error('Error fetching trainings:', error)
     return []
@@ -99,15 +110,22 @@ export const getTrainings = cache(async () => {
   // URLs (1 hour) so the content is only accessible to this Partner user.
   const trainings = await Promise.all(
     (data || []).map(async (training) => {
-      if (!training.file_path) return { ...training, signed_url: null }
+      const partsCount = (training as any).parts_count?.[0]?.count || 0
+      if (!training.file_path) {
+        return { ...training, parts_count: partsCount, signed_url: null }
+      }
       const { data: urlData, error: urlError } = await supabase.storage
         .from('trainings')
         .createSignedUrl(training.file_path, 3600)
       if (urlError) {
         console.error('Error signing training URL:', urlError)
-        return { ...training, signed_url: null }
+        return { ...training, parts_count: partsCount, signed_url: null }
       }
-      return { ...training, signed_url: urlData?.signedUrl ?? null }
+      return {
+        ...training,
+        parts_count: partsCount,
+        signed_url: urlData?.signedUrl ?? null,
+      }
     })
   )
 
@@ -146,7 +164,51 @@ export const getTrainingById = cache(async (id: string) => {
     }
   }
 
-  return { ...data, signed_url }
+  // Playlist parts (migration 0015) with their own signed URLs. Silent
+  // fallback when the table hasn't been created yet.
+  let parts: any[] = []
+  if (data.type === 'video') {
+    const { data: partsData, error: partsError } = await supabase
+      .from('training_parts')
+      .select('*')
+      .eq('training_id', id)
+      .order('position', { ascending: true })
+    if (partsError) {
+      if (partsError.code !== 'PGRST202') {
+        console.error('Error fetching training parts:', partsError)
+      }
+    } else {
+      parts = await Promise.all(
+        (partsData || []).map(async (part) => {
+          if (!part.file_path) return part
+          const { data: partUrl, error: partUrlError } = await supabase.storage
+            .from('trainings')
+            .createSignedUrl(part.file_path, 3600)
+          if (partUrlError) {
+            console.error('Error signing training part URL:', partUrlError)
+            return { ...part, signed_url: null }
+          }
+          return { ...part, signed_url: partUrl?.signedUrl ?? null }
+        })
+      )
+    }
+
+    // Legacy fallback: no parts yet but a video file on the parent row →
+    // treat the parent file as a single-part playlist.
+    if (parts.length === 0 && signed_url) {
+      parts = [{
+        id: 'parent',
+        position: 0,
+        title: data.title,
+        file_path: data.file_path,
+        file_name: data.file_name,
+        file_size: data.file_size,
+        signed_url,
+      }]
+    }
+  }
+
+  return { ...data, signed_url, parts }
 })
 
 export const getReviews = cache(async (type: 'product' | 'supplier', id: string) => {

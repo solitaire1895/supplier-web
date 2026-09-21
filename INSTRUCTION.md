@@ -480,4 +480,39 @@ The SQL is idempotent (safe to run multiple times). It will:
 ### Notes
 
 - Uploads go directly from the browser to Supabase Storage (not through server actions) so large files work — server actions cap at roughly 1 MB.
-- Max direct upload is 50 MB. For long videos, use the **Link** type (YouTube/Vimeo unlisted) — it also streams much better than self-hosted MP4.
+- Max direct upload is **150 MB per file** (enforced by the app). Note that Supabase Storage also enforces its own per-file cap based on your plan tier (~50 MB on the free tier, up to 5 GB on Pro) — for long videos, use the **Link** type (YouTube/Vimeo) which also streams better.
+
+---
+
+## Training Playlists (many videos per training)
+
+### What Was Built
+
+- A training of type **Video** can now hold **many videos** that play as a **playlist**:
+  - **Admin** (`/admin?tab=Training`): upload many videos at once (drag & drop, up to 150 MB each), give each part a title, reorder with ↑ ↓, remove parts — saving replaces the playlist atomically (dropped parts lose their stored files).
+  - **Client**: the training's detail page shows a playlist player — click any part to play it, and the next part **auto-plays** when one ends ("Now playing" / "Up next" indicators).
+  - Cards on the Training Center show the number of videos in each training.
+- Existing single-video trainings are **automatically migrated** into a single-part playlist by the SQL backfill.
+
+### Action Required (1 Step)
+
+#### Step 1: Run the Training Parts Migration
+
+1. Go to your **Supabase Dashboard**: https://supabase.com/dashboard
+2. Select your project
+3. Navigate to: **SQL Editor**
+4. Click **New query**
+5. Open the file `supabase/migrations/0015_training_parts.sql` from this project
+6. Copy and paste its entire contents into the SQL Editor
+7. Click **Run**
+
+The SQL is idempotent (safe to run multiple times). It will:
+- Create the `training_parts` table (position, title, file path, size, duration) with cascade delete on the parent training
+- Enable RLS with the same Partner + admin policies as the `trainings` table
+- Backfill: any existing video training with an uploaded file becomes a single-part playlist automatically
+
+### How to Verify
+
+1. Run the SQL migration (Step 1 above)
+2. `/admin?tab=Training` → New Training → type **Video** → drop several videos → reorder → Publish
+3. Open that training as a Partner-plan user → the playlist player appears → part 1 plays → when it ends, part 2 auto-plays

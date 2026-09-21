@@ -16,9 +16,10 @@ const TYPE_META: Record<TrainingType, { icon: any; label: string; classes: strin
   link: { icon: Link2, label: "Link", classes: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
 };
 
-// Supabase Storage per-file upload limit on most plans. Larger videos should
-// use the 'link' type (YouTube/Vimeo) instead of a direct upload.
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+// Per-file upload limit enforced by the app. Note that Supabase Storage ALSO
+// enforces its own per-file cap depending on the plan tier (~50MB on the
+// free tier, up to 5GB on Pro) — larger videos should use the 'link' type.
+const MAX_UPLOAD_BYTES = 150 * 1024 * 1024;
 
 function formatFileSize(bytes: number | null | undefined): string | null {
   if (!bytes) return null;
@@ -55,6 +56,12 @@ export default function TrainingAdmin() {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Playlist parts (video type) — many videos per training.
+  const [parts, setParts] = useState<any[]>([]);
+  const [activeUploads, setActiveUploads] = useState(0);
+  const [dragOverParts, setDragOverParts] = useState(false);
+  const partsInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState(emptyForm);
 
   // Self-fetching tab (same pattern as SupportChatAdmin). RLS allows admins.
@@ -88,7 +95,7 @@ export default function TrainingAdmin() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleOpenForm = (training: any = null) => {
+  const handleOpenForm = async (training: any = null) => {
     resetUpload();
     setError(null);
     if (training) {
@@ -105,9 +112,27 @@ export default function TrainingAdmin() {
       setUploadedPath(training.file_path || null);
       setUploadedName(training.file_name || null);
       setUploadedSize(training.file_size ?? null);
+
+      // Load the existing playlist parts (video type).
+      setParts([]);
+      const { data: partsData, error: partsError } = await supabase
+        .from("training_parts")
+        .select("*")
+        .eq("training_id", training.id)
+        .order("position", { ascending: true });
+      if (partsError && partsError.code !== "PGRST202") {
+        console.error("Error loading training parts:", partsError);
+      }
+      setParts(
+        ((partsData || []) as any[]).map((p) => ({
+          ...p,
+          duration_minutes: p.duration_minutes ?? "",
+        }))
+      );
     } else {
       setEditingTraining(null);
       setFormData(emptyForm);
+      setParts([]);
     }
     setIsFormOpen(true);
   };
@@ -118,7 +143,7 @@ export default function TrainingAdmin() {
   const uploadFile = async (selected: File) => {
     if (selected.size > MAX_UPLOAD_BYTES) {
       setUploadError(
-        `File is too large (${formatFileSize(selected.size)}). Max direct upload is 50 MB — for long videos use the Link type (YouTube/Vimeo).`
+        `File is too large (${formatFileSize(selected.size)}). Max direct upload is 150 MB — for long videos use the Link type (YouTube/Vimeo).`
       );
       return;
     }
@@ -154,6 +179,57 @@ export default function TrainingAdmin() {
     if (dropped) uploadFile(dropped);
   };
 
+  // ---- Playlist parts (video type): many videos per training ----
+
+  const uploadPartFiles = async (fileList: FileList | File[]) => {
+    const files = Array.from(fileList);
+    for (const file of files) {
+      if (file.size > MAX_UPLOAD_BYTES) {
+        setUploadError(
+          `"${file.name}" is too large (${formatFileSize(file.size)}). Max is 150 MB per video — use the Link type for longer videos.`
+        );
+        continue;
+      }
+      setActiveUploads((n) => n + 1);
+      try {
+        const ext = file.name.split(".").pop() || "bin";
+        const path = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
+        const { error: upError } = await supabase.storage
+          .from("trainings")
+          .upload(path, file, { upsert: false });
+        if (upError) throw upError;
+        setParts((list) => [
+          ...list,
+          {
+            file_path: path,
+            file_name: file.name,
+            file_size: file.size,
+            title: file.name.replace(/\.[^.]+$/, ""),
+            duration_minutes: "",
+          },
+        ]);
+      } catch (err: any) {
+        console.error("Playlist part upload failed:", err);
+        setUploadError(`Upload failed for "${file.name}": ${err.message || "unknown error"}`);
+      } finally {
+        setActiveUploads((n) => n - 1);
+      }
+    }
+  };
+
+  const removePart = (index: number) => {
+    setParts(parts.filter((_, i) => i !== index));
+  };
+
+  const movePart = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= parts.length) return;
+    const next = [...parts];
+    const [item] = next.splice(index, 1);
+    next.splice(target, 0, item);
+    setParts(next);
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this training? Its file will also be removed from storage.")) return;
     setIsDeleting(id);
@@ -176,24 +252,48 @@ export default function TrainingAdmin() {
       setError("An external URL is required for the Link type.");
       return;
     }
-    if (formData.type !== "link" && !uploadedPath) {
-      setError("Please upload a file (or switch to the Link type).");
+    if (formData.type === "document" && !uploadedPath) {
+      setError("Please upload the document file.");
+      return;
+    }
+    if (formData.type === "video" && parts.length === 0) {
+      setError("Please upload at least one video for the playlist.");
+      return;
+    }
+    if (activeUploads > 0) {
+      setError("Please wait for the current uploads to finish.");
       return;
     }
 
     setIsSubmitting(true);
     setError(null);
 
+    // Parent row: for video playlists the content lives in training_parts,
+    // so the parent's own file fields are cleared.
     const submission: any = {
       title: formData.title.trim(),
       description: formData.description.trim() || null,
       type: formData.type,
-      file_path: formData.type === "link" ? null : uploadedPath,
-      file_name: formData.type === "link" ? null : uploadedName,
-      file_size: formData.type === "link" ? null : uploadedSize,
+      file_path: formData.type === "document" ? uploadedPath : null,
+      file_name: formData.type === "document" ? uploadedName : null,
+      file_size: formData.type === "document" ? uploadedSize : null,
       external_url: formData.type === "link" ? formData.external_url.trim() : null,
       duration_minutes: formData.duration_minutes === "" ? null : Number(formData.duration_minutes),
       sort_order: Number(formData.sort_order) || 0,
+      parts:
+        formData.type === "video"
+          ? parts.map((p: any) => ({
+              title: (p.title || "").trim() || null,
+              file_path: p.file_path || null,
+              external_url: p.external_url || null,
+              file_name: p.file_name || null,
+              file_size: p.file_size ?? null,
+              duration_minutes:
+                p.duration_minutes === "" || p.duration_minutes == null
+                  ? null
+                  : Number(p.duration_minutes),
+            }))
+          : [],
     };
 
     const res = editingTraining
@@ -438,11 +538,11 @@ export default function TrainingAdmin() {
                 </div>
               </div>
 
-              {/* FILE UPLOAD (document / video) */}
-              {formData.type !== "link" && (
+              {/* FILE UPLOAD (document — single file) */}
+              {formData.type === "document" && (
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
-                    File * <span className="normal-case font-medium text-gray-600">(max 50 MB — long videos? use the Link type)</span>
+                    File * <span className="normal-case font-medium text-gray-600">(up to 150 MB)</span>
                   </label>
                   <input
                     type="file"
@@ -500,19 +600,144 @@ export default function TrainingAdmin() {
                             <Upload className="text-red-500" size={22} />
                           </div>
                           <p className="text-sm font-bold text-white">
-                            Drop your {formData.type} here, or click to browse
+                            Drop your document here, or click to browse
                           </p>
-                          <p className="text-[11px] text-gray-500 mt-1">PDF, DOCX, PPTX, MP4... up to 50 MB</p>
+                          <p className="text-[11px] text-gray-500 mt-1">PDF, DOCX, PPTX... up to 150 MB</p>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {uploadError && (
-                    <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-xs text-red-400">
-                      <AlertCircle size={14} className="shrink-0" /> {uploadError}
+                </div>
+              )}
+
+              {/* VIDEO PLAYLIST (many videos, up to 150 MB each) */}
+              {formData.type === "video" && (
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+                    Videos * <span className="normal-case font-medium text-gray-600">(playlist — up to 150 MB per video)</span>
+                  </label>
+                  <input
+                    type="file"
+                    multiple
+                    accept="video/*"
+                    className="hidden"
+                    ref={partsInputRef}
+                    onChange={(e) => {
+                      const files = e.target.files;
+                      if (files) uploadPartFiles(files);
+                      e.target.value = "";
+                    }}
+                  />
+
+                  <div
+                    onClick={() => activeUploads === 0 && partsInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragOverParts(true);
+                    }}
+                    onDragLeave={() => setDragOverParts(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragOverParts(false);
+                      if (e.dataTransfer.files?.length) uploadPartFiles(e.dataTransfer.files);
+                    }}
+                    className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+                      dragOverParts
+                        ? "border-red-500/60 bg-red-500/10"
+                        : "border-white/10 bg-white/[0.02] hover:border-red-500/50 hover:bg-red-500/5"
+                    } ${activeUploads > 0 ? "pointer-events-none opacity-80" : ""}`}
+                  >
+                    {activeUploads > 0 ? (
+                      <div className="flex flex-col items-center py-2">
+                        <Loader2 className="text-red-500 animate-spin mb-2" size={24} />
+                        <p className="text-sm font-medium text-white">
+                          Uploading {activeUploads} video{activeUploads > 1 ? "s" : ""}...
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <div className="w-11 h-11 rounded-full bg-red-500/10 flex items-center justify-center mb-2">
+                          <Upload className="text-red-500" size={20} />
+                        </div>
+                        <p className="text-sm font-bold text-white">Drop videos here, or click to browse</p>
+                        <p className="text-[11px] text-gray-500 mt-1">
+                          Add many videos — they play as a playlist · up to 150 MB each
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {parts.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {parts.map((part: any, i: number) => (
+                        <div
+                          key={part.file_path || part.id || i}
+                          className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-2xl"
+                        >
+                          <div className="flex flex-col gap-0.5">
+                            <button
+                              type="button"
+                              onClick={() => movePart(i, -1)}
+                              disabled={i === 0}
+                              className="p-1 text-gray-500 hover:text-white disabled:opacity-20 transition-colors leading-none"
+                              title="Move up"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => movePart(i, 1)}
+                              disabled={i === parts.length - 1}
+                              className="p-1 text-gray-500 hover:text-white disabled:opacity-20 transition-colors leading-none"
+                              title="Move down"
+                            >
+                              ↓
+                            </button>
+                          </div>
+                          <span className="w-6 text-center text-[11px] font-black text-red-500 shrink-0">
+                            {String(i + 1).padStart(2, "0")}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <input
+                              value={part.title || ""}
+                              onChange={(e) =>
+                                setParts(
+                                  parts.map((p: any, pi: number) =>
+                                    pi === i ? { ...p, title: e.target.value } : p
+                                  )
+                                )
+                              }
+                              placeholder={`Part ${i + 1} title`}
+                              className="w-full bg-transparent text-sm font-bold text-white placeholder-gray-600 focus:outline-none border-b border-transparent focus:border-red-500/30 py-0.5"
+                            />
+                            <p className="text-[10px] text-gray-500 truncate">
+                              {part.file_name}
+                              {part.file_size ? ` · ${formatFileSize(part.file_size)}` : ""}
+                              {part.id ? " · saved" : " · new"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removePart(i)}
+                            className="p-2 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
+                            title="Remove"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      <p className="text-[10px] text-gray-600 text-center">
+                        {parts.length} video{parts.length === 1 ? "" : "s"} in the playlist · reorder with ↑ ↓
+                      </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {(formData.type === "document" || formData.type === "video") && uploadError && (
+                <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-xs text-red-400">
+                  <AlertCircle size={14} className="shrink-0" /> {uploadError}
                 </div>
               )}
 

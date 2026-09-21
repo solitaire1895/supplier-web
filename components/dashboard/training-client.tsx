@@ -137,7 +137,11 @@ export default function TrainingClient({ trainings, profile }: TrainingClientPro
                   </p>
 
                   <div className="mt-auto flex items-center gap-3 text-[10px] text-gray-600">
-                    {training.duration_minutes ? (
+                    {training.parts_count > 0 ? (
+                      <span className="flex items-center gap-1 text-red-400">
+                        <Clock size={10} /> {training.parts_count} {t.training.videosCount}
+                      </span>
+                    ) : training.duration_minutes ? (
                       <span className="flex items-center gap-1">
                         <Clock size={10} /> {training.duration_minutes} {t.training.minutes}
                       </span>

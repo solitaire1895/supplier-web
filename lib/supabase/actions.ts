@@ -727,11 +727,37 @@ export async function getRecommendedSuppliersAction(limit: number = 4) {
 
 export async function addTraining(trainingData: any) {
   const supabase = await createClient()
-  const { error } = await supabase.from('trainings').insert([trainingData])
+  const { parts, ...row } = trainingData
+
+  const { data: created, error } = await supabase
+    .from('trainings')
+    .insert([row])
+    .select('id')
+    .single()
 
   if (error) {
     console.error('Error adding training:', error)
     return { error: error.message }
+  }
+
+  // Playlist parts (video trainings)
+  if (Array.isArray(parts) && parts.length > 0) {
+    const { error: partsError } = await supabase
+      .from('training_parts')
+      .insert(parts.map((p: any, i: number) => ({
+        training_id: created.id,
+        position: i,
+        title: p.title || null,
+        file_path: p.file_path || null,
+        external_url: p.external_url || null,
+        file_name: p.file_name || null,
+        file_size: p.file_size ?? null,
+        duration_minutes: p.duration_minutes ?? null,
+      })))
+    if (partsError) {
+      console.error('Error adding training parts:', partsError)
+      return { error: partsError.message }
+    }
   }
 
   revalidatePath('/admin')
@@ -741,7 +767,60 @@ export async function addTraining(trainingData: any) {
 
 export async function updateTraining(id: string, trainingData: any) {
   const supabase = await createClient()
-  const { error } = await supabase.from('trainings').update(trainingData).eq('id', id)
+  const { parts, ...row } = trainingData
+
+  // 1. Replace the playlist when a parts array is provided (video type).
+  //    Parts dropped from the list also lose their stored files.
+  if (Array.isArray(parts)) {
+    const { data: existingParts } = await supabase
+      .from('training_parts')
+      .select('id, file_path')
+      .eq('training_id', id)
+
+    const keepPaths = new Set(parts.map((p: any) => p.file_path).filter(Boolean))
+    const droppedPaths = ((existingParts || [])
+      .map((p: any) => p.file_path)
+      .filter((p: string | null) => p && !keepPaths.has(p))) as string[]
+    if (droppedPaths.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from('trainings')
+        .remove(droppedPaths)
+      if (storageError) {
+        console.error('Error deleting dropped part files:', storageError)
+      }
+    }
+
+    const { error: deleteError } = await supabase
+      .from('training_parts')
+      .delete()
+      .eq('training_id', id)
+    if (deleteError) {
+      console.error('Error replacing training parts:', deleteError)
+      return { error: deleteError.message }
+    }
+
+    if (parts.length > 0) {
+      const { error: partsError } = await supabase
+        .from('training_parts')
+        .insert(parts.map((p: any, i: number) => ({
+          training_id: id,
+          position: i,
+          title: p.title || null,
+          file_path: p.file_path || null,
+          external_url: p.external_url || null,
+          file_name: p.file_name || null,
+          file_size: p.file_size ?? null,
+          duration_minutes: p.duration_minutes ?? null,
+        })))
+      if (partsError) {
+        console.error('Error updating training parts:', partsError)
+        return { error: partsError.message }
+      }
+    }
+  }
+
+  // 2. Update the parent row.
+  const { error } = await supabase.from('trainings').update(row).eq('id', id)
 
   if (error) {
     console.error('Error updating training:', error)
@@ -756,19 +835,25 @@ export async function updateTraining(id: string, trainingData: any) {
 export async function deleteTraining(id: string) {
   const supabase = await createClient()
 
-  // Look up the row first so we can also remove its file from storage.
+  // Look up the row + its playlist parts so we can also remove all
+  // their files from storage. (Part rows cascade-delete with the parent.)
   const { data: training } = await supabase
     .from('trainings')
-    .select('file_path')
+    .select('file_path, training_parts(file_path)')
     .eq('id', id)
     .maybeSingle()
 
-  if (training?.file_path) {
+  const paths: string[] = []
+  if (training?.file_path) paths.push(training.file_path)
+  ;(training?.training_parts || []).forEach((p: any) => {
+    if (p.file_path) paths.push(p.file_path)
+  })
+  if (paths.length > 0) {
     const { error: storageError } = await supabase.storage
       .from('trainings')
-      .remove([training.file_path])
+      .remove(paths)
     if (storageError) {
-      console.error('Error deleting training file from storage:', storageError)
+      console.error('Error deleting training files from storage:', storageError)
     }
   }
 

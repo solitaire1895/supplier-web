@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { toEmbedUrl } from "@/lib/embed";
+import { useState } from "react";
 import Link from "next/link";
 
 const TYPE_META: Record<string, { icon: any; classes: string }> = {
@@ -28,6 +29,7 @@ const GLASS =
 
 export default function TrainingDetailClient({ training }: { training: any }) {
   const { t } = useI18n();
+  const [activePart, setActivePart] = useState(0);
 
   if (!t) return null;
 
@@ -48,6 +50,17 @@ export default function TrainingDetailClient({ training }: { training: any }) {
   // Nothing playable / downloadable at all (e.g. signed URL failed).
   const nothingAvailable =
     !training.signed_url && !embedUrl && !training.external_url;
+
+  // Playlist parts (video trainings) — many videos, one training.
+  const parts: any[] = training.parts || [];
+  const hasPlaylist = parts.length > 0;
+  const currentPart = parts[Math.min(activePart, Math.max(parts.length - 1, 0))];
+  const currentPartEmbed = currentPart?.external_url
+    ? toEmbedUrl(currentPart.external_url)
+    : null;
+  const handleEnded = () => {
+    if (activePart < parts.length - 1) setActivePart(activePart + 1);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30">
@@ -98,6 +111,107 @@ export default function TrainingDetailClient({ training }: { training: any }) {
             </span>
           ) : null}
         </div>
+
+        {/* PLAYLIST — many videos, one training */}
+        {hasPlaylist && (
+          <div className="space-y-5">
+            {/* CURRENT PART PLAYER */}
+            {currentPart?.signed_url ? (
+              <div className={`${GLASS} overflow-hidden`}>
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <video
+                  controls
+                  autoPlay
+                  onEnded={handleEnded}
+                  className="w-full aspect-video bg-black"
+                  src={currentPart.signed_url}
+                />
+              </div>
+            ) : currentPartEmbed ? (
+              <div className={`${GLASS} overflow-hidden`}>
+                <iframe
+                  src={currentPartEmbed}
+                  title={currentPart.title || training.title}
+                  className="w-full aspect-video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            ) : currentPart?.external_url ? (
+              <a
+                href={currentPart.external_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-2xl text-sm font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all"
+              >
+                <ExternalLink size={16} /> {t.training.openOriginal}
+              </a>
+            ) : null}
+
+            {/* PLAYLIST LIST */}
+            {parts.length > 1 && (
+              <div className={`${GLASS} p-4`}>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                    {t.training.playlist}
+                  </p>
+                  <span className="text-[10px] font-bold text-gray-600">
+                    {activePart + 1} / {parts.length}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {parts.map((part: any, i: number) => (
+                    <button
+                      key={part.id || part.file_path || i}
+                      onClick={() => setActivePart(i)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${
+                        i === activePart
+                          ? "bg-red-500/10 border-red-500/20"
+                          : "border-transparent hover:bg-white/5"
+                      }`}
+                    >
+                      <span
+                        className={`text-[11px] font-black shrink-0 ${
+                          i === activePart ? "text-red-500" : "text-gray-600"
+                        }`}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className={`block text-sm font-bold truncate ${
+                            i === activePart ? "text-white" : "text-gray-300"
+                          }`}
+                        >
+                          {part.title || part.file_name || `Part ${i + 1}`}
+                        </span>
+                        <span className="block text-[10px] text-gray-600 truncate">
+                          {part.file_name}
+                          {part.file_size ? ` · ${formatFileSize(part.file_size)}` : ""}
+                        </span>
+                      </span>
+                      {i === activePart ? (
+                        <span className="text-[9px] font-black uppercase tracking-widest text-red-400 flex items-center gap-1.5 shrink-0">
+                          <span className="w-1 h-1 rounded-full bg-red-500 animate-pulse"></span>
+                          {t.training.nowPlaying}
+                        </span>
+                      ) : i === activePart + 1 ? (
+                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-600 shrink-0">
+                          {t.training.upNext}
+                        </span>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* LEGACY SINGLE CONTENT — trainings without playlist parts */}
+        {!hasPlaylist && (
+          <div className="space-y-5">
 
         {/* UPLOADED VIDEO — native in-page player (signed URL) */}
         {isUploadedVideo && (
@@ -164,6 +278,8 @@ export default function TrainingDetailClient({ training }: { training: any }) {
           <div className={`${GLASS} p-12 text-center`}>
             <AlertCircle className="text-red-500 mb-3 mx-auto" size={28} />
             <p className="text-sm text-gray-500">{t.common.unavailable}</p>
+          </div>
+        )}
           </div>
         )}
       </div>
