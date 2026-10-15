@@ -6,17 +6,20 @@ export type Lang = "EN" | "FR" | "CN";
 
 const KEY = "nexusply_settings";
 
+/** Language for visitors who have not picked one. */
+export const DEFAULT_LANG: Lang = "FR";
+
 export function getLanguage(): Lang {
-  if (typeof window === "undefined") return "EN";
+  if (typeof window === "undefined") return DEFAULT_LANG;
 
   const data = localStorage.getItem(KEY);
-  if (!data) return "EN";
+  if (!data) return DEFAULT_LANG;
 
   try {
     const settings = JSON.parse(data);
-    return settings.language || "EN";
+    return settings.language || DEFAULT_LANG;
   } catch (e) {
-    return "EN";
+    return DEFAULT_LANG;
   }
 }
 
@@ -224,6 +227,17 @@ export const translations = {
       choosePlan: "Choose Your Plan",
       manageSubscription: "Manage Subscription",
       backToHome: "Back to Home",
+      redirecting: "Redirecting to secure payment...",
+      checkoutError: "Could not start the payment. Please try again.",
+      confirming: "Confirming your payment...",
+      confirmed: "Payment confirmed! Your plan is active until",
+      processing: "Your payment is still being processed. Your plan will activate automatically in a few minutes.",
+      failed: "The payment did not go through. You can try again whenever you are ready.",
+      mismatch: "We could not validate this payment. If you were charged, please contact support.",
+      tryAgain: "Try again",
+      renew: "Renew (+30 days)",
+      expiresIn: "Expires in",
+      payFrom: "Paying from",
     },
     heroCarousel: {
       intro: "Nexusply Intelligence",
@@ -696,6 +710,17 @@ export const translations = {
       choosePlan: "Choisissez votre plan",
       manageSubscription: "Gérer l'abonnement",
       backToHome: "Retour à l'accueil",
+      redirecting: "Redirection vers le paiement sécurisé...",
+      checkoutError: "Impossible de lancer le paiement. Veuillez réessayer.",
+      confirming: "Confirmation de votre paiement...",
+      confirmed: "Paiement confirmé ! Votre plan est actif jusqu'au",
+      processing: "Votre paiement est en cours de traitement. Votre plan sera activé automatiquement dans quelques minutes.",
+      failed: "Le paiement n'a pas abouti. Vous pouvez réessayer quand vous voulez.",
+      mismatch: "Nous n'avons pas pu valider ce paiement. Si vous avez été débité, contactez le support.",
+      tryAgain: "Réessayer",
+      renew: "Renouveler (+30 jours)",
+      expiresIn: "Expire dans",
+      payFrom: "Paiement depuis",
     },
     heroCarousel: {
       intro: "Nexusply Intelligence",
@@ -1163,6 +1188,17 @@ export const translations = {
       choosePlan: "选择您的方案",
       manageSubscription: "管理订阅",
       backToHome: "返回首页",
+      redirecting: "正在跳转到安全支付页面...",
+      checkoutError: "无法发起支付，请重试。",
+      confirming: "正在确认您的付款...",
+      confirmed: "付款成功！您的方案有效期至",
+      processing: "您的付款仍在处理中，方案将在几分钟内自动激活。",
+      failed: "付款未成功，您可以随时重试。",
+      mismatch: "我们无法验证此付款。如已扣款，请联系客服。",
+      tryAgain: "重试",
+      renew: "续订（+30 天）",
+      expiresIn: "剩余有效期",
+      payFrom: "付款国家",
     },
     heroCarousel: {
       intro: "Nexusply 情报",
@@ -1449,7 +1485,7 @@ export const translations = {
 };
 
 export function useI18n() {
-  const [lang, setLang] = useState<Lang>("EN");
+  const [lang, setLang] = useState<Lang>(DEFAULT_LANG);
 
   useEffect(() => {
     setLang(getLanguage());
@@ -1459,6 +1495,11 @@ export function useI18n() {
 
     return () => window.removeEventListener("languageChanged", update);
   }, []);
+
+  // Keep <html lang> in sync for screen readers, spell-check and search engines.
+  useEffect(() => {
+    document.documentElement.lang = lang === "CN" ? "zh" : lang.toLowerCase();
+  }, [lang]);
 
   // Use a type cast to ensure the returned translation object matches the structure of the EN translation.
   // This avoids TypeScript errors when accessing properties that are present in all translations but

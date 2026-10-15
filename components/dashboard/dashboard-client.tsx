@@ -11,7 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import { useState, useEffect, useCallback } from "react";
 import { searchSuppliersAction, recordSourcingRequest } from "@/lib/supabase/actions";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useUser } from "@/lib/supabase/provider";
+import PaymentStatusBanner from "@/components/dashboard/payment-status-banner";
 
 interface DashboardClientProps {
   suppliers: any[];
@@ -23,54 +23,11 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
   const { t, lang } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { refreshProfile, profile: liveProfile } = useUser();
   
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [searchResults, setSearchResults] = useState<any[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  // ---------------------------------------------------------------------------
-  // Stripe success redirect: poll for profile update
-  // When the user returns from Stripe checkout with ?success=true, the webhook
-  // may not have finished updating the profile yet. We poll refreshProfile
-  // a few times until the plan changes from the initial value.
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
-    const isSuccess = searchParams.get("success") === "true";
-    if (!isSuccess) return;
-
-    const initialPlan = profile?.active_plan || "free";
-    let pollCount = 0;
-    const maxPolls = 6;
-    const pollInterval = 2000; // 2 seconds
-
-    const poll = async () => {
-      await refreshProfile();
-      pollCount++;
-
-      // Check if the plan has been updated by the webhook
-      const currentPlan = liveProfile?.active_plan || profile?.active_plan || "free";
-      if (currentPlan !== initialPlan && currentPlan !== "free") {
-        // Plan updated! Clean the URL and stop polling.
-        router.replace("/dashboard", { scroll: false });
-        return;
-      }
-
-      if (pollCount < maxPolls) {
-        setTimeout(poll, pollInterval);
-      } else {
-        // Exhausted polls — clean the URL anyway
-        router.replace("/dashboard", { scroll: false });
-      }
-    };
-
-    // Small initial delay to give the webhook time to process
-    const timeout = setTimeout(poll, 1500);
-
-    return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
 
   const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -194,6 +151,8 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
       <Navbar />
 
       <div className="pt-28 pb-24 px-4 md:px-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+
+        <PaymentStatusBanner />
 
         {/* HERO SEARCH & HEADER */}
         <div className="mb-12">

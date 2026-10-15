@@ -146,3 +146,38 @@ export function getPlanFeatures(plan: string | null | undefined): PlanFeatures {
   const type = (plan?.toLowerCase() as PlanType) || 'free';
   return PLANS[type] || PLANS.free;
 }
+
+/* ================= BILLING ================= */
+
+export const PAID_PLANS = ['explorateur', 'importateur', 'partenaire'] as const;
+export type PaidPlan = (typeof PAID_PLANS)[number];
+
+/** Days of access bought by one payment (SasPay has no recurring billing). */
+export const PLAN_PERIOD_DAYS = 30;
+
+export function isPaidPlan(plan: unknown): plan is PaidPlan {
+  return typeof plan === 'string' && (PAID_PLANS as readonly string[]).includes(plan);
+}
+
+type BillingFields = {
+  active_plan?: string | null;
+  plan_expires_at?: string | null;
+  subscription_status?: string | null;
+};
+
+export function isPlanExpired(profile: BillingFields | null | undefined): boolean {
+  if (!profile?.plan_expires_at || !profile.active_plan || profile.active_plan === 'free') return false;
+  return new Date(profile.plan_expires_at).getTime() <= Date.now();
+}
+
+/**
+ * Returns the profile with an expired paid plan shown as 'free'.
+ * Plans are prepaid periods, so access must stop at plan_expires_at even
+ * before the database job (expire_lapsed_plans) has downgraded the row.
+ */
+export function withEffectivePlan<T extends BillingFields>(profile: T): T;
+export function withEffectivePlan<T extends BillingFields>(profile: T | null | undefined): T | null | undefined;
+export function withEffectivePlan<T extends BillingFields>(profile: T | null | undefined) {
+  if (!profile || !isPlanExpired(profile)) return profile;
+  return { ...profile, active_plan: 'free', subscription_status: 'free' };
+}

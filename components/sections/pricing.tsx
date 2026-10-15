@@ -1,10 +1,14 @@
 "use client"
 
 import PricingCard from "./PricingCard"
+import CountrySelect from "@/components/billing/country-select"
 import { useI18n } from "@/lib/i18n"
+import { PAID_PLANS } from "@/lib/plans"
+import { useBillingCountry } from "@/lib/use-billing-country"
 
 export default function Pricing() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
+  const { countries, country, setCountry, priceLabel } = useBillingCountry()
 
   if (!t) return null
 
@@ -14,11 +18,8 @@ export default function Pricing() {
     { ...t.pricing?.plans?.premium, highlight: false },
   ]
 
-  const priceIds = [
-    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_EXPLORER,
-    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_IMPORTER,
-    process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PARTNER,
-  ]
+  // Same order as `plans` above (basic, standard, premium).
+  const planKeys = PAID_PLANS
 
   return (
     <section id="pricing" className="relative py-32 px-6 bg-black text-white overflow-hidden">
@@ -28,17 +29,29 @@ export default function Pricing() {
         {t.pricing?.title}
       </h2>
 
+      {/* COUNTRY / CURRENCY */}
+      <div className="relative z-10 mb-10 flex justify-center">
+        <CountrySelect
+          countries={countries}
+          value={country.iso}
+          onChange={setCountry}
+          lang={lang}
+          label={t.subscription.payFrom}
+        />
+      </div>
+
       {/* CARDS */}
       <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8 relative z-10">
         {plans.map((plan, i) => (
           <PricingCard
             key={i}
             title={plan.title}
-            price={plan.price}
+            price={priceLabel(planKeys[i], lang)}
             features={plan.features}
             highlight={plan.highlight}
             ctaText={plan.cta}
-            priceId={priceIds[i]}
+            plan={planKeys[i]}
+            country={country.iso}
           />
         ))}
       </div>

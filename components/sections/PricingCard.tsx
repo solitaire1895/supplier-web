@@ -1,7 +1,8 @@
 import { Check, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import type { PaidPlan } from "@/lib/plans"
+import { usePlanCheckout } from "@/lib/use-plan-checkout"
+import { useI18n } from "@/lib/i18n"
 
 export default function PricingCard({
   title,
@@ -9,56 +10,23 @@ export default function PricingCard({
   features,
   highlight,
   ctaText = "Get Started",
-  priceId,
+  plan,
+  country,
 }: {
   title: string
   price: string
   features: string[]
   highlight?: boolean
   ctaText?: string
-  priceId?: string
+  plan?: PaidPlan
+  country?: string
 }) {
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const { t } = useI18n()
+  const { startCheckout, pendingPlan, error } = usePlanCheckout()
+  const loading = !!plan && pendingPlan === plan
 
-  const handleSubscribe = async () => {
-    if (!priceId) return
-
-    try {
-      setLoading(true)
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ priceId }),
-      })
-
-      // Safely parse the JSON body (it may be empty / non-JSON on errors)
-      let data: { url?: string; error?: string } = {}
-      try {
-        data = await res.json()
-      } catch {
-        data = {}
-      }
-
-      // Not signed in -> send the user to sign up / login
-      if (res.status === 401) {
-        router.push("/auth/signup")
-        return
-      }
-
-      if (data.url) {
-        window.location.href = data.url
-        return
-      }
-
-      alert(data.error || "Something went wrong")
-    } catch (error) {
-      console.error("Subscription error:", error)
-      alert("Failed to initiate checkout")
-    } finally {
-      setLoading(false)
-    }
+  const handleSubscribe = () => {
+    if (plan && !loading) startCheckout(plan, country)
   }
 
   return (
@@ -103,7 +71,7 @@ export default function PricingCard({
       </div>
 
       {/* BUTTON */}
-      {priceId ? (
+      {plan ? (
         <button
           onClick={handleSubscribe}
           disabled={loading}
@@ -118,7 +86,7 @@ export default function PricingCard({
           `}
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {ctaText}
+          {loading ? (t.subscription?.redirecting ?? ctaText) : ctaText}
         </button>
       ) : (
         <Link
@@ -134,6 +102,12 @@ export default function PricingCard({
         >
           {ctaText}
         </Link>
+      )}
+
+      {error && (
+        <p role="alert" className="mt-3 text-center text-sm text-red-400">
+          {t.subscription?.checkoutError ?? "Could not start the payment. Please try again."}
+        </p>
       )}
 
     </div>

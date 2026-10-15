@@ -1,6 +1,6 @@
 import { createClient } from './server'
 import { cache } from 'react'
-import { getPlanFeatures } from '../plans'
+import { getPlanFeatures, withEffectivePlan } from '../plans'
 
 // ---------------------------------------------------------------------------
 // Cached per-request auth helpers — avoids redundant round-trips when multiple
@@ -19,10 +19,10 @@ const getCachedPlan = cache(async () => {
   const supabase = await createClient()
   const { data: profile } = await supabase
     .from('profiles')
-    .select('active_plan')
+    .select('active_plan, plan_expires_at')
     .eq('id', user.id)
     .maybeSingle()
-  return profile?.active_plan ?? null
+  return withEffectivePlan(profile)?.active_plan ?? null
 })
 
 // ---------------------------------------------------------------------------
@@ -332,7 +332,7 @@ export const getUserProfile = cache(async () => {
     return null
   }
 
-  return data
+  return withEffectivePlan(data)
 })
 
 export const searchProducts = cache(async (query: string) => {

@@ -9,7 +9,10 @@ import { useI18n } from "@/lib/i18n";
 import { CheckCircle2, Zap, CreditCard, Star, User, Globe, Loader2, Package, Shield, Phone, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useUser } from "@/lib/supabase/provider";
-import { PLANS, PlanType } from "@/lib/plans";
+import { PLANS, type PaidPlan } from "@/lib/plans";
+import { usePlanCheckout } from "@/lib/use-plan-checkout";
+import { useBillingCountry } from "@/lib/use-billing-country";
+import CountrySelect from "@/components/billing/country-select";
 
 /* ================= SETTINGS ================= */
 const SETTINGS_KEY = "nexusply_settings";
@@ -46,6 +49,8 @@ function ProfileContent() {
   const searchParams = useSearchParams();
   // Pull both `user` (auth session) and `profile` (DB row) from the provider.
   const { user, profile: userProfile, loading: userLoading, refreshProfile } = useUser();
+  const { startCheckout, pendingPlan, error: checkoutError } = usePlanCheckout();
+  const { countries: billingCountries, country: billingCountry, setCountry: setBillingCountry, priceLabel } = useBillingCountry();
 
   // Keep activeTab in state but always sync it from the URL so query-only
   // navigations (e.g. ?tab=plan from the navbar) reliably update the view.
@@ -57,9 +62,8 @@ function ProfileContent() {
   }, [searchParams]);
 
   // Refresh the profile whenever the user (re-)lands on this page while
-  // authenticated. This covers the Stripe success redirect case where the
-  // webhook may have updated active_plan / plan_expires_at after the session
-  // was originally loaded.
+  // authenticated, so a plan applied by the payment webhook after the
+  // session was loaded (active_plan / plan_expires_at) shows up.
   useEffect(() => {
     if (user) {
       refreshProfile();
@@ -72,7 +76,6 @@ function ProfileContent() {
   const [favoriteSuppliers, setFavoriteSuppliers] = useState<any[]>([]);
   const [contactedSuppliers, setContactedSuppliers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
   const loadFavorites = useCallback(async (userId: string) => {
     try {
@@ -194,23 +197,20 @@ function ProfileContent() {
   const pricingPlans = [
     {
       name: PLANS.explorateur.name[lang] || PLANS.explorateur.name.EN,
-      type: 'explorateur' as PlanType,
-      price: { monthly: PLANS.explorateur.price, yearly: Math.round(PLANS.explorateur.price * 0.8) },
+      type: 'explorateur' as PaidPlan,
       description: PLANS.explorateur.description[lang] || PLANS.explorateur.description.EN,
       features: t.pricing.plans.basic.features,
     },
     {
       name: PLANS.importateur.name[lang] || PLANS.importateur.name.EN,
-      type: 'importateur' as PlanType,
-      price: { monthly: PLANS.importateur.price, yearly: Math.round(PLANS.importateur.price * 0.8) },
+      type: 'importateur' as PaidPlan,
       description: PLANS.importateur.description[lang] || PLANS.importateur.description.EN,
       features: t.pricing.plans.standard.features,
       popular: true,
     },
     {
       name: PLANS.partenaire.name[lang] || PLANS.partenaire.name.EN,
-      type: 'partenaire' as PlanType,
-      price: { monthly: PLANS.partenaire.price, yearly: Math.round(PLANS.partenaire.price * 0.8) },
+      type: 'partenaire' as PaidPlan,
       description: PLANS.partenaire.description[lang] || PLANS.partenaire.description.EN,
       features: t.pricing.plans.premium.features,
     }
@@ -391,7 +391,7 @@ function ProfileContent() {
                     {/* 30-day countdown from plan_expires_at */}
                     {userProfile?.plan_expires_at && userProfile.subscription_status === 'active' && (
                       <div className="text-left md:text-right">
-                        <p className="text-sm text-gray-400">{(t.profile as any).renewsIn ?? "Renews in"}</p>
+                        <p className="text-sm text-gray-400">{t.subscription.expiresIn}</p>
                         <p className="font-medium">
                           {(() => {
                             const days = getDaysRemaining(userProfile.plan_expires_at);
@@ -414,6 +414,18 @@ function ProfileContent() {
                       </div>
                     )}
                   </div>
+
+                  {checkoutError && (
+                    <p role="alert" className="text-sm text-red-400">{t.subscription.checkoutError}</p>
+                  )}
+
+                  <CountrySelect
+                    countries={billingCountries}
+                    value={billingCountry.iso}
+                    onChange={setBillingCountry}
+                    lang={lang}
+                    label={t.subscription.payFrom}
+                  />
 
                   {/* Pricing Cards Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -444,7 +456,7 @@ function ProfileContent() {
                           </div>
 
                           <div className="mb-8">
-                            <span className="text-3xl font-bold tracking-tight">{plan.price[billingCycle].toLocaleString()} FCFA</span>
+                            <span className="text-3xl font-bold tracking-tight">{priceLabel(plan.type, lang)}</span>
                             <span className="text-gray-500 text-sm">/{t.common.month}</span>
                           </div>
 
@@ -458,18 +470,23 @@ function ProfileContent() {
                           </ul>
 
                           <button
-                            onClick={() => router.push('/dashboard/subscribe')}
-                            disabled={isActive}
-                            className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all
-                              ${isActive 
-                                ? 'bg-white/10 text-gray-400 cursor-not-allowed' 
-                                : plan.popular 
-                                  ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] hover:bg-red-600' 
+                            onClick={() => startCheckout(plan.type, billingCountry.iso)}
+                            disabled={pendingPlan !== null}
+                            className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed
+                              ${isActive
+                                ? 'border border-white/20 bg-transparent text-white hover:bg-white/10'
+                                : plan.popular
+                                  ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] hover:bg-red-600'
                                   : 'bg-white/10 text-white hover:bg-white/20'
                               }
                             `}
                           >
-                            {isActive ? t.profile.currentPlanBtn : `${t.profile.upgradeTo} ${plan.name}`}
+                            {pendingPlan === plan.type && <Loader2 size={16} className="animate-spin" />}
+                            {pendingPlan === plan.type
+                              ? t.subscription.redirecting
+                              : isActive
+                                ? t.subscription.renew
+                                : `${t.profile.upgradeTo} ${plan.name}`}
                           </button>
                         </div>
                       );
