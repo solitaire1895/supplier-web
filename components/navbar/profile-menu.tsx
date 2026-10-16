@@ -22,7 +22,7 @@ export default function ProfileMenu({ close }: { close: () => void }) {
         exit={{ opacity: 0, scale: 0.95 }}
         className="relative z-10 w-full max-w-sm"
       >
-        <ProfileDropdown />
+        <ProfileDropdown onNavigate={close} />
       </motion.div>
     </div>
   );

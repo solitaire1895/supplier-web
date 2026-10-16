@@ -10,6 +10,7 @@ import {
   LogOut,
   Shield,
   LifeBuoy,
+  CreditCard,
 } from "lucide-react";
 import { useI18n, Lang } from "@/lib/i18n";
 import { useUser } from "@/lib/supabase/provider";
@@ -21,7 +22,8 @@ const languages = [
   { code: "CN" as Lang, label: "中文" },
 ];
 
-export default function ProfileDropdown() {
+/** `onNavigate` lets a parent overlay (mobile profile menu) close itself after a link is used. */
+export default function ProfileDropdown({ onNavigate }: { onNavigate?: () => void } = {}) {
   const router = useRouter();
   const { t, lang, setLanguage } = useI18n();
   const { profile, user, refreshProfile } = useUser();
@@ -37,6 +39,11 @@ export default function ProfileDropdown() {
   // Resilient logout: never freezes on a hung network call, always clears
   // the local session and hard-navigates to the login page.
   const handleLogout = () => logoutAndRedirect();
+
+  const go = (path: string) => {
+    onNavigate?.();
+    router.push(path);
+  };
 
   const normalizedRole = profile?.role?.toString().trim().toLowerCase();
   const isAdmin = normalizedRole === 'admin' || normalizedRole === 'super_admin';
@@ -81,18 +88,19 @@ export default function ProfileDropdown() {
           <DropdownItem
             icon={<Shield size={15} className="text-red-500" />}
             label="Admin Panel"
-            onClick={() => router.push("/admin")}
+            onClick={() => go("/admin")}
             className="text-white"
           />
         )}
-        <DropdownItem icon={<User size={15} />} label={t.navbar.profile} onClick={() => router.push("/dashboard/profile")} />
-        <DropdownItem icon={<Clock size={15} />} label={t.profile.activity} onClick={() => console.log("activity")} />
-        <DropdownItem icon={<Star size={15} />} label={t.profile.favoritesProducts} onClick={() => router.push("/dashboard/profile")} />
-        <DropdownItem icon={<Settings size={15} />} label={t.settings.account} onClick={() => router.push("/dashboard/profile")} />
+        <DropdownItem icon={<User size={15} />} label={t.navbar.profile} onClick={() => go("/dashboard/profile?tab=fav-suppliers")} />
+        <DropdownItem icon={<Clock size={15} />} label={t.profile.activity} onClick={() => go("/dashboard/profile?tab=contacts")} />
+        <DropdownItem icon={<Star size={15} />} label={t.profile.favoritesProducts} onClick={() => go("/dashboard/profile?tab=fav-products")} />
+        <DropdownItem icon={<CreditCard size={15} />} label={t.profile.plan} onClick={() => go("/dashboard/profile?tab=plan")} />
+        <DropdownItem icon={<Settings size={15} />} label={t.settings.account} onClick={() => go("/dashboard/profile?tab=settings")} />
 
         <div className="my-1.5 border-t border-white/[0.06]" />
 
-        <DropdownItem icon={<LifeBuoy size={15} />} label={t.navbar.support} onClick={() => router.push("/dashboard/support")} />
+        <DropdownItem icon={<LifeBuoy size={15} />} label={t.navbar.support} onClick={() => go("/dashboard/support")} />
         <DropdownItem
           icon={<LogOut size={15} />}
           label={t.profile.logout}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, Suspense } from "react";
-import ProfileSidebar from "@/components/dashboard/profile-sidebar";
+import ProfileSidebar, { ProfileMobileNav } from "@/components/dashboard/profile-sidebar";
 import SupplierCard from "@/components/dashboard/supplier-card";
 import ProductCard from "@/components/dashboard/product-card";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -256,8 +256,11 @@ function ProfileContent() {
     t.common.free;
 
   return (
-    <div className="editorial flex min-h-screen selection:bg-red-500/30">
-      {/* SIDEBAR */}
+    <div className="editorial min-h-screen selection:bg-red-500/30 md:flex">
+      {/* MOBILE: sticky header + tab bar (replaces the sidebar on small screens) */}
+      <ProfileMobileNav activeTab={activeTab} setActiveTab={handleTabChange} />
+
+      {/* SIDEBAR (md and up) */}
       <ProfileSidebar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
@@ -266,7 +269,7 @@ function ProfileContent() {
       />
 
       {/* CONTENT */}
-      <div className={`${sidebarExpanded ? "ml-64" : "ml-20"} w-full min-w-0 px-5 py-10 transition-[margin] duration-300 sm:px-8 lg:px-12 lg:py-14`}>
+      <div className={`${sidebarExpanded ? "md:ml-64" : "md:ml-20"} w-full min-w-0 px-4 py-8 transition-[margin] duration-300 sm:px-8 md:py-10 lg:px-12 lg:py-14`}>
 
         {/* HEADER */}
         <header key={activeTab} className="mb-12 border-b border-white/[0.08] pb-8 animate-in fade-in slide-in-from-bottom-1 duration-500">
