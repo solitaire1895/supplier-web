@@ -2,7 +2,7 @@
 
 import { createClient } from './server'
 import { revalidatePath } from 'next/cache'
-import { getPlanFeatures } from '@/lib/plans'
+import { getPlanFeatures, withEffectivePlan } from '@/lib/plans'
 
 /* ================= STORAGE ACTIONS ================= */
 
@@ -562,10 +562,10 @@ export async function searchAction(
   if (user) {
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('active_plan')
+      .select('active_plan, plan_expires_at')
       .eq('id', user.id)
       .single()
-    plan = profileData?.active_plan || 'free'
+    plan = withEffectivePlan(profileData)?.active_plan || 'free'
   }
 
   const features = getPlanFeatures(plan)

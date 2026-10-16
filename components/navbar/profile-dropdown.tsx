@@ -16,9 +16,9 @@ import { useUser } from "@/lib/supabase/provider";
 import { logoutAndRedirect } from "@/lib/logout";
 
 const languages = [
-  { code: "EN" as Lang, label: "English", flag: "🇺🇸" },
-  { code: "FR" as Lang, label: "Français", flag: "🇫🇷" },
-  { code: "CN" as Lang, label: "中文", flag: "🇨🇳" },
+  { code: "FR" as Lang, label: "Français" },
+  { code: "EN" as Lang, label: "English" },
+  { code: "CN" as Lang, label: "中文" },
 ];
 
 export default function ProfileDropdown() {
@@ -44,105 +44,61 @@ export default function ProfileDropdown() {
   const displayName = profile?.full_name || displayEmail?.split('@')[0] || "User";
 
   return (
-    <div
-      className="
-      bg-black/80 backdrop-blur-xl
-      border border-white/10
-      rounded-2xl p-4
-      shadow-[0_0_30px_rgba(0,0,0,0.5)]
-    "
-    >
+    <div className="rounded-2xl border border-white/[0.08] bg-ink-2/95 p-2 font-text shadow-[0_24px_60px_-20px_rgba(0,0,0,0.85)] backdrop-blur-xl">
       {/* USER */}
-      <div className="mb-4 px-2">
-        <p className="text-white font-medium capitalize">
-          {displayName}
-        </p>
-        <p className="text-gray-400 text-sm truncate">
-          {displayEmail || "No email"}
-        </p>
+      <div className="flex items-center gap-3 px-3 pb-4 pt-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 font-display text-lg text-white">
+          {displayName[0]?.toUpperCase()}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate font-display text-lg font-light capitalize text-white">{displayName}</p>
+          <p className="truncate text-xs text-stone">{displayEmail || "No email"}</p>
+        </div>
       </div>
 
-      <div className="border-t border-white/10 my-3" />
-
-      {/* LANGUAGE SELECTOR */}
-      <div className="mb-4">
-        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 mb-2 px-2">
-          {t.settings.language}
-        </p>
-        <div className="grid grid-cols-3 gap-1">
+      {/* LANGUAGE */}
+      <div className="border-t border-white/[0.06] px-3 py-3">
+        <p className="mb-2 font-label text-[10px] uppercase tracking-[0.18em] text-stone-2">{t.settings.language}</p>
+        <div className="grid grid-cols-3 gap-1 rounded-full border border-white/[0.08] p-1">
           {languages.map((l) => (
             <button
               key={l.code}
               onClick={() => setLanguage(l.code)}
-              className={`
-                flex flex-col items-center justify-center p-2 rounded-xl border transition-all duration-300
-                ${
-                  lang === l.code
-                    ? "bg-red-500/10 border-red-500/30 text-red-500"
-                    : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
-                }
-              `}
+              aria-pressed={lang === l.code}
+              className={`rounded-full py-1.5 font-label text-[11px] tracking-[0.12em] transition ${
+                lang === l.code ? "bg-white/10 text-white" : "text-stone hover:text-white"
+              }`}
             >
-              <span className="text-lg mb-1">{l.flag}</span>
-              <span className="text-[10px] font-medium">{l.code}</span>
+              {l.code}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="border-t border-white/10 my-3" />
-
       {/* MENU */}
-      <div className="space-y-1 text-sm">
-
+      <div className="space-y-0.5 border-t border-white/[0.06] pt-2 text-sm">
         {isAdmin && (
           <DropdownItem
-            icon={<Shield size={16} className="text-red-500" />}
+            icon={<Shield size={15} className="text-red-500" />}
             label="Admin Panel"
             onClick={() => router.push("/admin")}
-            className="bg-red-500/5 text-red-500 hover:bg-red-500/10"
+            className="text-white"
           />
         )}
+        <DropdownItem icon={<User size={15} />} label={t.navbar.profile} onClick={() => router.push("/dashboard/profile")} />
+        <DropdownItem icon={<Clock size={15} />} label={t.profile.activity} onClick={() => console.log("activity")} />
+        <DropdownItem icon={<Star size={15} />} label={t.profile.favoritesProducts} onClick={() => router.push("/dashboard/profile")} />
+        <DropdownItem icon={<Settings size={15} />} label={t.settings.account} onClick={() => router.push("/dashboard/profile")} />
 
+        <div className="my-1.5 border-t border-white/[0.06]" />
+
+        <DropdownItem icon={<LifeBuoy size={15} />} label={t.navbar.support} onClick={() => router.push("/dashboard/support")} />
         <DropdownItem
-          icon={<User size={16} />}
-          label={t.navbar.profile}
-          onClick={() => router.push("/dashboard/profile")}
-        />
-
-        <DropdownItem
-          icon={<Clock size={16} />}
-          label={t.profile.activity}
-          onClick={() => console.log("activity")}
-        />
-
-        <DropdownItem
-          icon={<Star size={16} />}
-          label={t.profile.favoritesProducts}
-          onClick={() => router.push("/dashboard/profile")}
-        />
-
-        <DropdownItem
-          icon={<Settings size={16} />}
-          label={t.settings.account}
-          onClick={() => router.push("/dashboard/profile")}
-        />
-
-        <div className="border-t border-white/10 my-2" />
-
-        <DropdownItem
-          icon={<LifeBuoy size={16} />}
-          label={t.navbar.support}
-          onClick={() => router.push("/dashboard/support")}
-        />
-
-        <DropdownItem
-          icon={<LogOut size={16} />}
+          icon={<LogOut size={15} />}
           label={t.profile.logout}
           onClick={handleLogout}
-          className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+          className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
         />
-
       </div>
     </div>
   );
@@ -155,20 +111,19 @@ function DropdownItem({
   label,
   onClick,
   className = "",
-}: any) {
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  className?: string;
+}) {
   return (
-    <div
+    <button
       onClick={onClick}
-      className={`
-        flex items-center gap-3 p-2.5 rounded-xl
-        text-gray-300 cursor-pointer
-        hover:text-white hover:bg-white/5
-        transition-all duration-200
-        ${className}
-      `}
+      className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-white/70 transition hover:bg-white/[0.05] hover:text-white ${className}`}
     >
-      <div className="flex-shrink-0">{icon}</div>
-      <span className="font-medium">{label}</span>
-    </div>
+      <span className="shrink-0 text-stone">{icon}</span>
+      <span>{label}</span>
+    </button>
   );
 }

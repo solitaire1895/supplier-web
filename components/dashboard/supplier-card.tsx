@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, Loader2, CheckCircle, ShieldCheck, MessageSquare } from "lucide-react";
+import { Star, Loader2, ShieldCheck, MessageSquare, ArrowUpRight, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { toggleFavorite } from "@/lib/supabase/actions";
 import { supabase } from "@/lib/supabase/client";
-import { motion } from "framer-motion";
 
 type Supplier = {
   id: string;
@@ -25,6 +24,7 @@ interface SupplierCardProps {
 export default function SupplierCard({ supplier, onContact }: SupplierCardProps) {
   const [favorite, setFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const router = useRouter();
   const { t } = useI18n();
 
@@ -75,125 +75,104 @@ export default function SupplierCard({ supplier, onContact }: SupplierCardProps)
     router.push(`/dashboard/suppliers/${supplier.id}`);
   };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.02 }}
-      onClick={handleNavigate}
-      className="relative group cursor-pointer bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden transition-all duration-500 hover:border-red-500/50 shadow-xl hover:shadow-neon"
-    >
-      {/* HEADER BAR */}
-      <div className="bg-red-500/10 backdrop-blur-md border-b border-white/5 px-6 py-3 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded">
-            {supplier.platform}
-          </span>
-          <span className="text-[10px] text-gray-500 font-mono">
-            #{supplier.id?.slice(0, 8).toUpperCase() || 'NEW'}
-          </span>
-        </div>
-        <div className="flex items-center gap-1 text-[10px] text-green-400 font-bold uppercase">
-          <ShieldCheck size={12} />
-          {t?.supplier?.verified || "Verified"}
-        </div>
-      </div>
+  const showImage = supplier.image_url && !imageFailed;
 
-      {/* IMAGE SECTION */}
-      <div className="relative h-48 w-full overflow-hidden bg-white/5">
-        {supplier.image_url ? (
-          <img 
-            src={supplier.image_url} 
+  return (
+    <article
+      onClick={handleNavigate}
+      className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-ink-2 transition-colors duration-500 hover:border-white/20"
+    >
+      {/* IMAGE */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-ink-3">
+        {showImage ? (
+          <img
+            src={supplier.image_url}
             alt={supplier.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${supplier.name}&background=random`;
-            }}
+            loading="lazy"
+            className="h-full w-full object-cover grayscale-[15%] transition-transform duration-700 ease-out group-hover:scale-105"
+            onError={() => setImageFailed(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500/5 to-transparent">
-             <CheckCircle className="text-white/5 w-12 h-12" />
+          <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(60%_60%_at_50%_40%,rgba(239,68,68,0.12),transparent)]">
+            <span className="font-display text-6xl font-light text-white/25">{supplier.name?.[0]?.toUpperCase() ?? <Building2 />}</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        
-        {/* ⭐ FAVORITE */}
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-2 via-transparent to-ink/30" aria-hidden />
+
+        {/* platform + verified */}
+        <div className="absolute left-4 top-4 flex items-center gap-2">
+          <span className="rounded-full border border-white/15 bg-ink/60 px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-white backdrop-blur-md">
+            {supplier.platform}
+          </span>
+        </div>
+
+        {/* favorite */}
         <button
           onClick={handleFavorite}
           disabled={loading}
-          className="absolute top-4 right-6 p-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition active:scale-90 z-10 hover:bg-black/60"
+          aria-label="Favorite"
+          aria-pressed={favorite}
+          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border border-white/15 bg-ink/60 backdrop-blur-md transition hover:border-white/30 active:scale-90"
         >
           {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin text-white" />
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
           ) : (
-            <Star
-              className={`w-5 h-5 transition ${
-                favorite
-                  ? "text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]"
-                  : "text-gray-400 group-hover:text-white"
-              }`}
-            />
+            <Star className={`h-4 w-4 transition ${favorite ? "fill-red-500 text-red-500" : "text-white/70 group-hover:text-white"}`} />
           )}
         </button>
       </div>
 
-      <div className="p-6">
-        {/* CONTENT */}
-        <div className="mb-6 pr-4">
-          <h3 className="text-white text-xl font-bold mb-1 line-clamp-1 group-hover:text-red-400 transition-colors">
-            {supplier.name}
-          </h3>
-          <p className="text-gray-500 text-sm font-medium uppercase tracking-tight">
-            {supplier.category}
-          </p>
+      {/* BODY */}
+      <div className="flex flex-1 flex-col p-6">
+        <div className="flex items-center justify-between gap-3">
+          <p className="truncate font-label text-[10px] uppercase tracking-[0.18em] text-stone">{supplier.category}</p>
+          <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-white/60">
+            <ShieldCheck size={12} className="text-red-500" aria-hidden />
+            {t?.supplier?.verified || "Verified"}
+          </span>
         </div>
 
-        {/* INFO GRID */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <div className="bg-white/[0.03] border border-white/5 p-3 rounded-2xl">
-            <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">
-              {t?.supplier?.moq || "MOQ"}
-            </p>
-            <p className="text-white text-lg font-bold">
-              {supplier.moq} <span className="text-[10px] text-gray-500">{t?.supplier?.units || "Units"}</span>
-            </p>
-          </div>
+        <h3 className="mt-3 line-clamp-1 font-display text-2xl font-light text-white">{supplier.name}</h3>
 
-          <div className="bg-white/[0.03] border border-white/5 p-3 rounded-2xl">
-            <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">
-              {t?.supplier?.reliability || "Reliability"}
-            </p>
-            <p className="text-green-400 text-lg font-bold flex items-center gap-1">
-               98% <CheckCircle size={14} />
-            </p>
+        <dl className="mt-6 grid grid-cols-2 border-t border-white/[0.08] pt-5">
+          <div>
+            <dt className="font-label text-[10px] uppercase tracking-[0.15em] text-stone-2">{t?.supplier?.moq || "MOQ"}</dt>
+            <dd className="mt-1.5 font-display text-2xl font-light text-white">
+              {supplier.moq} <span className="font-text text-xs text-stone">{t?.supplier?.units || "Units"}</span>
+            </dd>
           </div>
-        </div>
+          <div className="border-l border-white/[0.08] pl-5">
+            <dt className="font-label text-[10px] uppercase tracking-[0.15em] text-stone-2">{t?.supplier?.reliability || "Reliability"}</dt>
+            <dd className="mt-1.5 font-display text-2xl font-light text-white">98%</dd>
+          </div>
+        </dl>
 
         {/* ACTIONS */}
-        <div className="flex gap-3">
+        <div className="mt-auto flex gap-2 pt-6">
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleNavigate();
             }}
-            className="flex-1 py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest bg-white/5 text-white border border-white/10 hover:bg-white/10 transition-all active:scale-95"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/15 bg-white/[0.04] py-2.5 text-sm text-white transition hover:border-white/30 hover:bg-white/10"
           >
             {t?.supplier?.viewDetails || "Details"}
+            <ArrowUpRight size={14} aria-hidden />
           </button>
-          
+
           <button
             onClick={(e) => {
               e.stopPropagation();
               if (onContact) onContact(supplier);
               else handleNavigate();
             }}
-            className="flex-1 py-3.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest bg-red-500 text-white shadow-neon hover:shadow-neon-strong hover:bg-red-600 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-red-500 py-2.5 text-sm font-medium text-white transition hover:bg-red-600 active:scale-[0.98]"
           >
-            <MessageSquare size={14} />
+            <MessageSquare size={14} aria-hidden />
             {t?.supplier?.contact || "Contact"}
           </button>
         </div>
       </div>
-    </motion.div>
+    </article>
   );
 }

@@ -4,14 +4,16 @@ import Navbar from "@/components/navbar/navbar";
 import SupplierCard from "@/components/dashboard/supplier-card";
 import FilterSidebar from "@/components/dashboard/filter-sidebar";
 import Recommendations from "@/components/dashboard/recommendations";
-import { Search, Users, Star, Package, Zap, SlidersHorizontal, ChevronDown, Lock, Loader2, X } from "lucide-react";
+import { Search, Zap, ChevronDown, Lock, Loader2, X, ArrowRight } from "lucide-react";
+import { DisplayHeading, Reveal, SectionLabel } from "@/components/landing/primitives";
+import { LockedPanel, LockedTile } from "@/components/dashboard/locked";
 import { getPlanFeatures } from "@/lib/plans";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useState, useEffect, useCallback } from "react";
 import { searchSuppliersAction, recordSourcingRequest } from "@/lib/supabase/actions";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useUser } from "@/lib/supabase/provider";
+import PaymentStatusBanner from "@/components/dashboard/payment-status-banner";
 
 interface DashboardClientProps {
   suppliers: any[];
@@ -23,54 +25,11 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
   const { t, lang } = useI18n();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { refreshProfile, profile: liveProfile } = useUser();
   
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [searchResults, setSearchResults] = useState<any[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  // ---------------------------------------------------------------------------
-  // Stripe success redirect: poll for profile update
-  // When the user returns from Stripe checkout with ?success=true, the webhook
-  // may not have finished updating the profile yet. We poll refreshProfile
-  // a few times until the plan changes from the initial value.
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
-    const isSuccess = searchParams.get("success") === "true";
-    if (!isSuccess) return;
-
-    const initialPlan = profile?.active_plan || "free";
-    let pollCount = 0;
-    const maxPolls = 6;
-    const pollInterval = 2000; // 2 seconds
-
-    const poll = async () => {
-      await refreshProfile();
-      pollCount++;
-
-      // Check if the plan has been updated by the webhook
-      const currentPlan = liveProfile?.active_plan || profile?.active_plan || "free";
-      if (currentPlan !== initialPlan && currentPlan !== "free") {
-        // Plan updated! Clean the URL and stop polling.
-        router.replace("/dashboard", { scroll: false });
-        return;
-      }
-
-      if (pollCount < maxPolls) {
-        setTimeout(poll, pollInterval);
-      } else {
-        // Exhausted polls — clean the URL anyway
-        router.replace("/dashboard", { scroll: false });
-      }
-    };
-
-    // Small initial delay to give the webhook time to process
-    const timeout = setTimeout(poll, 1500);
-
-    return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
 
   const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -98,7 +57,7 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
   }, [searchParams, performSearch]);
 
   if (!t) return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
+    <div className="min-h-screen bg-ink flex items-center justify-center">
       <Zap className="text-red-500 animate-pulse" size={48} />
     </div>
   );
@@ -189,179 +148,171 @@ export default function DashboardClient({ suppliers, stats, profile }: Dashboard
   const isLimited = supplierLimit !== 'unlimited';
   const lockedCount = isLimited && !searchResults ? 3 : 0;
 
+  const d = t.dashboardUi;
+  const planName = features.name[lang] || features.name.EN;
+
+  const statItems = [
+    { label: t.dashboard.stats.suppliers, value: stats.suppliers.toString() },
+    { label: t.dashboard.stats.favorites, value: stats.favorites.toString() },
+    { label: t.dashboard.stats.avgMoq, value: "75" },
+    { label: t.dashboard.stats.topCategory, value: d.categories.Electronics },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30">
+    <div className="editorial min-h-screen selection:bg-red-500/30">
       <Navbar />
 
-      <div className="pt-28 pb-24 px-4 md:px-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+      <div className="mx-auto max-w-[1600px] px-4 pb-24 pt-28 md:px-8">
 
-        {/* HERO SEARCH & HEADER */}
-        <div className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
+        <PaymentStatusBanner />
+
+        {/* HEADER & SEARCH */}
+        <Reveal className="mb-14 max-w-3xl">
+          <SectionLabel>{d.eyebrow}</SectionLabel>
+          <DisplayHeading as="h1" className="mt-5 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
             {t.dashboard.title}
-          </h1>
-          <p className="text-gray-400 text-sm md:text-base mb-8 max-w-2xl">
-            {t.dashboard.subtitle}
-          </p>
+          </DisplayHeading>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-stone">{t.dashboard.subtitle}</p>
 
-          {/* Premium Omnibar Search */}
-          <form onSubmit={handleSearch} className="relative group max-w-3xl">
-            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+          <form onSubmit={handleSearch} role="search" className="group relative mt-10">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5">
               {searching ? (
-                <Loader2 className="text-red-500 animate-spin" size={20} />
+                <Loader2 className="animate-spin text-red-500" size={18} />
               ) : (
-                <Search className="text-gray-400 group-focus-within:text-red-500 transition-colors duration-300" size={20} />
+                <Search className="text-stone transition-colors group-focus-within:text-red-500" size={18} />
               )}
             </div>
-            <input 
-              type="text" 
+            <input
+              type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t.dashboard.searchPlaceholder}
-              className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:shadow-[0_0_30px_rgba(239,68,68,0.15)] transition-all text-sm md:text-base"
+              aria-label={t.common.search}
+              className="w-full rounded-full border border-white/10 bg-ink-2 py-4 pl-14 pr-28 text-base text-white placeholder:text-stone-2 transition focus:border-red-500/50 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
             />
-            <div className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2">
+            <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2">
               {searchQuery && (
-                <button 
+                <button
                   type="button"
                   onClick={clearSearch}
-                  className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+                  aria-label={d.clearSearch}
+                  className="grid h-9 w-9 place-items-center rounded-full text-stone transition hover:bg-white/10 hover:text-white"
                 >
                   <X size={16} />
                 </button>
               )}
-              <kbd className="hidden sm:inline-flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-lg text-[10px] font-medium text-gray-400 border border-white/5">
-                <span className="text-xs">ENTER</span>
-              </kbd>
+              <button
+                type="submit"
+                aria-label={t.common.search}
+                className="grid h-10 w-10 place-items-center rounded-full bg-red-500 text-white transition hover:bg-red-600"
+              >
+                <ArrowRight size={16} />
+              </button>
             </div>
           </form>
-        </div>
+        </Reveal>
 
-        {/* RECOMMENDATIONS (Show if not searching) */}
-        {!searchResults && (
-          <div className="mb-16">
-            <Recommendations type="supplier" />
-          </div>
-        )}
-
-        {/* TOP STATS ROW */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10">
-          {[
-            { label: t.dashboard.stats.suppliers, value: stats.suppliers.toString(), icon: Users },
-            { label: t.dashboard.stats.favorites, value: stats.favorites.toString(), icon: Star },
-            { label: t.dashboard.stats.avgMoq, value: "75", icon: Package },
-            { label: t.dashboard.stats.topCategory, value: "Electronics", icon: Zap, highlight: true },
-          ].map((stat, i) => (
+        {/* STATS (hairline grid) */}
+        <div className="mb-16 grid min-w-0 grid-cols-2 border-y border-white/[0.08] md:grid-cols-4">
+          {statItems.map((stat, i) => (
             <div
-              key={i}
-              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 overflow-hidden group hover:border-white/20 transition-all duration-500"
+              key={stat.label}
+              className={`px-5 py-8 md:py-10 ${i % 2 === 1 ? "border-l border-white/[0.08]" : ""} ${i >= 2 ? "border-t border-white/[0.08] md:border-t-0" : ""} ${i === 2 ? "md:border-l" : ""}`}
             >
-              <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/5 rounded-full blur-[30px] group-hover:bg-red-500/10 transition-all duration-500"></div>
-              
-              <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className={`p-2 rounded-xl ${stat.highlight ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-white/5 text-gray-400 border border-white/5'}`}>
-                  <stat.icon size={18} />
-                </div>
-              </div>
-              
-              <div className="relative z-10">
-                <p className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">{stat.label}</p>
-                <p className={`text-2xl font-bold tracking-tight ${stat.highlight ? 'text-white' : 'text-gray-200'}`}>
-                  {stat.value}
-                </p>
-              </div>
+              <p className="break-words font-display text-2xl font-light tracking-[-0.02em] text-white min-[400px]:text-3xl sm:text-4xl lg:text-5xl">{stat.value}</p>
+              <p className="mt-3 font-label text-[10px] uppercase tracking-[0.18em] text-stone">{stat.label}</p>
             </div>
           ))}
         </div>
 
-        {/* MAIN LAYOUT GRID (SIDEBAR + SUPPLIERS) */}
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
+        {/* RECOMMENDATIONS (hidden while searching) */}
+        {!searchResults && (
+          <div className="mb-10">
+            <Recommendations type="supplier" />
+          </div>
+        )}
 
-          <aside className="hidden lg:block sticky top-28 z-10 h-[calc(100vh-140px)] overflow-y-auto no-scrollbar">
+        {/* SIDEBAR + GRID */}
+        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[280px_1fr]">
+
+          <aside className="no-scrollbar sticky top-28 z-10 hidden h-[calc(100vh-140px)] overflow-y-auto lg:block">
             <FilterSidebar />
-            
-            {/* PLAN UPSELL IN SIDEBAR */}
-            {(features.access.suppliers === 'platforms' || isLimited) && (
-              <div className="mt-8 p-6 bg-red-500/5 border border-red-500/20 rounded-3xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3"></div>
-                <div className="relative z-10">
-                  <Lock className="text-red-500 mb-4" size={20} />
-                  <h3 className="text-sm font-bold mb-2">{t.dashboard.lockedTitle}</h3>
-                  <p className="text-xs text-gray-400 mb-4 leading-relaxed">{t.dashboard.lockedDesc}</p>
-                  <Link href="/dashboard/profile?tab=plan" className="text-xs font-bold text-red-500 hover:text-red-400 transition-colors">
-                    {t.common.upgrade} Now →
-                  </Link>
-                </div>
+
+            {/* PLAN UPSELL */}
+            {(features.access.suppliers === "platforms" || isLimited) && (
+              <div className="mt-6 rounded-2xl border border-red-500/25 bg-gradient-to-b from-red-500/[0.08] to-ink-2 p-6">
+                <Lock className="mb-4 text-red-500" size={18} aria-hidden />
+                <h3 className="font-display text-xl font-light text-white">{t.dashboard.lockedTitle}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-stone">{t.dashboard.lockedDesc}</p>
+                <Link
+                  href="/dashboard/profile?tab=plan"
+                  className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-red-500 transition hover:text-red-400"
+                >
+                  {d.upgradeNow} <ArrowRight size={14} aria-hidden />
+                </Link>
               </div>
             )}
           </aside>
 
-          <main className="min-w-0 flex flex-col h-full">
+          <main className="flex min-w-0 flex-col">
 
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                {searchResults ? "Search Results" : t.dashboard.discoveryGrid}
-                <span className="bg-white/10 text-xs px-2 py-0.5 rounded-md text-gray-400 font-normal">{filteredSuppliers.length} {t.common.results}</span>
-              </h2>
-              
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <button className="flex-1 sm:flex-none flex items-center justify-between gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-sm font-medium transition-colors">
-                  {t.common.sortBy}: {t.common.recommended} <ChevronDown size={14} className="text-gray-400" />
-                </button>
+            <div className="mb-8 flex flex-col items-start justify-between gap-4 border-b border-white/[0.08] pb-5 sm:flex-row sm:items-end">
+              <div>
+                <SectionLabel>{searchResults ? t.common.search : t.common.recommended}</SectionLabel>
+                <h2 className="mt-3 flex flex-wrap items-baseline gap-x-3 font-display text-3xl font-light text-white">
+                  {searchResults ? d.searchResults : t.dashboard.discoveryGrid}
+                  <span className="font-label text-xs text-stone">
+                    {filteredSuppliers.length} {t.common.results}
+                  </span>
+                </h2>
               </div>
+
+              <button className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm text-white/80 transition hover:border-white/20 hover:text-white">
+                {t.common.sortBy}: {t.common.recommended} <ChevronDown size={14} className="text-stone" aria-hidden />
+              </button>
             </div>
 
             {/* SUPPLIERS GRID */}
-            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {displaySuppliers.length > 0 ? (
                 displaySuppliers.map((supplier, i) => (
-                  <div key={i} className="animate-in fade-in zoom-in-95 duration-500" style={{ animationDelay: `${i * 50}ms` }}>
+                  <div
+                    key={supplier.id ?? i}
+                    className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both duration-500"
+                    style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}
+                  >
                     <SupplierCard supplier={supplier} onContact={handleContactSupplier} />
                   </div>
                 ))
               ) : (
-                <div className="col-span-full py-20 text-center bg-white/5 border border-dashed border-white/10 rounded-[2rem]">
-                  <p className="text-gray-400">No suppliers found matching your criteria.</p>
+                <div className="col-span-full rounded-2xl border border-dashed border-white/10 py-20 text-center">
+                  <p className="text-stone">{d.noSuppliers}</p>
                 </div>
               )}
-              
-              {/* Locked Suppliers Placeholders */}
+
+              {/* Locked placeholders */}
               {!searchResults && lockedCount > 0 && Array.from({ length: lockedCount }).map((_, i) => (
-                <div key={`locked-supplier-${i}`} className="bg-white/5 border border-dashed border-white/10 rounded-[2rem] h-[280px] flex flex-col items-center justify-center p-8 text-center opacity-60">
-                   <Lock className="text-gray-600 mb-4" size={24} />
-                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{t.dashboard.lockedSupplier}</p>
-                   <p className="text-xs text-gray-500 leading-relaxed">{t.dashboard.lockedSupplierDesc}</p>
-                </div>
+                <LockedTile key={`locked-supplier-${i}`} label={t.dashboard.lockedSupplier} description={t.dashboard.lockedSupplierDesc} className="min-h-[360px]" />
               ))}
             </div>
 
-            {/* Load More */}
+            {/* Load more */}
             {!searchResults && displaySuppliers.length < filteredSuppliers.length && (
               <div className="mt-12 flex justify-center">
-                <button className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300">
+                <button className="rounded-full border border-white/15 px-6 py-3 text-sm text-white/80 transition hover:border-white/30 hover:text-white">
                   {t.common.loadMore}
                 </button>
               </div>
             )}
 
-            {/* Upgrade CTA when supplier limit is in effect */}
+            {/* Upgrade CTA when the supplier limit applies */}
             {!searchResults && isLimited && (
-              <div className="mt-12 bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
-                <div className="relative z-10">
-                  <Lock className="text-red-500 mx-auto mb-4" size={28} />
-                  <h2 className="text-2xl font-bold mb-3">Unlock More Suppliers</h2>
-                  <p className="text-gray-400 mb-8 max-w-xl mx-auto text-sm">
-                    You are viewing a limited set of suppliers on the <span className="text-white font-semibold">{features.name.EN}</span> plan. Upgrade to access our full supplier network.
-                  </p>
-                  <Link 
-                    href="/dashboard/profile?tab=plan"
-                    className="px-10 py-4 bg-red-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all inline-block"
-                  >
-                    {t.common.upgrade} Plan Now
-                  </Link>
-                </div>
-              </div>
+              <LockedPanel
+                className="mt-14"
+                title={d.unlockTitle}
+                description={d.unlockDesc.replace("{plan}", planName)}
+                ctaLabel={d.upgradeNow}
+              />
             )}
 
           </main>

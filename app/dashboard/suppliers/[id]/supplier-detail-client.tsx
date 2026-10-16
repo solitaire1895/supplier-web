@@ -3,15 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  Star, ChevronLeft, ShieldCheck, Box, Truck,
-  TrendingUp, Activity, MessageSquare, Award, Lock, Phone, MessageCircle, Mail, Package
+  Star, ChevronLeft, ShieldCheck, Truck,
+  TrendingUp, MessageSquare, Phone, MessageCircle, Mail,
 } from "lucide-react";
+import { Reveal, SectionLabel } from "@/components/landing/primitives";
+import { LockedPanel } from "@/components/dashboard/locked";
 import { getPlanFeatures } from "@/lib/plans";
 import { supabase } from "@/lib/supabase/client";
 import { submitReview, trackActivityAction, recordSourcingRequest } from "@/lib/supabase/actions";
 import { useUser } from "@/lib/supabase/provider";
 import { useI18n } from "@/lib/i18n";
-import Link from "next/link";
 import Navbar from "@/components/navbar/navbar";
 import { useEffect } from "react";
 
@@ -29,6 +30,7 @@ export default function SupplierDetailClient({ supplier, initialReviews, supplie
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   const plan = profile?.active_plan || "Free";
   const features = getPlanFeatures(plan);
@@ -104,303 +106,254 @@ export default function SupplierDetailClient({ supplier, initialReviews, supplie
       newTab.location.href = contactUrl;
     } else {
       if (newTab) newTab.close();
-      alert("No direct contact method found. Please use the platform contact link.");
+      alert(t.dashboardUi.supplier.noDirectContact);
     }
 
     setSubmitting(false);
   };
 
+  const ds = t.dashboardUi.supplier;
+  const reviewerName = (r: { profiles?: { full_name?: string | null; email?: string | null } | null }) =>
+    r.profiles?.full_name || r.profiles?.email?.split("@")[0] || t.supplier.anonymous;
+
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30 pb-24">
+    <div className="editorial min-h-screen pb-24 selection:bg-red-500/30">
       <Navbar />
 
-      <div className="pt-28 px-4 md:px-8 max-w-[1400px] mx-auto animate-in fade-in duration-700">
+      <div className="mx-auto max-w-[1400px] px-4 pt-28 md:px-8">
 
-        {/* NAVIGATION BAR */}
+        {/* BACK */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-all group mb-8"
+          className="group mb-10 inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.18em] text-stone transition hover:text-white"
         >
-          <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/10 transition-all">
-            <ChevronLeft size={16} />
-          </div>
+          <span className="grid h-8 w-8 place-items-center rounded-full border border-white/10 transition group-hover:border-white/30">
+            <ChevronLeft size={14} aria-hidden />
+          </span>
           {t.supplier.backToResults}
         </button>
 
-        {/* HERO HEADER */}
-        <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 md:p-10 overflow-hidden group mb-8">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-500/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        {/* HERO */}
+        <header className="grid items-end gap-10 border-b border-white/[0.08] pb-12 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-16">
+          <Reveal>
+            <SectionLabel>
+              {supplier.platform} <span className="text-stone-2">·</span> {supplier.category}
+            </SectionLabel>
+            <h1 className="mt-5 font-display text-5xl font-light leading-[1.02] tracking-[-0.02em] text-white text-balance sm:text-6xl lg:text-7xl">
+              {supplier.name}
+            </h1>
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-stone">{supplier.description}</p>
 
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div className="flex flex-col md:flex-row items-center gap-8 flex-1">
-              {/* Image */}
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden bg-white/10 border border-white/10 shrink-0 relative">
-                <img
-                  src={
-                    supplier.image_url ||
-                    `https://ui-avatars.com/api/?name=${supplier.name}&background=random`
-                  }
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  alt={supplier.name}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${supplier.name}&background=random`;
-                  }}
-                />
-              </div>
-
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-3">
-                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-                    {supplier.name}
-                  </h1>
-                  <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                    <TrendingUp size={14} /> {t.supplier.trending}
-                  </span>
-                </div>
-
-                <p className="text-gray-400 font-medium flex items-center justify-center md:justify-start gap-2">
-                  <GlobeIcon /> {supplier.platform}{" "}
-                  <span className="text-gray-600">•</span> {supplier.category}
-                </p>
-
-                <div className="flex flex-wrap gap-3 mt-6 justify-center md:justify-start">
-                  <Badge icon={<Box size={14} />} text={`${t.supplier.moq}: ${supplier.moq} ${t.supplier.units}`} />
-                  <Badge icon={<ShieldCheck size={14} className="text-green-400" />} text={t.supplier.verified} />
-                  <Badge icon={<Truck size={14} />} text={t.supplier.fastFulfillment} />
-                </div>
-              </div>
+            <div className="mt-8 flex flex-wrap gap-2">
+              <Chip icon={<TrendingUp size={13} className="text-red-500" />} text={t.supplier.trending} accent />
+              <Chip icon={<ShieldCheck size={13} />} text={t.supplier.verified} />
+              <Chip icon={<Truck size={13} />} text={t.supplier.fastFulfillment} />
             </div>
-          </div>
+          </Reveal>
 
-          <p className="text-gray-300 mt-8 text-sm leading-relaxed max-w-4xl relative z-10 text-center md:text-left">
-            {supplier.description}
-          </p>
-        </div>
-
-        {/* MAIN CONTENT GRID */}
-        <div className="grid lg:grid-cols-12 gap-8 items-start">
-
-          {/* LEFT COLUMN (8 cols) */}
-          <div className="lg:col-span-8 space-y-8">
-
-            {/* DIRECT CONTACT INFO (LOCKED) */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 relative overflow-hidden group">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-2">
-                  <MessageCircle className="text-red-500" size={20} />
-                  <h2 className="text-lg font-semibold">{t.supplier.factoryAccess}</h2>
+          <Reveal delay={0.1}>
+            <div className="relative aspect-square overflow-hidden rounded-2xl border border-white/[0.08] bg-ink-2">
+              {supplier.image_url && !imageFailed ? (
+                <img
+                  src={supplier.image_url}
+                  alt={supplier.name}
+                  className="h-full w-full object-cover grayscale-[15%]"
+                  onError={() => setImageFailed(true)}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(60%_60%_at_50%_40%,rgba(239,68,68,0.14),transparent)]">
+                  <span className="font-display text-9xl font-light text-white/20">{supplier.name?.[0]?.toUpperCase()}</span>
                 </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" aria-hidden />
+            </div>
+          </Reveal>
+        </header>
+
+        {/* KEY FIGURES */}
+        <dl className="grid grid-cols-2 border-b border-white/[0.08] md:grid-cols-4">
+          {[
+            { label: t.supplier.minOrder, value: `${supplier.moq}`, unit: t.supplier.units },
+            { label: ds.rating, value: `${supplier.rating}`, unit: "/ 5" },
+            { label: ds.reviewCount, value: `${reviews.length}`, unit: "" },
+            { label: t.supplier.delivery, value: "5–7", unit: ds.days },
+          ].map((fig, i) => (
+            <div
+              key={fig.label}
+              className={`px-5 py-8 ${i % 2 === 1 ? "border-l border-white/[0.08]" : ""} ${i >= 2 ? "border-t border-white/[0.08] md:border-t-0" : ""} ${i === 2 ? "md:border-l" : ""}`}
+            >
+              <dt className="font-label text-[10px] uppercase tracking-[0.18em] text-stone">{fig.label}</dt>
+              <dd className="mt-3 font-display text-4xl font-light text-white">
+                {fig.value} {fig.unit && <span className="font-text text-sm text-stone">{fig.unit}</span>}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        {/* MAIN GRID */}
+        <div className="mt-16 grid items-start gap-12 lg:grid-cols-12 lg:gap-16">
+
+          {/* LEFT */}
+          <div className="space-y-20 lg:col-span-8">
+
+            {/* DIRECT CONTACT */}
+            <section>
+              <SectionHeader label={ds.contactLabel} title={t.supplier.factoryAccess}>
                 {!features.access.directContacts && (
-                  <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded-md border border-red-500/20 uppercase tracking-widest">
+                  <span className="shrink-0 whitespace-nowrap rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-red-500">
                     {t.supplier.premiumOnly}
                   </span>
                 )}
-              </div>
+              </SectionHeader>
 
               {features.access.directContacts ? (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <ContactItem icon={<Phone size={18} />} label={t.supplier.whatsappPhone} value={supplier.whatsapp || t.common.unavailable} />
-                  <ContactItem icon={<MessageCircle size={18} />} label={t.supplier.wechatId} value={supplier.wechat || t.common.unavailable} />
-                  <ContactItem icon={<Mail size={18} />} label={t.supplier.enterpriseEmail} value={supplier.private_email || t.common.unavailable} />
+                <div className="grid border-y border-white/[0.08] sm:grid-cols-3">
+                  <ContactItem icon={<Phone size={15} />} label={t.supplier.whatsappPhone} value={supplier.whatsapp || t.common.unavailable} />
+                  <ContactItem icon={<MessageCircle size={15} />} label={t.supplier.wechatId} value={supplier.wechat || t.common.unavailable} bordered />
+                  <ContactItem icon={<Mail size={15} />} label={t.supplier.enterpriseEmail} value={supplier.private_email || t.common.unavailable} bordered />
                 </div>
               ) : (
-                <div className="text-center py-10 relative">
-                  <div className="absolute inset-0 backdrop-blur-md bg-black/20 z-0 rounded-2xl"></div>
-                  <div className="relative z-10">
-                    <Lock className="mx-auto text-gray-600 mb-4" size={32} />
-                    <h3 className="text-xl font-bold mb-2">{t.supplier.unlockAccess}</h3>
-                    <p className="text-sm text-gray-400 mb-8 max-w-md mx-auto">{t.supplier.unlockDesc}</p>
-                    <Link
-                      href="/dashboard/profile?tab=plan"
-                      className="px-8 py-3 bg-white text-black rounded-xl text-sm font-bold hover:bg-gray-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)]"
-                    >
-                      {t.supplier.upgradeToPartner}
-                    </Link>
-                  </div>
-                </div>
+                <LockedPanel
+                  title={t.supplier.unlockAccess}
+                  description={t.supplier.unlockDesc}
+                  ctaLabel={t.supplier.upgradeToPartner}
+                  image="/landing/team.webp"
+                />
               )}
-            </div>
+            </section>
 
-            {/* PRODUCT PORTFOLIO */}
+            {/* PORTFOLIO */}
             {supplier.supplied_products && (
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <Package className="text-red-500" size={20} />
-                  <h2 className="text-lg font-semibold">{t.supplier.indexedPortfolio}</h2>
-                </div>
+              <section>
+                <SectionHeader label={ds.portfolioLabel} title={ds.portfolioTitle} />
                 <div className="flex flex-wrap gap-2">
                   {supplier.supplied_products.split(",").map((prod: string, i: number) => (
-                    <span
-                      key={i}
-                      className="px-4 py-2 bg-black/40 border border-white/5 rounded-xl text-xs text-gray-300 hover:border-red-500/30 transition-all cursor-default"
-                    >
+                    <span key={i} className="rounded-xl border border-white/[0.08] px-4 py-2.5 text-sm leading-relaxed text-white/75">
                       {prod.trim()}
                     </span>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
-            {/* AI INSIGHTS */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-              <div className="flex items-center gap-2 mb-6">
-                <Activity className="text-red-500" size={20} />
-                <h2 className="text-lg font-semibold">{t.supplier.aiInsights}</h2>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <InsightCard title={t.supplier.profitScore} value="92" highlight={true} subtext={t.supplier.excellent} />
-                <InsightCard title={t.supplier.estMargin} value="38%" subtext={t.supplier.aboveAverage} />
-                <InsightCard title={t.supplier.reliability} value={t.supplier.highReliability} subtext={`99.8% ${t.supplier.successRate}`} />
-                <InsightCard title={t.supplier.delivery} value="5–7 days" subtext={t.supplier.globalAvg} />
-              </div>
-            </div>
+            {/* INSIGHTS */}
+            <section>
+              <SectionHeader label={ds.insightsLabel} title={t.supplier.aiInsights} />
+              <dl className="grid grid-cols-2 border-y border-white/[0.08] md:grid-cols-4">
+                <Insight title={t.supplier.profitScore} value="92" subtext={t.supplier.excellent} progress={92} />
+                <Insight title={t.supplier.estMargin} value="38%" subtext={t.supplier.aboveAverage} bordered />
+                <Insight title={t.supplier.reliability} value={t.supplier.highReliability} subtext={`99.8% ${t.supplier.successRate}`} bordered />
+                <Insight title={t.supplier.delivery} value="5–7" subtext={`${ds.days} · ${t.supplier.globalAvg}`} bordered />
+              </dl>
+            </section>
 
-            {/* RATING & STATS */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-              <div className="flex items-center gap-2 mb-8">
-                <Award className="text-gray-400" size={20} />
-                <h2 className="text-lg font-semibold">{t.supplier.ratings}</h2>
-              </div>
+            {/* RATINGS + REVIEWS */}
+            <section>
+              <SectionHeader label={ds.reviewsLabel} title={t.supplier.ratings} />
 
-              <div className="flex flex-col md:flex-row items-center gap-10">
-                <div className="text-center md:text-left flex flex-col items-center md:items-start">
-                  <span className="text-6xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500">
-                    {supplier.rating}
-                  </span>
-                  <div className="flex mt-2 mb-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.round(supplier.rating)
-                            ? "text-red-500 fill-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"
-                            : "text-gray-700"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-gray-400 text-sm font-medium">
+              <div className="flex flex-col gap-10 md:flex-row md:items-center">
+                <div className="md:w-48">
+                  <p className="font-display text-7xl font-light tracking-[-0.03em] text-white">{supplier.rating}</p>
+                  <Stars value={Math.round(supplier.rating)} className="mt-3" />
+                  <p className="mt-2 text-sm text-stone">
                     {t.supplier.basedOn} {reviews.length} {t.supplier.reviews}
                   </p>
                 </div>
-
-                <div className="flex-1 w-full space-y-3">
+                <div className="flex-1 space-y-3">
                   {ratingStats.map((value, i) => (
                     <div key={i} className="flex items-center gap-4">
-                      <div className="flex items-center gap-1 w-8 text-xs font-medium text-gray-400">
-                        {5 - i} <Star size={10} className="fill-gray-400" />
-                      </div>
-                      <div className="flex-1 h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/5">
-                        <div
-                          className="h-full bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.8)]"
-                          style={{ width: `${value}%` }}
-                        />
+                      <span className="w-6 font-label text-xs text-stone">{5 - i}</span>
+                      <div className="h-px flex-1 bg-white/10">
+                        <div className="h-px bg-red-500" style={{ width: `${value}%` }} />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* REVIEWS FEED */}
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8">
-              <div className="flex items-center gap-2 mb-8">
-                <MessageSquare className="text-gray-400" size={20} />
-                <h2 className="text-lg font-semibold">{t.supplier.communityFeed}</h2>
-              </div>
-
-              <div className="space-y-6">
+              <div className="mt-14">
+                <p className="mb-4 font-label text-[10px] uppercase tracking-[0.18em] text-stone-2">{t.supplier.communityFeed}</p>
                 {reviews.length === 0 ? (
-                  <p className="text-gray-500 text-sm text-center py-8 italic">{t.supplier.noReviews}</p>
+                  <p className="border-y border-white/[0.08] py-10 text-center text-sm text-stone">{t.supplier.noReviews}</p>
                 ) : (
-                  reviews.map((r, i) => (
-                    <div key={i} className="bg-black/30 p-5 rounded-2xl border border-white/5">
-                      <div className="flex justify-between items-center mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 text-[10px] font-bold border border-red-500/20">
-                            {(r.profiles?.full_name || r.profiles?.email)?.[0]?.toUpperCase()}
+                  <ul className="border-b border-white/[0.08]">
+                    {reviews.map((r, i) => (
+                      <li key={i} className="border-t border-white/[0.08] py-6">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <span className="grid h-9 w-9 place-items-center rounded-full border border-white/10 font-display text-base text-white">
+                              {reviewerName(r)[0]?.toUpperCase()}
+                            </span>
+                            <div>
+                              <p className="text-sm text-white">{reviewerName(r)}</p>
+                              <p className="font-label text-[10px] text-stone-2">{new Date(r.created_at).toLocaleDateString()}</p>
+                            </div>
                           </div>
-                          <p className="font-bold text-sm text-gray-200">
-                            {r.profiles?.full_name ||
-                              r.profiles?.email?.split("@")[0] ||
-                              t.supplier.anonymous}
-                          </p>
+                          <Stars value={r.rating} small />
                         </div>
-                        <div className="flex">
-                          {[...Array(5)].map((_, j) => (
-                            <Star
-                              key={j}
-                              className={`w-3 h-3 ${
-                                j < r.rating ? "text-red-500 fill-red-500" : "text-gray-700"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-gray-400 text-xs leading-relaxed italic">&quot;{r.content}&quot;</p>
-                      <p className="text-[10px] text-gray-600 mt-3">
-                        {new Date(r.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))
+                        <p className="mt-4 font-display text-lg font-light italic leading-relaxed text-white/80">“{r.content}”</p>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
-            </div>
+            </section>
           </div>
 
-          {/* RIGHT COLUMN (4 cols) - STICKY */}
-          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-28">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 text-center shadow-2xl">
-              <div className="w-16 h-16 mx-auto bg-red-500/10 rounded-full flex items-center justify-center mb-4 border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
-                <MessageSquare size={24} className="text-red-500" />
-              </div>
-              <h3 className="text-xl font-bold mb-1">{t.supplier.readyToSource}</h3>
-              <p className="text-sm text-gray-400 mb-6">{t.supplier.readyDesc}</p>
-              <div className="bg-black/50 rounded-xl p-4 mb-6 border border-white/5 flex justify-between items-center">
-                <span className="text-sm text-gray-400">{t.supplier.minOrder}</span>
-                <span className="font-bold text-white">
-                  {supplier.moq} {t.supplier.units}
+          {/* RIGHT (sticky) */}
+          <aside className="space-y-6 lg:sticky lg:top-28 lg:col-span-4">
+            <div className="rounded-2xl border border-red-500/25 bg-gradient-to-b from-red-500/[0.08] to-ink-2 p-7">
+              <SectionLabel>{ds.contactLabel}</SectionLabel>
+              <h3 className="mt-4 font-display text-3xl font-light text-white">{t.supplier.readyToSource}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-stone">{t.supplier.readyDesc}</p>
+              <div className="mt-6 flex items-baseline justify-between border-y border-white/[0.08] py-4">
+                <span className="text-sm text-stone">{t.supplier.minOrder}</span>
+                <span className="font-display text-2xl font-light text-white">
+                  {supplier.moq} <span className="font-text text-xs text-stone">{t.supplier.units}</span>
                 </span>
               </div>
               <button
                 onClick={handleContact}
                 disabled={submitting}
-                className="w-full py-3.5 rounded-xl text-sm font-bold bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.8)] hover:bg-red-600 transition-all duration-300 disabled:opacity-50"
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-red-500 py-3.5 text-sm font-medium text-white transition hover:bg-red-600 disabled:opacity-60"
               >
+                <MessageSquare size={15} aria-hidden />
                 {submitting ? t.common.loading : t.supplier.contact}
               </button>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
-              <h3 className="text-md font-semibold mb-4">{t.supplier.rateExperience}</h3>
-              <div className="flex gap-1.5 mb-5 justify-center bg-black/30 py-3 rounded-xl border border-white/5">
+            <div className="rounded-2xl border border-white/[0.08] bg-ink-2 p-7">
+              <h3 className="font-display text-2xl font-light text-white">{t.supplier.rateExperience}</h3>
+              <div className="mt-5 flex justify-center gap-1.5 border-y border-white/[0.08] py-4" role="radiogroup" aria-label={t.supplier.rateExperience}>
                 {[...Array(5)].map((_, i) => (
-                  <Star
+                  <button
                     key={i}
+                    type="button"
+                    role="radio"
+                    aria-checked={newRating === i + 1}
+                    aria-label={`${i + 1}`}
                     onClick={() => setNewRating(i + 1)}
-                    className={`w-6 h-6 cursor-pointer transition-all hover:scale-110 ${
-                      i < newRating
-                        ? "text-red-500 fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]"
-                        : "text-gray-600 hover:text-gray-400"
-                    }`}
-                  />
+                    className="p-0.5 transition hover:scale-110"
+                  >
+                    <Star className={`h-6 w-6 ${i < newRating ? "fill-red-500 text-red-500" : "text-white/20 hover:text-white/40"}`} />
+                  </button>
                 ))}
               </div>
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder={t.supplier.ratePlaceholder}
-                className="w-full p-4 rounded-xl bg-black/50 border border-white/10 text-sm text-white focus:outline-none focus:border-red-500/50 transition-all resize-none h-28 mb-4"
+                className="mt-5 h-28 w-full resize-none rounded-xl border border-white/10 bg-ink p-4 text-sm text-white placeholder:text-stone-2 transition focus:border-red-500/50 focus:outline-none"
               />
               <button
                 onClick={handleAddReview}
                 disabled={!newComment || submitting}
-                className="w-full py-3 rounded-xl text-sm font-semibold bg-white/10 text-white hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="mt-4 w-full rounded-full border border-white/15 py-3 text-sm text-white transition hover:border-white/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting ? t.common.loading : t.supplier.submitReview}
               </button>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
     </div>
@@ -409,70 +362,75 @@ export default function SupplierDetailClient({ supplier, initialReviews, supplie
 
 /* ─── Sub-components ─── */
 
-function ContactItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function SectionHeader({ label, title, children }: { label: string; title: string; children?: React.ReactNode }) {
   return (
-    <div className="bg-black/40 p-4 rounded-2xl border border-white/5 flex flex-col gap-2 group hover:border-red-500/30 transition-all">
-      <div className="flex items-center gap-2 text-gray-500 group-hover:text-red-500 transition-colors">
-        {icon}
-        <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
+    <div className="mb-8 flex items-end justify-between gap-4">
+      <div>
+        <SectionLabel>{label}</SectionLabel>
+        <h2 className="mt-3 font-display text-3xl font-light text-white sm:text-4xl">{title}</h2>
       </div>
-      <p className="text-white font-mono text-sm break-all">{value}</p>
+      {children}
     </div>
   );
 }
 
-function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
+function ContactItem({ icon, label, value, bordered }: { icon: React.ReactNode; label: string; value: string; bordered?: boolean }) {
   return (
-    <span className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300">
+    <div className={`flex flex-col gap-3 py-6 sm:px-6 ${bordered ? "border-t border-white/[0.08] sm:border-l sm:border-t-0" : "sm:pl-0"}`}>
+      <span className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.15em] text-stone">
+        <span className="text-red-500">{icon}</span>
+        {label}
+      </span>
+      <span className="break-all font-label text-sm text-white">{value}</span>
+    </div>
+  );
+}
+
+function Chip({ icon, text, accent }: { icon: React.ReactNode; text: string; accent?: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs ${
+        accent ? "border-red-500/30 bg-red-500/10 text-white" : "border-white/10 text-white/70"
+      }`}
+    >
       {icon} {text}
     </span>
   );
 }
 
-function InsightCard({
+function Insight({
   title,
   value,
   subtext,
-  highlight = false,
+  progress,
+  bordered,
 }: {
   title: string;
   value: string;
   subtext: string;
-  highlight?: boolean;
+  progress?: number;
+  bordered?: boolean;
 }) {
   return (
-    <div className="p-4 rounded-2xl bg-black/40 border border-white/5 hover:border-white/10 transition-colors flex flex-col justify-between h-full">
-      <p className="text-gray-400 text-xs font-medium mb-2">{title}</p>
-      <div>
-        <p className={`font-bold text-2xl tracking-tight mb-1 ${highlight ? "text-red-500" : "text-white"}`}>
-          {value}
-        </p>
-        <p className="text-[10px] text-gray-500 uppercase tracking-wider">{subtext}</p>
-      </div>
-      {highlight && (
-        <div className="h-1 mt-3 bg-black rounded-full overflow-hidden">
-          <div className="h-full bg-red-500 w-[92%] shadow-[0_0_8px_rgba(239,68,68,1)]" />
+    <div className={`px-5 py-7 ${bordered ? "border-l border-white/[0.08] [&:nth-child(3)]:border-l-0 [&:nth-child(3)]:border-t md:[&:nth-child(3)]:border-l md:[&:nth-child(3)]:border-t-0 [&:nth-child(4)]:border-t md:[&:nth-child(4)]:border-t-0" : ""}`}>
+      <dt className="font-label text-[10px] uppercase tracking-[0.15em] text-stone">{title}</dt>
+      <dd className={`mt-3 font-display text-4xl font-light ${progress ? "text-red-500" : "text-white"}`}>{value}</dd>
+      <dd className="mt-1 text-xs text-stone-2">{subtext}</dd>
+      {progress !== undefined && (
+        <div className="mt-4 h-px bg-white/10">
+          <div className="h-px bg-red-500" style={{ width: `${progress}%` }} />
         </div>
       )}
     </div>
   );
 }
 
-function GlobeIcon() {
+function Stars({ value, small, className = "" }: { value: number; small?: boolean; className?: string }) {
   return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="2" x2="22" y1="12" y2="12"></line>
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-    </svg>
+    <div className={`flex gap-0.5 ${className}`} aria-label={`${value} / 5`}>
+      {[...Array(5)].map((_, i) => (
+        <Star key={i} className={`${small ? "h-3 w-3" : "h-4 w-4"} ${i < value ? "fill-red-500 text-red-500" : "text-white/15"}`} aria-hidden />
+      ))}
+    </div>
   );
 }

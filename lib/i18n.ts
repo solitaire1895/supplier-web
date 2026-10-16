@@ -6,17 +6,20 @@ export type Lang = "EN" | "FR" | "CN";
 
 const KEY = "nexusply_settings";
 
+/** Language for visitors who have not picked one. */
+export const DEFAULT_LANG: Lang = "FR";
+
 export function getLanguage(): Lang {
-  if (typeof window === "undefined") return "EN";
+  if (typeof window === "undefined") return DEFAULT_LANG;
 
   const data = localStorage.getItem(KEY);
-  if (!data) return "EN";
+  if (!data) return DEFAULT_LANG;
 
   try {
     const settings = JSON.parse(data);
-    return settings.language || "EN";
+    return settings.language || DEFAULT_LANG;
   } catch (e) {
-    return "EN";
+    return DEFAULT_LANG;
   }
 }
 
@@ -224,6 +227,297 @@ export const translations = {
       choosePlan: "Choose Your Plan",
       manageSubscription: "Manage Subscription",
       backToHome: "Back to Home",
+      redirecting: "Redirecting to secure payment...",
+      checkoutError: "Could not start the payment. Please try again.",
+      confirming: "Confirming your payment...",
+      confirmed: "Payment confirmed! Your plan is active until",
+      processing: "Your payment is still being processed. Your plan will activate automatically in a few minutes.",
+      failed: "The payment did not go through. You can try again whenever you are ready.",
+      mismatch: "We could not validate this payment. If you were charged, please contact support.",
+      tryAgain: "Try again",
+      renew: "Renew (+30 days)",
+      expiresIn: "Expires in",
+      payFrom: "Paying from",
+    },
+    featureUi: {
+      "lockedLabel": "Locked feature",
+      "seePlans": "See plans",
+      "winning": {
+        "eyebrow": "Winning products",
+        "searchPlaceholder": "Search by niche, name or category…",
+        "topFive": "The Top 5",
+        "topResults": "Top results",
+        "emerging": "Emerging opportunities",
+        "noProducts": "No products match your search.",
+        "delayNote": "Your plan shows new winners with a {h} h delay. Upgrade to Importer for instant access.",
+        "lockedTitle": "Winning products are locked",
+        "lockedDesc": "Your {plan} plan doesn't include winning products. Upgrade to discover high-margin products updated in real time.",
+        "unlockMoreTitle": "Unlock {n}+ winning products",
+        "unlockMoreDesc": "You're seeing a limited selection on the {plan} plan. Upgrade to access the full database.",
+        "lockedProduct": "Locked product",
+        "lockedProductDesc": "Upgrade your plan to see this product.",
+        "trending": "Trending"
+      },
+      "product": {
+        "eyebrow": "Product",
+        "insightsLabel": "Insights",
+        "suppliersLabel": "Suppliers",
+        "sourcingLabel": "Sourcing",
+        "reviewsLabel": "Reviews"
+      },
+      "calculator": {
+        "title": "Profit simulator",
+        "plan": "Plan",
+        "buyPrice": "Buy price",
+        "sellPrice": "Sell price",
+        "shipping": "Shipping (total)",
+        "weight": "Weight (kg)",
+        "cbm": "Volume (CBM)",
+        "adSpend": "Est. ad spend",
+        "netProfit": "Est. net profit",
+        "roi": "ROI",
+        "lockedNote": "Upgrade to Importer to unlock shipping, CBM and net margin.",
+        "lockedBadge": "Importer+"
+      },
+      "training": {
+        "eyebrow": "Training center"
+      }
+    },
+    dashboardUi: {
+      "eyebrow": "Dashboard",
+      "searchResults": "Search results",
+      "noSuppliers": "No suppliers match your criteria.",
+      "clearSearch": "Clear search",
+      "filters": "Filters",
+      "reset": "Reset",
+      "quickFilters": "Quick filters",
+      "verifiedOnly": "Verified only",
+      "primaryCategory": "Primary category",
+      "subCategory": "Sub-category",
+      "selectCategoryFirst": "Select a category first",
+      "applyFilters": "Apply filters",
+      "categories": {
+        "Electronics": "Electronics",
+        "Clothing": "Clothing",
+        "Home": "Home",
+        "Beauty": "Beauty"
+      },
+      "recommendedForYou": "Recommended for you",
+      "suggestedSuppliers": "Suggested suppliers",
+      "suggestedLabel": "Picks",
+      "unlockTitle": "Unlock every supplier",
+      "unlockDesc": "You're seeing a limited selection on the {plan} plan. Upgrade to access the full network.",
+      "upgradeNow": "See plans",
+      "supplier": {
+        "overview": "Overview",
+        "contactLabel": "Contact",
+        "portfolioLabel": "Catalog",
+        "portfolioTitle": "Products offered",
+        "insightsLabel": "Insights",
+        "reviewsLabel": "Reviews",
+        "rating": "Rating",
+        "reviewCount": "Reviews",
+        "days": "days",
+        "noDirectContact": "No direct contact found. Please use the platform contact link."
+      }
+    },
+    landing: {
+      "nav": {
+        "product": "Product",
+        "solutions": "Solutions",
+        "ai": "Nexus AI",
+        "pricing": "Pricing",
+        "faq": "FAQ",
+        "login": "Log in",
+        "start": "Get started"
+      },
+      "announce": {
+        "tag": "New",
+        "text": "Pay with mobile money in 15 countries"
+      },
+      "hero": {
+        "title": "Your intelligent importing assistant",
+        "subtitle": "Find verified suppliers, spot winning products and know your margin before you buy. All in one place.",
+        "primary": "Start for free",
+        "secondary": "See pricing",
+        "scroll": "Scroll"
+      },
+      "intro": {
+        "label": "Redefining importing",
+        "title": "Import faster, with less risk",
+        "desc": "Nexusply replaces hours of research with clear data, so you buy at the right price and resell with a real margin.",
+        "stats": [
+          {
+            "value": "10K+",
+            "label": "Suppliers analyzed"
+          },
+          {
+            "value": "+45%",
+            "label": "Average margin increase"
+          },
+          {
+            "value": "15",
+            "label": "Countries with mobile money"
+          }
+        ]
+      },
+      "product": {
+        "label": "Product",
+        "title": "Built for importers who move fast",
+        "desc": "Three tools that cover the whole journey, from supplier to resale.",
+        "learnMore": "Explore",
+        "items": [
+          {
+            "tab": "Verified suppliers",
+            "title": "Reliable suppliers, no guesswork",
+            "desc": "Prices, lead times, minimum order, reviews and a reliability score for every supplier on Alibaba, 1688 and beyond.",
+            "metric": "10K+",
+            "metricLabel": "suppliers analyzed"
+          },
+          {
+            "tab": "Winning products",
+            "title": "Spot trends before everyone else",
+            "desc": "High-demand, low-competition products, updated continuously, with their resale potential.",
+            "metric": "0 h",
+            "metricLabel": "delay on new finds with the Importer plan"
+          },
+          {
+            "tab": "Profit calculator",
+            "title": "Know your margin before you buy",
+            "desc": "Purchase price, shipping, CBM and fees: the calculator gives your real margin and a suggested resale price.",
+            "metric": "+45%",
+            "metricLabel": "average margin"
+          }
+        ]
+      },
+      "solutions": {
+        "label": "Solutions",
+        "title": "Fits the way you sell",
+        "desc": "Whether you're testing your first product or turning over stock, Nexusply keeps up.",
+        "items": [
+          {
+            "tab": "Beginners",
+            "desc": "Test the market on a small budget: suppliers from the big platforms, a basic calculator and one winning product a month.",
+            "metric": "30 days",
+            "metricLabel": "of access per payment, no commitment"
+          },
+          {
+            "tab": "Importers",
+            "desc": "Every brand, tablets and computers, direct supplier contacts and real-time winning products.",
+            "metric": "CBM",
+            "metricLabel": "full shipping and margin calculation"
+          },
+          {
+            "tab": "Resellers",
+            "desc": "Early access to the latest releases, every supplier, priority access and the training center.",
+            "metric": "Priority",
+            "metricLabel": "support and early access"
+          },
+          {
+            "tab": "E-commerce",
+            "desc": "Compare prices across sellers, estimate your ad budget and track favorites from a single dashboard.",
+            "metric": "1",
+            "metricLabel": "dashboard to run it all"
+          }
+        ]
+      },
+      "ai": {
+        "label": "Nexus AI",
+        "title": "Ask questions, get answers with numbers",
+        "desc": "Your sourcing advisor looks at your budget, niche and target market to recommend what to buy, and where.",
+        "points": [
+          "Find trending products in a niche",
+          "Compare suppliers for the same product",
+          "Estimate profit before you order"
+        ],
+        "cta": "Try it now"
+      },
+      "steps": {
+        "label": "How it works",
+        "title": "From idea to order in 4 steps",
+        "items": [
+          {
+            "title": "Pick your niche",
+            "desc": "Phones, tablets, computers: filter by category, budget and target market."
+          },
+          {
+            "title": "Compare suppliers",
+            "desc": "Price, minimum order, lead time and reliability score, side by side."
+          },
+          {
+            "title": "Calculate your margin",
+            "desc": "Add shipping and fees: see your real profit before you buy."
+          },
+          {
+            "title": "Order and resell",
+            "desc": "Contact the supplier directly and follow trends to restock at the right time."
+          }
+        ]
+      },
+      "band": {
+        "quote": "Buy at the right price. Resell with a real margin.",
+        "caption": "Nexusply, supplier intelligence for Africa"
+      },
+      "pricing": {
+        "label": "Pricing",
+        "title": "Simple prices, paid with mobile money",
+        "desc": "Each payment gives you 30 days of access. No automatic subscription: renew whenever you want.",
+        "popular": "Most popular",
+        "perMonth": "/ 30 days"
+      },
+      "faq": {
+        "label": "FAQ",
+        "title": "Your questions, answered",
+        "items": [
+          {
+            "q": "How can I pay?",
+            "a": "With mobile money or card, through our secure payment partner SasPay. Pick your country above the prices to see them in your currency."
+          },
+          {
+            "q": "Is it an automatic subscription?",
+            "a": "No. Each payment gives 30 days of access. You renew whenever you like; nothing is charged automatically."
+          },
+          {
+            "q": "Can I change plans?",
+            "a": "Yes, anytime. If you switch plans during a running period, the remaining time is converted and added to your new plan."
+          },
+          {
+            "q": "Which countries can pay?",
+            "a": "Today: Cameroon, Gabon, Congo, Côte d'Ivoire, Senegal, Benin, Togo, Burkina Faso, Mali, Niger, DR Congo, Nigeria, Ghana, Guinea and Sierra Leone. More countries are coming."
+          },
+          {
+            "q": "Can I explore before paying?",
+            "a": "Yes. Create a free account to explore Nexusply, then pick a plan when you're ready."
+          },
+          {
+            "q": "Are suppliers verified?",
+            "a": "Every supplier shows prices, lead times, minimum order, reviews and a reliability score, to help you avoid risky sellers."
+          }
+        ]
+      },
+      "cta": {
+        "label": "Get started",
+        "title": "Join the importers who buy smarter",
+        "desc": "Create your account in a minute. Pick a plan when you're ready.",
+        "primary": "Start for free",
+        "secondary": "Log in"
+      },
+      "footer": {
+        "tagline": "Turning supplier data into profitable decisions.",
+        "product": "Product",
+        "company": "Company",
+        "legal": "Legal",
+        "features": "Features",
+        "solutions": "Solutions",
+        "pricing": "Pricing",
+        "faq": "FAQ",
+        "dashboard": "Dashboard",
+        "support": "Help center",
+        "contact": "Contact us",
+        "terms": "Terms",
+        "privacy": "Privacy",
+        "rights": "© 2026 Nexusply. All rights reserved."
+      }
     },
     heroCarousel: {
       intro: "Nexusply Intelligence",
@@ -696,6 +990,297 @@ export const translations = {
       choosePlan: "Choisissez votre plan",
       manageSubscription: "Gérer l'abonnement",
       backToHome: "Retour à l'accueil",
+      redirecting: "Redirection vers le paiement sécurisé...",
+      checkoutError: "Impossible de lancer le paiement. Veuillez réessayer.",
+      confirming: "Confirmation de votre paiement...",
+      confirmed: "Paiement confirmé ! Votre plan est actif jusqu'au",
+      processing: "Votre paiement est en cours de traitement. Votre plan sera activé automatiquement dans quelques minutes.",
+      failed: "Le paiement n'a pas abouti. Vous pouvez réessayer quand vous voulez.",
+      mismatch: "Nous n'avons pas pu valider ce paiement. Si vous avez été débité, contactez le support.",
+      tryAgain: "Réessayer",
+      renew: "Renouveler (+30 jours)",
+      expiresIn: "Expire dans",
+      payFrom: "Paiement depuis",
+    },
+    featureUi: {
+      "lockedLabel": "Fonctionnalité verrouillée",
+      "seePlans": "Voir les plans",
+      "winning": {
+        "eyebrow": "Produits gagnants",
+        "searchPlaceholder": "Rechercher par niche, nom ou catégorie…",
+        "topFive": "Le Top 5",
+        "topResults": "Meilleurs résultats",
+        "emerging": "Opportunités émergentes",
+        "noProducts": "Aucun produit ne correspond à votre recherche.",
+        "delayNote": "Votre plan affiche les nouveautés avec {h} h de délai. Passez au plan Importateur pour un accès immédiat.",
+        "lockedTitle": "Les produits gagnants sont verrouillés",
+        "lockedDesc": "Votre plan {plan} n'inclut pas les produits gagnants. Passez à un plan supérieur pour découvrir les produits à forte marge, mis à jour en temps réel.",
+        "unlockMoreTitle": "Débloquez {n}+ produits gagnants",
+        "unlockMoreDesc": "Vous voyez une sélection limitée avec le plan {plan}. Passez à un plan supérieur pour accéder à toute la base.",
+        "lockedProduct": "Produit verrouillé",
+        "lockedProductDesc": "Passez à un plan supérieur pour voir ce produit.",
+        "trending": "Tendance"
+      },
+      "product": {
+        "eyebrow": "Produit",
+        "insightsLabel": "Analyses",
+        "suppliersLabel": "Fournisseurs",
+        "sourcingLabel": "Sourcing",
+        "reviewsLabel": "Avis"
+      },
+      "calculator": {
+        "title": "Simulateur de profit",
+        "plan": "Plan",
+        "buyPrice": "Prix d'achat",
+        "sellPrice": "Prix de vente",
+        "shipping": "Transport (total)",
+        "weight": "Poids (kg)",
+        "cbm": "Volume (CBM)",
+        "adSpend": "Budget pub estimé",
+        "netProfit": "Profit net estimé",
+        "roi": "ROI",
+        "lockedNote": "Passez au plan Importateur pour débloquer le transport, le CBM et la marge nette.",
+        "lockedBadge": "Importateur+"
+      },
+      "training": {
+        "eyebrow": "Centre de formation"
+      }
+    },
+    dashboardUi: {
+      "eyebrow": "Tableau de bord",
+      "searchResults": "Résultats de recherche",
+      "noSuppliers": "Aucun fournisseur ne correspond à vos critères.",
+      "clearSearch": "Effacer la recherche",
+      "filters": "Filtres",
+      "reset": "Réinitialiser",
+      "quickFilters": "Filtres rapides",
+      "verifiedOnly": "Vérifiés uniquement",
+      "primaryCategory": "Catégorie principale",
+      "subCategory": "Sous-catégorie",
+      "selectCategoryFirst": "Choisissez d'abord une catégorie",
+      "applyFilters": "Appliquer les filtres",
+      "categories": {
+        "Electronics": "Électronique",
+        "Clothing": "Vêtements",
+        "Home": "Maison",
+        "Beauty": "Beauté"
+      },
+      "recommendedForYou": "Recommandé pour vous",
+      "suggestedSuppliers": "Fournisseurs suggérés",
+      "suggestedLabel": "Sélection",
+      "unlockTitle": "Débloquez tous les fournisseurs",
+      "unlockDesc": "Vous voyez une sélection limitée avec le plan {plan}. Passez à un plan supérieur pour accéder à tout le réseau.",
+      "upgradeNow": "Voir les plans",
+      "supplier": {
+        "overview": "Aperçu",
+        "contactLabel": "Contact",
+        "portfolioLabel": "Catalogue",
+        "portfolioTitle": "Produits proposés",
+        "insightsLabel": "Analyses",
+        "reviewsLabel": "Avis",
+        "rating": "Note",
+        "reviewCount": "Avis",
+        "days": "jours",
+        "noDirectContact": "Aucun contact direct trouvé. Utilisez le lien de contact de la plateforme."
+      }
+    },
+    landing: {
+      "nav": {
+        "product": "Produit",
+        "solutions": "Solutions",
+        "ai": "Nexus AI",
+        "pricing": "Tarifs",
+        "faq": "FAQ",
+        "login": "Connexion",
+        "start": "Démarrer"
+      },
+      "announce": {
+        "tag": "Nouveau",
+        "text": "Paiement par mobile money dans 15 pays"
+      },
+      "hero": {
+        "title": "Votre assistant d'importation intelligent",
+        "subtitle": "Trouvez des fournisseurs vérifiés, repérez les produits gagnants et connaissez votre marge avant d'acheter. Tout au même endroit.",
+        "primary": "Commencer gratuitement",
+        "secondary": "Voir les tarifs",
+        "scroll": "Défiler"
+      },
+      "intro": {
+        "label": "Redéfinir l'import",
+        "title": "Importez plus vite, avec moins de risques",
+        "desc": "Nexusply remplace des heures de recherche par des données claires, pour acheter au bon prix et revendre avec une vraie marge.",
+        "stats": [
+          {
+            "value": "10K+",
+            "label": "Fournisseurs analysés"
+          },
+          {
+            "value": "+45 %",
+            "label": "Hausse moyenne de marge"
+          },
+          {
+            "value": "15",
+            "label": "Pays où payer en mobile money"
+          }
+        ]
+      },
+      "product": {
+        "label": "Produit",
+        "title": "Conçu pour les importateurs qui avancent vite",
+        "desc": "Trois outils qui couvrent tout le parcours, du fournisseur à la revente.",
+        "learnMore": "Découvrir",
+        "items": [
+          {
+            "tab": "Fournisseurs vérifiés",
+            "title": "Des fournisseurs fiables, sans deviner",
+            "desc": "Prix, délais, minimum de commande, avis et score de fiabilité pour chaque fournisseur d'Alibaba, 1688 et au-delà.",
+            "metric": "10K+",
+            "metricLabel": "fournisseurs analysés"
+          },
+          {
+            "tab": "Produits gagnants",
+            "title": "Repérez les tendances avant les autres",
+            "desc": "Les produits à forte demande et faible concurrence, mis à jour en continu, avec leur potentiel de revente.",
+            "metric": "0 h",
+            "metricLabel": "de délai sur les nouveautés avec le plan Importateur"
+          },
+          {
+            "tab": "Calculateur de profit",
+            "title": "Connaissez votre marge avant d'acheter",
+            "desc": "Prix d'achat, transport, CBM et frais : le calculateur donne votre marge réelle et un prix de revente conseillé.",
+            "metric": "+45 %",
+            "metricLabel": "de marge moyenne"
+          }
+        ]
+      },
+      "solutions": {
+        "label": "Solutions",
+        "title": "Adapté à votre façon de vendre",
+        "desc": "Que vous testiez votre premier produit ou que vous fassiez tourner un stock, Nexusply suit votre rythme.",
+        "items": [
+          {
+            "tab": "Débutants",
+            "desc": "Testez le marché avec un petit budget : fournisseurs des grandes plateformes, calculatrice de base et un produit gagnant par mois.",
+            "metric": "30 jours",
+            "metricLabel": "d'accès par paiement, sans engagement"
+          },
+          {
+            "tab": "Importateurs",
+            "desc": "Toutes les marques, tablettes et ordinateurs, contacts directs des fournisseurs et produits gagnants en temps réel.",
+            "metric": "CBM",
+            "metricLabel": "calcul complet du transport et de la marge"
+          },
+          {
+            "tab": "Revendeurs",
+            "desc": "Les dernières sorties en avant-première, tous les fournisseurs, un accès prioritaire et le centre de formation.",
+            "metric": "Priorité",
+            "metricLabel": "sur le support et les nouveautés"
+          },
+          {
+            "tab": "E-commerce",
+            "desc": "Comparez les prix entre vendeurs, estimez votre budget publicitaire et suivez vos favoris depuis un seul tableau de bord.",
+            "metric": "1",
+            "metricLabel": "tableau de bord pour tout piloter"
+          }
+        ]
+      },
+      "ai": {
+        "label": "Nexus AI",
+        "title": "Posez vos questions, recevez des réponses chiffrées",
+        "desc": "Votre conseiller sourcing analyse votre budget, votre niche et votre marché cible pour vous recommander quoi acheter, et où.",
+        "points": [
+          "Trouver les produits tendance d'une niche",
+          "Comparer des fournisseurs pour un même produit",
+          "Estimer le profit avant de commander"
+        ],
+        "cta": "Essayer maintenant"
+      },
+      "steps": {
+        "label": "Comment ça marche",
+        "title": "De l'idée à la commande en 4 étapes",
+        "items": [
+          {
+            "title": "Choisissez votre niche",
+            "desc": "Téléphones, tablettes, ordinateurs : filtrez par catégorie, budget et marché cible."
+          },
+          {
+            "title": "Comparez les fournisseurs",
+            "desc": "Prix, minimum de commande, délais et score de fiabilité, côte à côte."
+          },
+          {
+            "title": "Calculez votre marge",
+            "desc": "Ajoutez transport et frais : vous voyez le profit réel avant d'acheter."
+          },
+          {
+            "title": "Commandez et revendez",
+            "desc": "Contactez le fournisseur en direct et suivez les tendances pour réassortir au bon moment."
+          }
+        ]
+      },
+      "band": {
+        "quote": "Achetez au bon prix. Revendez avec une vraie marge.",
+        "caption": "Nexusply, l'intelligence fournisseur pour l'Afrique"
+      },
+      "pricing": {
+        "label": "Tarifs",
+        "title": "Des prix simples, payés en mobile money",
+        "desc": "Chaque paiement vous donne 30 jours d'accès. Pas d'abonnement automatique : vous renouvelez quand vous voulez.",
+        "popular": "Le plus choisi",
+        "perMonth": "/ 30 jours"
+      },
+      "faq": {
+        "label": "FAQ",
+        "title": "Vos questions, nos réponses",
+        "items": [
+          {
+            "q": "Comment puis-je payer ?",
+            "a": "Par mobile money ou par carte, via notre partenaire de paiement sécurisé SasPay. Choisissez votre pays au-dessus des tarifs pour voir le prix dans votre monnaie."
+          },
+          {
+            "q": "Est-ce un abonnement automatique ?",
+            "a": "Non. Chaque paiement donne 30 jours d'accès. Vous renouvelez quand vous le souhaitez ; rien n'est prélevé automatiquement."
+          },
+          {
+            "q": "Puis-je changer de plan ?",
+            "a": "Oui, à tout moment. Si vous changez de plan pendant une période en cours, le temps restant est converti et ajouté à votre nouveau plan."
+          },
+          {
+            "q": "Dans quels pays le paiement est-il disponible ?",
+            "a": "Aujourd'hui : Cameroun, Gabon, Congo, Côte d'Ivoire, Sénégal, Bénin, Togo, Burkina Faso, Mali, Niger, RD Congo, Nigeria, Ghana, Guinée et Sierra Leone. D'autres pays arrivent."
+          },
+          {
+            "q": "Puis-je découvrir la plateforme avant de payer ?",
+            "a": "Oui. Créez un compte gratuit pour explorer Nexusply, puis choisissez un plan quand vous êtes prêt."
+          },
+          {
+            "q": "Les fournisseurs sont-ils vérifiés ?",
+            "a": "Chaque fournisseur affiche ses prix, délais, minimum de commande, avis et un score de fiabilité, pour vous aider à éviter les vendeurs à risque."
+          }
+        ]
+      },
+      "cta": {
+        "label": "Commencer",
+        "title": "Rejoignez les importateurs qui achètent mieux",
+        "desc": "Créez votre compte en une minute. Choisissez un plan quand vous êtes prêt.",
+        "primary": "Commencer gratuitement",
+        "secondary": "Se connecter"
+      },
+      "footer": {
+        "tagline": "Transformer les données fournisseurs en décisions rentables.",
+        "product": "Produit",
+        "company": "Entreprise",
+        "legal": "Légal",
+        "features": "Fonctionnalités",
+        "solutions": "Solutions",
+        "pricing": "Tarifs",
+        "faq": "FAQ",
+        "dashboard": "Tableau de bord",
+        "support": "Centre d'aide",
+        "contact": "Nous contacter",
+        "terms": "Conditions",
+        "privacy": "Confidentialité",
+        "rights": "© 2026 Nexusply. Tous droits réservés."
+      }
     },
     heroCarousel: {
       intro: "Nexusply Intelligence",
@@ -1163,6 +1748,297 @@ export const translations = {
       choosePlan: "选择您的方案",
       manageSubscription: "管理订阅",
       backToHome: "返回首页",
+      redirecting: "正在跳转到安全支付页面...",
+      checkoutError: "无法发起支付，请重试。",
+      confirming: "正在确认您的付款...",
+      confirmed: "付款成功！您的方案有效期至",
+      processing: "您的付款仍在处理中，方案将在几分钟内自动激活。",
+      failed: "付款未成功，您可以随时重试。",
+      mismatch: "我们无法验证此付款。如已扣款，请联系客服。",
+      tryAgain: "重试",
+      renew: "续订（+30 天）",
+      expiresIn: "剩余有效期",
+      payFrom: "付款国家",
+    },
+    featureUi: {
+      "lockedLabel": "功能已锁定",
+      "seePlans": "查看方案",
+      "winning": {
+        "eyebrow": "爆款产品",
+        "searchPlaceholder": "按细分市场、名称或类别搜索…",
+        "topFive": "前五名",
+        "topResults": "最佳结果",
+        "emerging": "新兴机会",
+        "noProducts": "没有符合搜索条件的产品。",
+        "delayNote": "您的方案会延迟 {h} 小时显示新品。升级到进口商方案即可立即查看。",
+        "lockedTitle": "爆款产品已锁定",
+        "lockedDesc": "您的 {plan} 方案不包含爆款产品。升级即可发现实时更新的高利润产品。",
+        "unlockMoreTitle": "解锁 {n}+ 个爆款产品",
+        "unlockMoreDesc": "您在 {plan} 方案下只能看到部分产品。升级即可访问完整数据库。",
+        "lockedProduct": "产品已锁定",
+        "lockedProductDesc": "升级方案即可查看此产品。",
+        "trending": "热门"
+      },
+      "product": {
+        "eyebrow": "产品",
+        "insightsLabel": "分析",
+        "suppliersLabel": "供应商",
+        "sourcingLabel": "采购",
+        "reviewsLabel": "评价"
+      },
+      "calculator": {
+        "title": "利润模拟器",
+        "plan": "方案",
+        "buyPrice": "采购价",
+        "sellPrice": "售价",
+        "shipping": "运费（总计）",
+        "weight": "重量（公斤）",
+        "cbm": "体积（CBM）",
+        "adSpend": "预估广告费",
+        "netProfit": "预估净利润",
+        "roi": "投资回报率",
+        "lockedNote": "升级到进口商方案即可解锁运费、体积和净利润计算。",
+        "lockedBadge": "进口商+"
+      },
+      "training": {
+        "eyebrow": "培训中心"
+      }
+    },
+    dashboardUi: {
+      "eyebrow": "仪表盘",
+      "searchResults": "搜索结果",
+      "noSuppliers": "没有符合条件的供应商。",
+      "clearSearch": "清除搜索",
+      "filters": "筛选",
+      "reset": "重置",
+      "quickFilters": "快速筛选",
+      "verifiedOnly": "仅认证供应商",
+      "primaryCategory": "主要类别",
+      "subCategory": "子类别",
+      "selectCategoryFirst": "请先选择类别",
+      "applyFilters": "应用筛选",
+      "categories": {
+        "Electronics": "电子产品",
+        "Clothing": "服装",
+        "Home": "家居",
+        "Beauty": "美妆"
+      },
+      "recommendedForYou": "为您推荐",
+      "suggestedSuppliers": "推荐供应商",
+      "suggestedLabel": "精选",
+      "unlockTitle": "解锁全部供应商",
+      "unlockDesc": "您在 {plan} 方案下只能看到部分供应商。升级即可访问完整网络。",
+      "upgradeNow": "查看方案",
+      "supplier": {
+        "overview": "概览",
+        "contactLabel": "联系",
+        "portfolioLabel": "产品目录",
+        "portfolioTitle": "供应产品",
+        "insightsLabel": "分析",
+        "reviewsLabel": "评价",
+        "rating": "评分",
+        "reviewCount": "评价",
+        "days": "天",
+        "noDirectContact": "未找到直接联系方式。请使用平台联系链接。"
+      }
+    },
+    landing: {
+      "nav": {
+        "product": "产品",
+        "solutions": "解决方案",
+        "ai": "Nexus AI",
+        "pricing": "价格",
+        "faq": "常见问题",
+        "login": "登录",
+        "start": "开始使用"
+      },
+      "announce": {
+        "tag": "新",
+        "text": "15 个国家支持移动支付"
+      },
+      "hero": {
+        "title": "您的智能进口助手",
+        "subtitle": "寻找经过验证的供应商，发现爆款产品，在购买前了解您的利润。一站式完成。",
+        "primary": "免费开始",
+        "secondary": "查看价格",
+        "scroll": "向下滚动"
+      },
+      "intro": {
+        "label": "重新定义进口",
+        "title": "更快进口，更低风险",
+        "desc": "Nexusply 用清晰的数据取代数小时的调研，让您以合适的价格采购，并以真实的利润转售。",
+        "stats": [
+          {
+            "value": "10K+",
+            "label": "已分析供应商"
+          },
+          {
+            "value": "+45%",
+            "label": "平均利润提升"
+          },
+          {
+            "value": "15",
+            "label": "支持移动支付的国家"
+          }
+        ]
+      },
+      "product": {
+        "label": "产品",
+        "title": "为行动迅速的进口商打造",
+        "desc": "三大工具，覆盖从供应商到转售的全流程。",
+        "learnMore": "了解更多",
+        "items": [
+          {
+            "tab": "认证供应商",
+            "title": "可靠的供应商，无需猜测",
+            "desc": "阿里巴巴、1688 等平台每个供应商的价格、交期、起订量、评价和可靠性评分。",
+            "metric": "10K+",
+            "metricLabel": "已分析供应商"
+          },
+          {
+            "tab": "爆款产品",
+            "title": "抢先发现趋势",
+            "desc": "高需求、低竞争的产品，持续更新，并附带转售潜力。",
+            "metric": "0 小时",
+            "metricLabel": "进口商方案的新品延迟"
+          },
+          {
+            "tab": "利润计算器",
+            "title": "购买前了解您的利润",
+            "desc": "采购价、运费、体积和费用：计算器给出真实利润和建议售价。",
+            "metric": "+45%",
+            "metricLabel": "平均利润"
+          }
+        ]
+      },
+      "solutions": {
+        "label": "解决方案",
+        "title": "适合您的销售方式",
+        "desc": "无论您是测试第一个产品还是周转库存，Nexusply 都能跟上您的节奏。",
+        "items": [
+          {
+            "tab": "新手",
+            "desc": "小预算测试市场：主流平台供应商、基础计算器，每月一个爆款产品。",
+            "metric": "30 天",
+            "metricLabel": "每次付款的使用期，无需绑定"
+          },
+          {
+            "tab": "进口商",
+            "desc": "所有品牌、平板和电脑、供应商直接联系方式以及实时爆款产品。",
+            "metric": "CBM",
+            "metricLabel": "完整的运费和利润计算"
+          },
+          {
+            "tab": "经销商",
+            "desc": "抢先获取最新产品、全部供应商、优先权限和培训中心。",
+            "metric": "优先",
+            "metricLabel": "支持与新品抢先体验"
+          },
+          {
+            "tab": "电商",
+            "desc": "比较不同卖家的价格，估算广告预算，在一个仪表盘中跟踪收藏。",
+            "metric": "1",
+            "metricLabel": "个仪表盘掌控一切"
+          }
+        ]
+      },
+      "ai": {
+        "label": "Nexus AI",
+        "title": "提出问题，获得有数据支撑的答案",
+        "desc": "您的采购顾问会分析您的预算、细分市场和目标市场，推荐买什么以及在哪里买。",
+        "points": [
+          "发现细分市场的热门产品",
+          "比较同一产品的供应商",
+          "下单前估算利润"
+        ],
+        "cta": "立即试用"
+      },
+      "steps": {
+        "label": "如何运作",
+        "title": "四步从想法到下单",
+        "items": [
+          {
+            "title": "选择细分市场",
+            "desc": "手机、平板、电脑：按类别、预算和目标市场筛选。"
+          },
+          {
+            "title": "比较供应商",
+            "desc": "价格、起订量、交期和可靠性评分，一目了然。"
+          },
+          {
+            "title": "计算利润",
+            "desc": "加入运费和费用：购买前看到真实利润。"
+          },
+          {
+            "title": "下单并转售",
+            "desc": "直接联系供应商，跟踪趋势，在合适的时机补货。"
+          }
+        ]
+      },
+      "band": {
+        "quote": "以合适的价格采购，以真实的利润转售。",
+        "caption": "Nexusply，为非洲打造的供应商情报平台"
+      },
+      "pricing": {
+        "label": "价格",
+        "title": "简单的价格，移动支付",
+        "desc": "每次付款可使用 30 天。没有自动续费：随时续订。",
+        "popular": "最受欢迎",
+        "perMonth": "/ 30 天"
+      },
+      "faq": {
+        "label": "常见问题",
+        "title": "为您解答",
+        "items": [
+          {
+            "q": "如何付款？",
+            "a": "通过我们的安全支付合作伙伴 SasPay，使用移动支付或银行卡。在价格上方选择您的国家，即可查看本币价格。"
+          },
+          {
+            "q": "会自动续费吗？",
+            "a": "不会。每次付款可使用 30 天。您可以随时续订，不会自动扣款。"
+          },
+          {
+            "q": "可以更换方案吗？",
+            "a": "可以，随时都行。如果在使用期内更换方案，剩余时间会被折算并加到新方案中。"
+          },
+          {
+            "q": "哪些国家可以付款？",
+            "a": "目前：喀麦隆、加蓬、刚果、科特迪瓦、塞内加尔、贝宁、多哥、布基纳法索、马里、尼日尔、刚果（金）、尼日利亚、加纳、几内亚和塞拉利昂。更多国家即将开通。"
+          },
+          {
+            "q": "付款前可以先体验吗？",
+            "a": "可以。创建免费账户来体验 Nexusply，准备好后再选择方案。"
+          },
+          {
+            "q": "供应商经过验证吗？",
+            "a": "每个供应商都会显示价格、交期、起订量、评价和可靠性评分，帮助您避开高风险卖家。"
+          }
+        ]
+      },
+      "cta": {
+        "label": "开始使用",
+        "title": "加入更聪明采购的进口商",
+        "desc": "一分钟创建账户。准备好后再选择方案。",
+        "primary": "免费开始",
+        "secondary": "登录"
+      },
+      "footer": {
+        "tagline": "将供应商数据转化为盈利决策。",
+        "product": "产品",
+        "company": "公司",
+        "legal": "法律",
+        "features": "功能",
+        "solutions": "解决方案",
+        "pricing": "价格",
+        "faq": "常见问题",
+        "dashboard": "仪表盘",
+        "support": "帮助中心",
+        "contact": "联系我们",
+        "terms": "条款",
+        "privacy": "隐私",
+        "rights": "© 2026 Nexusply。保留所有权利。"
+      }
     },
     heroCarousel: {
       intro: "Nexusply 情报",
@@ -1449,7 +2325,7 @@ export const translations = {
 };
 
 export function useI18n() {
-  const [lang, setLang] = useState<Lang>("EN");
+  const [lang, setLang] = useState<Lang>(DEFAULT_LANG);
 
   useEffect(() => {
     setLang(getLanguage());
@@ -1459,6 +2335,11 @@ export function useI18n() {
 
     return () => window.removeEventListener("languageChanged", update);
   }, []);
+
+  // Keep <html lang> in sync for screen readers, spell-check and search engines.
+  useEffect(() => {
+    document.documentElement.lang = lang === "CN" ? "zh" : lang.toLowerCase();
+  }, [lang]);
 
   // Use a type cast to ensure the returned translation object matches the structure of the EN translation.
   // This avoids TypeScript errors when accessing properties that are present in all translations but

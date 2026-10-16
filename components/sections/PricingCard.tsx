@@ -1,7 +1,8 @@
 import { Check, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import type { PaidPlan } from "@/lib/plans"
+import { usePlanCheckout } from "@/lib/use-plan-checkout"
+import { useI18n } from "@/lib/i18n"
 
 export default function PricingCard({
   title,
@@ -9,133 +10,80 @@ export default function PricingCard({
   features,
   highlight,
   ctaText = "Get Started",
-  priceId,
+  plan,
+  country,
 }: {
   title: string
   price: string
   features: string[]
   highlight?: boolean
   ctaText?: string
-  priceId?: string
+  plan?: PaidPlan
+  country?: string
 }) {
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const { t } = useI18n()
+  const { startCheckout, pendingPlan, error } = usePlanCheckout()
+  const loading = !!plan && pendingPlan === plan
+  const p = t.landing.pricing
 
-  const handleSubscribe = async () => {
-    if (!priceId) return
-
-    try {
-      setLoading(true)
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ priceId }),
-      })
-
-      // Safely parse the JSON body (it may be empty / non-JSON on errors)
-      let data: { url?: string; error?: string } = {}
-      try {
-        data = await res.json()
-      } catch {
-        data = {}
-      }
-
-      // Not signed in -> send the user to sign up / login
-      if (res.status === 401) {
-        router.push("/auth/signup")
-        return
-      }
-
-      if (data.url) {
-        window.location.href = data.url
-        return
-      }
-
-      alert(data.error || "Something went wrong")
-    } catch (error) {
-      console.error("Subscription error:", error)
-      alert("Failed to initiate checkout")
-    } finally {
-      setLoading(false)
-    }
+  const handleSubscribe = () => {
+    if (plan && !loading) startCheckout(plan, country)
   }
+
+  const buttonClass = `flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-medium transition ${
+    highlight
+      ? "bg-red-500 text-white hover:bg-red-600"
+      : "border border-white/15 bg-white/[0.04] text-white hover:border-white/30 hover:bg-white/10"
+  }`
 
   return (
     <div
-      className={`
-        group relative p-8 rounded-3xl
-        backdrop-blur-2xl
-        border transition-all duration-500
-        overflow-hidden
-
-        ${highlight
-          ? "bg-white/10 border-white/20 scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]"
-          : "bg-white/5 border-white/10 hover:border-red-500 hover:shadow-[0_0_40px_rgba(239,68,68,0.6)]"
-        }
-      `}
+      className={`relative flex flex-col rounded-2xl border p-8 transition-colors duration-500 ${
+        highlight
+          ? "border-red-500/50 bg-gradient-to-b from-red-500/[0.08] to-ink-2 shadow-[0_30px_80px_-40px_rgba(239,68,68,0.6)]"
+          : "border-white/[0.08] bg-ink-2 hover:border-white/20"
+      }`}
     >
-
-      {/* TOP LIQUID GLOW */}
-      <div className="
-        absolute -top-16 left-1/2 -translate-x-1/2
-        w-40 h-40 rounded-full
-        bg-white/20 blur-3xl opacity-20
-      " />
-
-      {/* TITLE */}
-      <p className="text-gray-400 mb-2">{title}</p>
-
-      {/* PRICE */}
-      <h3 className="text-4xl font-bold mb-6">
-        {price}
-        <span className="text-gray-500 text-lg"> /m</span>
-      </h3>
-
-      {/* FEATURES */}
-      <div className="space-y-4 mb-8">
-        {features.map((f, i) => (
-          <div key={i} className="flex items-center gap-3 text-sm text-gray-300">
-            <Check className="w-4 h-4 text-white" />
-            {f}
-          </div>
-        ))}
-      </div>
-
-      {/* BUTTON */}
-      {priceId ? (
-        <button
-          onClick={handleSubscribe}
-          disabled={loading}
-          className={`
-            block w-full py-3 rounded-full font-bold text-center transition-all duration-300 flex items-center justify-center gap-2
-
-            ${highlight
-              ? "bg-white text-black hover:bg-gray-200"
-              : "bg-black border border-white/20 hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.8)] text-white"
-            }
-            ${loading ? "opacity-70 cursor-not-allowed" : ""}
-          `}
-        >
-          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {ctaText}
-        </button>
-      ) : (
-        <Link
-          href="/auth/signup"
-          className={`
-            block w-full py-3 rounded-full font-bold text-center transition-all duration-300
-
-            ${highlight
-              ? "bg-white text-black hover:bg-gray-200"
-              : "bg-black border border-white/20 hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.8)] text-white"
-            }
-          `}
-        >
-          {ctaText}
-        </Link>
+      {highlight && (
+        <span className="absolute -top-3 left-8 rounded-full bg-red-500 px-3 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-white">
+          {p.popular}
+        </span>
       )}
 
+      <p className="font-label text-[11px] uppercase tracking-[0.18em] text-stone">{title}</p>
+
+      <p className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="font-display text-5xl font-light tracking-[-0.02em] text-white">{price}</span>
+        <span className="whitespace-nowrap text-sm text-stone">{p.perMonth}</span>
+      </p>
+
+      <ul className="mt-8 flex-1 space-y-3.5 border-t border-white/[0.08] pt-8">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-start gap-3 text-sm leading-snug text-white/75">
+            <Check className={`mt-0.5 h-4 w-4 shrink-0 ${highlight ? "text-red-500" : "text-white/50"}`} aria-hidden />
+            {f}
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-10">
+        {plan ? (
+          <button onClick={handleSubscribe} disabled={loading} className={`${buttonClass} disabled:cursor-not-allowed disabled:opacity-70`}>
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading ? (t.subscription?.redirecting ?? ctaText) : ctaText}
+          </button>
+        ) : (
+          <Link href="/auth/signup" className={buttonClass}>
+            {ctaText}
+          </Link>
+        )}
+
+        {error && (
+          <p role="alert" className="mt-3 text-center text-sm text-red-400">
+            {t.subscription?.checkoutError ?? "Could not start the payment. Please try again."}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

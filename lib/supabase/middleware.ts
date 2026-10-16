@@ -41,8 +41,12 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // 1. Light-weight session check (refreshes if needed)
-  const { data: { user } } = await supabase.auth.getUser()
+  // 1. Light-weight session check (refreshes the session if it is about to expire).
+  // getClaims() verifies the JWT locally with asymmetric signing keys instead of
+  // calling the Auth server on every navigation (it falls back to that request
+  // for projects still on a symmetric secret), which keeps page loads fast.
+  const { data: claimsData } = await supabase.auth.getClaims()
+  const user = claimsData?.claims?.sub ? claimsData.claims : null
 
   const { pathname } = request.nextUrl
   const isProtectedRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
