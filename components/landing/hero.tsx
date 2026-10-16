@@ -22,9 +22,12 @@ export default function Hero() {
 
   return (
     <section className="grain relative isolate flex min-h-[100svh] items-center overflow-hidden">
-      {/* Background video: aerial container ship. The poster shows instantly. */}
+      {/* Background video: aerial container ship. The poster shows instantly.
+          On portrait screens only a narrow strip of the 16:9 frame is visible, so the
+          crop is centred on the ship (which sits at ~45% across the source) instead
+          of the frame centre. */}
       <video
-        className="absolute inset-0 -z-20 h-full w-full object-cover"
+        className="absolute inset-0 -z-20 h-full w-full object-cover object-[45%_50%] md:object-center"
         src="/landing/hero-ship.mp4"
         poster="/landing/hero-ship-poster.webp"
         autoPlay={!reduce}
