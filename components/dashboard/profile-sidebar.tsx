@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  User,
   Star,
   Package,
   Phone,
@@ -34,111 +33,74 @@ export default function ProfileSidebar({
   // the local session and hard-navigates to the login page.
   const handleLogout = () => logoutAndRedirect();
 
+  const displayName = profile?.full_name || profile?.email?.split("@")[0] || "User";
+
   return (
-    <div
+    <aside
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
-      className={`
-        fixed top-0 left-0 h-screen z-40
-        transition-all duration-300 ease-in-out
-        ${expanded ? "w-64" : "w-20"}
-        bg-black/80 backdrop-blur-2xl
-        border-r border-white/10
-        flex flex-col justify-between
-        p-4
-      `}
+      className={`fixed left-0 top-0 z-40 flex h-screen flex-col justify-between border-r border-white/[0.06] bg-ink p-3 font-text transition-[width] duration-300 ease-out ${
+        expanded ? "w-64" : "w-20"
+      }`}
     >
-      {/* TOP */}
       <div>
         {/* LOGO + BACK */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="text-red-500 font-bold text-xl px-2">
-            {expanded ? "Nexusply" : "N"}
-          </div>
-
+        <div className="mb-8 flex h-12 items-center justify-between px-3">
+          <button onClick={() => router.push("/dashboard")} className="text-lg font-semibold tracking-tight" aria-label="Nexusply">
+            {expanded ? (
+              <>
+                <span className="text-white">Nexus</span>
+                <span className="text-red-500">ply</span>
+              </>
+            ) : (
+              <span className="font-display text-2xl font-light text-white">
+                N<span className="text-red-500">.</span>
+              </span>
+            )}
+          </button>
           {expanded && (
             <button
               onClick={() => router.push("/dashboard")}
-              className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-gray-400 hover:text-white"
+              aria-label="Back to dashboard"
+              className="grid h-8 w-8 place-items-center rounded-full border border-white/10 text-stone transition hover:border-white/25 hover:text-white"
             >
-              <ArrowLeft size={18} />
+              <ArrowLeft size={15} />
             </button>
           )}
         </div>
 
         {/* USER */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-3 mb-8 overflow-hidden">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0 border border-red-500/20">
-              <User className="w-5 h-5 text-red-500" />
+        <div className="mb-8 flex items-center gap-3 overflow-hidden border-y border-white/[0.06] px-2 py-4">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/10 font-display text-lg text-white">
+            {displayName[0]?.toUpperCase()}
+          </span>
+          {expanded && (
+            <div className="min-w-0">
+              <p className="truncate text-sm text-white">{displayName}</p>
+              <p className="mt-0.5 font-label text-[10px] uppercase tracking-[0.18em] text-red-500">{profile?.active_plan || "Free"}</p>
             </div>
-
-            {expanded && (
-              <div className="min-w-0">
-                <p className="text-sm font-bold truncate text-white">
-                  {profile?.full_name || profile?.email?.split('@')[0] || "User"}
-                </p>
-                <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">
-                  {profile?.active_plan || "Free"}
-                </p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* MENU */}
-        <div className="space-y-1.5 text-sm">
-          <SidebarItem
-            icon={<Phone size={18} />}
-            label={t.profile.contacted}
-            expanded={expanded}
-            active={activeTab === "contacts"}
-            onClick={() => setActiveTab("contacts")}
-          />
-
-          <SidebarItem
-            icon={<Star size={18} />}
-            label={t.profile.favoritesSuppliers}
-            expanded={expanded}
-            active={activeTab === "fav-suppliers"}
-            onClick={() => setActiveTab("fav-suppliers")}
-          />
-
-          <SidebarItem
-            icon={<Package size={18} />}
-            label={t.profile.favoritesProducts}
-            expanded={expanded}
-            active={activeTab === "fav-products"}
-            onClick={() => setActiveTab("fav-products")}
-          />
-
-          <SidebarItem
-            icon={<Settings size={18} />}
-            label={t.profile.settings}
-            expanded={expanded}
-            active={activeTab === "settings"}
-            onClick={() => setActiveTab("settings")}
-          />
-
-          <SidebarItem
-            icon={<CreditCard size={18} />}
-            label={t.profile.plan}
-            expanded={expanded}
-            active={activeTab === "plan"}
-            onClick={() => setActiveTab("plan")}
-          />
-        </div>
+        <nav className="space-y-1 text-sm" aria-label={t.navbar.profile}>
+          <SidebarItem icon={<Phone size={17} />} label={t.profile.contacted} expanded={expanded} active={activeTab === "contacts"} onClick={() => setActiveTab("contacts")} />
+          <SidebarItem icon={<Star size={17} />} label={t.profile.favoritesSuppliers} expanded={expanded} active={activeTab === "fav-suppliers"} onClick={() => setActiveTab("fav-suppliers")} />
+          <SidebarItem icon={<Package size={17} />} label={t.profile.favoritesProducts} expanded={expanded} active={activeTab === "fav-products"} onClick={() => setActiveTab("fav-products")} />
+          <SidebarItem icon={<Settings size={17} />} label={t.profile.settings} expanded={expanded} active={activeTab === "settings"} onClick={() => setActiveTab("settings")} />
+          <SidebarItem icon={<CreditCard size={17} />} label={t.profile.plan} expanded={expanded} active={activeTab === "plan"} onClick={() => setActiveTab("plan")} />
+        </nav>
       </div>
 
       {/* LOGOUT */}
       <SidebarItem
-        icon={<LogOut size={18} />}
+        icon={<LogOut size={17} />}
         label={t.profile.logout}
         expanded={expanded}
         onClick={handleLogout}
-        className="text-gray-500 hover:text-red-500 hover:bg-red-500/10"
+        className="hover:bg-red-500/10 hover:text-red-400"
       />
-    </div>
+    </aside>
   );
 }
 
@@ -146,24 +108,29 @@ function SidebarItem({
   icon,
   label,
   expanded,
-  active,
+  active = false,
   onClick,
-  className = ""
-}: any) {
+  className = "",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  expanded: boolean;
+  active?: boolean;
+  onClick: () => void;
+  className?: string;
+}) {
   return (
-    <div
+    <button
       onClick={onClick}
-      className={`
-        flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-300
-        ${
-          active
-            ? "bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)]"
-            : `text-gray-400 hover:text-white hover:bg-white/5 ${className}`
-        }
-      `}
+      title={expanded ? undefined : label}
+      aria-current={active ? "page" : undefined}
+      className={`relative flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
+        active ? "bg-white/[0.06] text-white" : `text-white/55 hover:bg-white/[0.04] hover:text-white ${className}`
+      }`}
     >
-      <div className="shrink-0">{icon}</div>
-      {expanded && <span className="font-medium whitespace-nowrap">{label}</span>}
-    </div>
+      {active && <span className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-red-500" aria-hidden />}
+      <span className={`shrink-0 ${active ? "text-red-500" : ""}`}>{icon}</span>
+      {expanded && <span className="whitespace-nowrap">{label}</span>}
+    </button>
   );
 }

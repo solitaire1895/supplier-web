@@ -1,10 +1,12 @@
 "use client";
 
 import Navbar from "@/components/navbar/navbar";
-import { Flame, Lock, Search, Loader2, X } from "lucide-react";
+import { Search, Loader2, X, ArrowRight } from "lucide-react";
 import ProductCard from "@/components/dashboard/product-card";
 import Recommendations from "@/components/dashboard/recommendations";
 import { getPlanFeatures } from "@/lib/plans";
+import { DisplayHeading, Reveal, SectionLabel } from "@/components/landing/primitives";
+import { LockedNotice, LockedPanel, LockedTile } from "@/components/dashboard/locked";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { useState } from "react";
@@ -63,183 +65,141 @@ export default function WinningProductsClient({ products, profile }: WinningProd
   const top5 = visibleProducts.slice(0, 5);
   const rest = visibleProducts.slice(5);
 
+  const w = t.featureUi.winning;
+  const planName = features.name[lang] || features.name.EN;
+
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30">
+    <div className="editorial min-h-screen selection:bg-red-500/30">
       <Navbar />
 
-      <div className="pt-28 pb-24 px-4 md:px-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+      <div className="mx-auto max-w-[1600px] px-4 pb-24 pt-28 md:px-8">
 
-        {/* HERO HEADER */}
-        <div className="mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight flex items-center gap-3">
+        {/* HEADER */}
+        <Reveal className="mb-16 max-w-3xl">
+          <SectionLabel>{w.eyebrow}</SectionLabel>
+          <DisplayHeading as="h1" className="mt-5 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
             {t.navbar.winning}
-            <div className="p-2 bg-red-500/10 rounded-xl border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)]">
-              <Flame size={28} className="text-red-500" />
-            </div>
-          </h1>
-          <p className="text-gray-400 mt-4 text-base md:text-lg max-w-2xl">
-            {t.dashboard.subtitle}
-          </p>
-          
-          {/* Search Bar — disabled/hidden when entirely locked */}
+          </DisplayHeading>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-stone">{t.dashboard.subtitle}</p>
+
+          {/* Search — hidden when entirely locked */}
           {!winningLocked && (
-            <form onSubmit={handleSearch} className="relative group max-w-3xl mt-10">
-              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+            <form onSubmit={handleSearch} role="search" className="group relative mt-10">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5">
                 {searching ? (
-                  <Loader2 className="text-red-500 animate-spin" size={20} />
+                  <Loader2 className="animate-spin text-red-500" size={18} />
                 ) : (
-                  <Search className="text-gray-400 group-focus-within:text-red-500 transition-colors duration-300" size={20} />
+                  <Search className="text-stone transition-colors group-focus-within:text-red-500" size={18} />
                 )}
               </div>
-              <input 
-                type="text" 
+              <input
+                type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search winning products by niche, name, or category..."
-                className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl py-4 pl-14 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-red-500/50 focus:shadow-[0_0_30px_rgba(239,68,68,0.15)] transition-all text-sm md:text-base"
+                placeholder={w.searchPlaceholder}
+                aria-label={t.common.search}
+                className="w-full rounded-full border border-white/10 bg-ink-2 py-4 pl-14 pr-28 text-base text-white placeholder:text-stone-2 transition focus:border-red-500/50 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
               />
-              <div className="absolute inset-y-0 right-0 pr-4 flex items-center gap-2">
+              <div className="absolute inset-y-0 right-0 flex items-center gap-1 pr-2">
                 {searchQuery && (
-                  <button 
+                  <button
                     type="button"
                     onClick={clearSearch}
-                    className="p-1 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+                    aria-label={t.dashboardUi.clearSearch}
+                    className="grid h-9 w-9 place-items-center rounded-full text-stone transition hover:bg-white/10 hover:text-white"
                   >
                     <X size={16} />
                   </button>
                 )}
+                <button type="submit" aria-label={t.common.search} className="grid h-10 w-10 place-items-center rounded-full bg-red-500 text-white transition hover:bg-red-600">
+                  <ArrowRight size={16} />
+                </button>
               </div>
             </form>
           )}
 
           {features.winningProducts.delay > 0 && !winningLocked && (
-            <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl inline-flex items-center gap-3">
-              <Lock size={18} className="text-red-500" />
-              <p className="text-sm font-medium text-red-400">
-                Your plan has a {features.winningProducts.delay}h delay on new winners. <Link href="/dashboard/profile?tab=plan" className="underline font-bold hover:text-red-300 transition-colors ml-1">{t.common.upgrade} to Importateur</Link> for instant access.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* FULLY LOCKED STATE — shown when plan has 0 winning products */}
-        {winningLocked && (
-          <div className="bg-white/5 border border-white/10 rounded-[3rem] p-16 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-red-500/5 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2"></div>
-            <div className="relative z-10">
-              <div className="p-5 bg-red-500/10 rounded-2xl border border-red-500/20 inline-flex mb-6">
-                <Lock className="text-red-500" size={32} />
-              </div>
-              <h2 className="text-3xl font-bold mb-4">Winning Products Are Locked</h2>
-              <p className="text-gray-400 mb-8 max-w-xl mx-auto leading-relaxed">
-                Your current <span className="text-white font-semibold">{features.name.EN}</span> plan does not include access to winning product intelligence. Upgrade to start discovering high-margin products updated in real-time.
-              </p>
-              <Link 
-                href="/dashboard/profile?tab=plan"
-                className="px-10 py-4 bg-red-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all inline-block"
-              >
-                {t.common.upgrade} Plan Now
+            <LockedNotice className="mt-6">
+              {w.delayNote.replace("{h}", String(features.winningProducts.delay))}{" "}
+              <Link href="/dashboard/profile?tab=plan" className="font-medium text-red-500 underline-offset-4 hover:underline">
+                {t.featureUi.seePlans}
               </Link>
-            </div>
-          </div>
+            </LockedNotice>
+          )}
+        </Reveal>
+
+        {/* FULLY LOCKED */}
+        {winningLocked && (
+          <LockedPanel
+            label={t.featureUi.lockedLabel}
+            title={w.lockedTitle}
+            description={w.lockedDesc.replace("{plan}", planName)}
+            ctaLabel={t.featureUi.seePlans}
+            image="/landing/parcels.webp"
+          />
         )}
 
-        {/* RECOMMENDATIONS (Show if not searching and not fully locked) */}
+        {/* RECOMMENDATIONS (not searching, not locked) */}
         {!searchResults && !winningLocked && (
-          <div className="mb-20">
+          <div className="mb-16">
             <Recommendations type="product" />
           </div>
         )}
 
-        {/* TOP 5 SECTION */}
+        {/* TOP 5 */}
         {!winningLocked && (
-          <div className="mb-20 relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] bg-red-500/5 rounded-[100%] blur-[120px] pointer-events-none z-0"></div>
-
-            <div className="relative z-10 flex items-center gap-3 mb-8">
-              <h2 className="text-2xl font-bold text-white tracking-tight">{searchResults ? "Top Results" : "The Top 5"}</h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-red-500/50 to-transparent"></div>
+          <section className="mb-20">
+            <div className="mb-8 border-b border-white/[0.08] pb-5">
+              <SectionLabel>{searchResults ? t.common.search : w.eyebrow}</SectionLabel>
+              <h2 className="mt-3 font-display text-3xl font-light text-white">{searchResults ? w.topResults : w.topFive}</h2>
             </div>
 
             {top5.length > 0 ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 relative z-10">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                 {top5.map((product: any, index: number) => (
-                  <ProductCard
-                    key={product.id || index}
-                    product={{ ...product, rank: !searchResults ? index + 1 : undefined }}
-                  />
+                  <ProductCard key={product.id || index} product={{ ...product, rank: !searchResults ? index + 1 : undefined }} />
                 ))}
-                
-                {/* Locked placeholders if limit is low */}
                 {!searchResults && top5.length < 5 && Array.from({ length: 5 - top5.length }).map((_, i) => (
-                  <LockedCard key={`locked-top-${i}`} t={t} />
+                  <LockedTile key={`locked-top-${i}`} label={w.lockedProduct} description={w.lockedProductDesc} />
                 ))}
               </div>
             ) : (
-              <div className="relative z-10 bg-white/5 border border-dashed border-white/10 rounded-[2rem] p-20 text-center">
-                <p className="text-gray-400">No products found matching your search.</p>
+              <div className="rounded-2xl border border-dashed border-white/10 py-20 text-center">
+                <p className="text-stone">{w.noProducts}</p>
               </div>
             )}
-          </div>
+          </section>
         )}
 
-        {/* REST OF OPPORTUNITIES */}
+        {/* EMERGING */}
         {!winningLocked && rest.length > 0 && (
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <h2 className="text-2xl font-bold text-white tracking-tight">Emerging Opportunities</h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
+          <section>
+            <div className="mb-8 border-b border-white/[0.08] pb-5">
+              <SectionLabel>{t.common.recommended}</SectionLabel>
+              <h2 className="mt-3 font-display text-3xl font-light text-white">{w.emerging}</h2>
             </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {rest.map((product: any, index: number) => (
                 <ProductCard key={product.id || index} product={product} />
               ))}
-              
-              {/* Show locked cards for the rest of the available products */}
               {!searchResults && lockedProducts.length > 0 && lockedProducts.map((_, i) => (
-                <LockedCard key={`locked-rest-${i}`} t={t} />
+                <LockedTile key={`locked-rest-${i}`} label={w.lockedProduct} description={w.lockedProductDesc} />
               ))}
             </div>
-          </div>
+          </section>
         )}
 
-        {/* UPGRADE CTA SECTION FOR PARTIALLY LOCKED PRODUCTS */}
+        {/* PARTIAL LOCK CTA */}
         {!winningLocked && !searchResults && lockedProducts.length > 0 && (
-          <div className="mt-20 bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
-            <div className="relative z-10">
-              <h2 className="text-3xl font-bold mb-4">Unlock {lockedProducts.length}+ More Winning Products</h2>
-              <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-                You are currently viewing limited products on the {features.name.EN} plan. Upgrade to access our full intelligence database updated in real-time.
-              </p>
-              <Link 
-                href="/dashboard/profile?tab=plan"
-                className="px-10 py-4 bg-red-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all inline-block"
-              >
-                {t.common.upgrade} Plan Now
-              </Link>
-            </div>
-          </div>
+          <LockedPanel
+            className="mt-20"
+            title={w.unlockMoreTitle.replace("{n}", String(lockedProducts.length))}
+            description={w.unlockMoreDesc.replace("{plan}", planName)}
+            ctaLabel={t.featureUi.seePlans}
+            image="/landing/parcels.webp"
+          />
         )}
-
       </div>
     </div>
   );
-}
-
-function LockedCard({ t }: { t: any }) {
-  return (
-    <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 border-dashed rounded-[2rem] h-[340px] flex flex-col items-center justify-center p-6 group overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40"></div>
-      <div className="p-4 bg-white/5 rounded-2xl mb-4 border border-white/5 group-hover:bg-white/10 transition-all duration-500">
-        <Lock className="text-gray-600" size={24} />
-      </div>
-      <p className="text-gray-500 font-bold uppercase tracking-wider text-[10px] mb-2">{t.dashboard.lockedSupplier}</p>
-      <p className="text-gray-400 text-sm text-center font-medium px-4">
-        {t.dashboard.lockedSupplierDesc}
-      </p>
-    </div>
-  )
 }

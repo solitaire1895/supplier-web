@@ -8,7 +8,7 @@ export default function ProfileMenu({ close }: { close: () => void }) {
     <div
       className="
       fixed inset-0 z-50
-      bg-black/70 backdrop-blur-xl
+      bg-ink/80 backdrop-blur-md font-text
       flex items-center justify-center px-4
     "
     >

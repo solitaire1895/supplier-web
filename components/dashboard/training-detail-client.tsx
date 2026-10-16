@@ -8,12 +8,13 @@ import {
 import { useI18n } from "@/lib/i18n";
 import { toEmbedUrl } from "@/lib/embed";
 import { useState } from "react";
+import { SectionLabel } from "@/components/landing/primitives";
 import Link from "next/link";
 
-const TYPE_META: Record<string, { icon: any; classes: string }> = {
-  document: { icon: FileText, classes: "bg-blue-500/10 border-blue-500/20 text-blue-400" },
-  video: { icon: Video, classes: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
-  link: { icon: Link2, classes: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
+const TYPE_META: Record<string, { icon: typeof FileText }> = {
+  document: { icon: FileText },
+  video: { icon: Video },
+  link: { icon: Link2 },
 };
 
 function formatFileSize(bytes: number | null | undefined): string | null {
@@ -23,9 +24,12 @@ function formatFileSize(bytes: number | null | undefined): string | null {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/* Shared Apple-glass surface: frosted card, hairline border, soft shadow */
-const GLASS =
-  "rounded-2xl bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_30px_rgba(0,0,0,0.25)]";
+/* Shared editorial surface: near-black panel with a hairline border */
+const GLASS = "rounded-2xl border border-white/[0.08] bg-ink-2";
+
+/* Primary red action (no glow) */
+const PRIMARY_BTN =
+  "inline-flex items-center justify-center gap-2 rounded-full bg-red-500 px-6 py-3 text-sm font-medium text-white transition hover:bg-red-600";
 
 export default function TrainingDetailClient({ training }: { training: any }) {
   const { t } = useI18n();
@@ -63,42 +67,39 @@ export default function TrainingDetailClient({ training }: { training: any }) {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30">
+    <div className="editorial min-h-screen selection:bg-red-500/30">
       <Navbar />
 
-      <div className="pt-28 pb-24 px-4 md:px-8 max-w-4xl mx-auto animate-in fade-in duration-700">
+      <div className="mx-auto max-w-4xl px-4 pb-24 pt-28 md:px-8">
 
         {/* BACK */}
         <Link
           href="/dashboard/training"
-          className="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-red-400 transition-colors mb-10"
+          className="group mb-10 inline-flex items-center gap-2 font-label text-[11px] uppercase tracking-[0.18em] text-stone transition hover:text-white"
         >
-          <ArrowLeft size={14} /> {t.training.back}
+          <span className="grid h-8 w-8 place-items-center rounded-full border border-white/10 transition group-hover:border-white/30">
+            <ArrowLeft size={14} aria-hidden />
+          </span>
+          {t.training.back}
         </Link>
 
         {/* HEADER */}
-        <div className="flex items-start gap-4 mb-5">
-          <div className={`p-3 rounded-2xl border ${meta.classes} shrink-0`}>
-            <TypeIcon size={22} />
-          </div>
-          <div className="min-w-0 pt-1">
-            <span className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1.5">
-              {typeLabel}
-              <span className="text-red-500">{t.training.partnerOnly}</span>
-            </span>
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight break-words">
-              {training.title}
-            </h1>
-          </div>
+        <div className="mb-6">
+          <SectionLabel>
+            <TypeIcon size={12} aria-hidden /> {typeLabel} <span className="text-stone-2">·</span> {t.training.partnerOnly}
+          </SectionLabel>
+          <h1 className="mt-5 break-words font-display text-4xl font-light leading-[1.05] tracking-[-0.02em] text-white text-balance sm:text-5xl">
+            {training.title}
+          </h1>
         </div>
 
         {/* DESCRIPTION + META */}
         {training.description && (
-          <p className="text-sm text-gray-400 leading-relaxed mb-3 max-w-2xl">
+          <p className="mb-4 max-w-2xl text-base leading-relaxed text-stone">
             {training.description}
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-4 text-[11px] text-gray-600 mb-10">
+        <div className="mb-10 flex flex-wrap items-center gap-4 border-b border-white/[0.08] pb-8 font-label text-[11px] text-stone-2">
           {training.duration_minutes ? (
             <span className="flex items-center gap-1.5">
               <Clock size={11} /> {training.duration_minutes} {t.training.minutes}
@@ -143,7 +144,7 @@ export default function TrainingDetailClient({ training }: { training: any }) {
                 href={currentPart.external_url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-2xl text-sm font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all"
+                className={PRIMARY_BTN}
               >
                 <ExternalLink size={16} /> {t.training.openOriginal}
               </a>
@@ -153,10 +154,10 @@ export default function TrainingDetailClient({ training }: { training: any }) {
             {parts.length > 1 && (
               <div className={`${GLASS} p-4`}>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                  <p className="font-label text-[10px] uppercase tracking-[0.18em] text-stone">
                     {t.training.playlist}
                   </p>
-                  <span className="text-[10px] font-bold text-gray-600">
+                  <span className="font-label text-[11px] text-stone-2">
                     {activePart + 1} / {parts.length}
                   </span>
                 </div>
@@ -165,39 +166,37 @@ export default function TrainingDetailClient({ training }: { training: any }) {
                     <button
                       key={part.id || part.file_path || i}
                       onClick={() => setActivePart(i)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${
-                        i === activePart
-                          ? "bg-red-500/10 border-red-500/20"
-                          : "border-transparent hover:bg-white/5"
+                      className={`flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left transition ${
+                        i === activePart ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"
                       }`}
                     >
                       <span
-                        className={`text-[11px] font-black shrink-0 ${
-                          i === activePart ? "text-red-500" : "text-gray-600"
+                        className={`shrink-0 font-label text-xs ${
+                          i === activePart ? "text-red-500" : "text-stone-2"
                         }`}
                       >
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span
-                          className={`block text-sm font-bold truncate ${
-                            i === activePart ? "text-white" : "text-gray-300"
+                          className={`block truncate font-display text-lg font-light ${
+                            i === activePart ? "text-white" : "text-white/70"
                           }`}
                         >
                           {part.title || part.file_name || `Part ${i + 1}`}
                         </span>
-                        <span className="block text-[10px] text-gray-600 truncate">
+                        <span className="block truncate text-xs text-stone-2">
                           {part.file_name}
                           {part.file_size ? ` · ${formatFileSize(part.file_size)}` : ""}
                         </span>
                       </span>
                       {i === activePart ? (
-                        <span className="text-[9px] font-black uppercase tracking-widest text-red-400 flex items-center gap-1.5 shrink-0">
-                          <span className="w-1 h-1 rounded-full bg-red-500 animate-pulse"></span>
+                        <span className="flex shrink-0 items-center gap-1.5 font-label text-[9px] uppercase tracking-[0.15em] text-red-500">
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500"></span>
                           {t.training.nowPlaying}
                         </span>
                       ) : i === activePart + 1 ? (
-                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-600 shrink-0">
+                        <span className="shrink-0 font-label text-[9px] uppercase tracking-[0.15em] text-stone-2">
                           {t.training.upNext}
                         </span>
                       ) : null}
@@ -245,7 +244,7 @@ export default function TrainingDetailClient({ training }: { training: any }) {
             href={training.external_url}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-2xl text-sm font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all"
+            className={PRIMARY_BTN}
           >
             <ExternalLink size={16} /> {t.training.openOriginal}
           </a>
@@ -259,7 +258,7 @@ export default function TrainingDetailClient({ training }: { training: any }) {
               target="_blank"
               rel="noreferrer"
               download={training.file_name || undefined}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-2xl text-sm font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all"
+              className={PRIMARY_BTN}
             >
               <Download size={16} /> {t.training.download}
             </a>
@@ -276,8 +275,8 @@ export default function TrainingDetailClient({ training }: { training: any }) {
         {/* Nothing playable or downloadable */}
         {nothingAvailable && (
           <div className={`${GLASS} p-12 text-center`}>
-            <AlertCircle className="text-red-500 mb-3 mx-auto" size={28} />
-            <p className="text-sm text-gray-500">{t.common.unavailable}</p>
+            <AlertCircle className="mx-auto mb-3 text-red-500" size={22} />
+            <p className="text-sm text-stone">{t.common.unavailable}</p>
           </div>
         )}
           </div>

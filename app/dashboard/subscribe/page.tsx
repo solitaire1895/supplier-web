@@ -39,7 +39,7 @@ export default function SubscribePage() {
         </motion.div>
 
         {/* PRICING PLANS */}
-        <Pricing />
+        <Pricing showHeader={false} />
 
         {/* FOOTER ACTIONS */}
         <div className="flex flex-col items-center gap-6 pt-10">

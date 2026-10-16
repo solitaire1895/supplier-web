@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getRecommendedProductsAction, getRecommendedSuppliersAction } from "@/lib/supabase/actions";
 import ProductCard from "./product-card";
 import SupplierCard from "./supplier-card";
-import { Zap, Sparkles } from "lucide-react";
+import { SectionLabel } from "@/components/landing/primitives";
 import { useI18n } from "@/lib/i18n";
 
 export default function Recommendations({ type = "both" }: { type?: "product" | "supplier" | "both" }) {
@@ -41,11 +41,11 @@ export default function Recommendations({ type = "both" }: { type?: "product" | 
   }, [type]);
 
   if (loading) return (
-    <div className="py-12 animate-pulse space-y-8">
-      <div className="h-8 w-48 bg-white/5 rounded-lg"></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="animate-pulse space-y-8 py-12">
+      <div className="h-8 w-56 rounded-lg bg-white/5"></div>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-64 bg-white/5 rounded-[2rem]"></div>
+          <div key={i} className="h-80 rounded-2xl border border-white/[0.06] bg-ink-2"></div>
         ))}
       </div>
     </div>
@@ -58,15 +58,8 @@ export default function Recommendations({ type = "both" }: { type?: "product" | 
       {/* Recommended Products */}
       {products.length > 0 && (
         <section>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-              <Sparkles size={20} className="text-red-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Recommended for You</h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-red-500/20 to-transparent ml-4"></div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Heading label={t.dashboardUi.suggestedLabel} title={t.dashboardUi.recommendedForYou} />
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -77,21 +70,23 @@ export default function Recommendations({ type = "both" }: { type?: "product" | 
       {/* Recommended Suppliers */}
       {suppliers.length > 0 && (
         <section>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-              <Zap size={20} className="text-red-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-white tracking-tight">Suggested Suppliers</h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-red-500/20 to-transparent ml-4"></div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Heading label={t.dashboardUi.suggestedLabel} title={t.dashboardUi.suggestedSuppliers} />
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {suppliers.map((s) => (
               <SupplierCard key={s.id} supplier={s} />
             ))}
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+function Heading({ label, title }: { label: string; title: string }) {
+  return (
+    <div className="mb-8 border-b border-white/[0.08] pb-5">
+      <SectionLabel>{label}</SectionLabel>
+      <h2 className="mt-3 font-display text-3xl font-light text-white">{title}</h2>
     </div>
   );
 }

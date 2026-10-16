@@ -1,9 +1,9 @@
 "use client";
 
 import Navbar from "@/components/navbar/navbar";
-import {
-  GraduationCap, Lock, FileText, Video, Link2, Clock, ChevronRight
-} from "lucide-react";
+import { GraduationCap, FileText, Video, Link2, Clock, ArrowUpRight } from "lucide-react";
+import { DisplayHeading, Reveal, SectionLabel } from "@/components/landing/primitives";
+import { LockedPanel } from "@/components/dashboard/locked";
 import { getPlanFeatures } from "@/lib/plans";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
@@ -13,10 +13,10 @@ interface TrainingClientProps {
   profile: any;
 }
 
-const TYPE_META: Record<string, { icon: any; classes: string }> = {
-  document: { icon: FileText, classes: "bg-blue-500/10 border-blue-500/20 text-blue-400" },
-  video: { icon: Video, classes: "bg-purple-500/10 border-purple-500/20 text-purple-400" },
-  link: { icon: Link2, classes: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
+const TYPE_META: Record<string, { icon: typeof FileText }> = {
+  document: { icon: FileText },
+  video: { icon: Video },
+  link: { icon: Link2 },
 };
 
 function formatFileSize(bytes: number | null | undefined): string | null {
@@ -39,72 +39,53 @@ export default function TrainingClient({ trainings, profile }: TrainingClientPro
   const trainingLocked = !features.training;
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-500/30">
+    <div className="editorial min-h-screen selection:bg-red-500/30">
       <Navbar />
 
-      <div className="pt-28 pb-24 px-4 md:px-8 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+      <div className="mx-auto max-w-[1600px] px-4 pb-24 pt-28 md:px-8">
 
-        {/* HERO HEADER */}
-        <div className="mb-16 relative">
-          <div className="absolute top-1/2 -left-20 -translate-y-1/2 w-72 h-72 bg-red-500/5 rounded-full blur-[100px] pointer-events-none"></div>
-          <h1 className="relative text-4xl md:text-5xl font-bold tracking-tight flex items-center gap-3">
+        {/* HEADER */}
+        <Reveal className="mb-16 max-w-3xl">
+          <SectionLabel>{t.featureUi.training.eyebrow}</SectionLabel>
+          <DisplayHeading as="h1" className="mt-5 text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
             {t.training.title}
-            <div className="p-2 bg-red-500/10 rounded-xl border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)]">
-              <GraduationCap size={28} className="text-red-500" />
-            </div>
-          </h1>
-          <p className="relative text-gray-400 mt-4 text-base md:text-lg max-w-2xl">
-            {t.training.subtitle}
-          </p>
+          </DisplayHeading>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-stone">{t.training.subtitle}</p>
 
           {!trainingLocked && (
-            <div className="relative mt-6 inline-flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-red-400">
-                {t.training.partnerOnly}
-              </span>
-            </div>
+            <span className="mt-6 inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 font-label text-[10px] uppercase tracking-[0.15em] text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden />
+              {t.training.partnerOnly}
+            </span>
           )}
-        </div>
+        </Reveal>
 
-        {/* FULLY LOCKED STATE — shown for any plan below Partner */}
+        {/* FULLY LOCKED — any plan below Partner */}
         {trainingLocked && (
-          <div className="bg-white/5 border border-white/10 rounded-[3rem] p-16 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-red-500/5 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2"></div>
-            <div className="relative z-10">
-              <div className="p-5 bg-red-500/10 rounded-2xl border border-red-500/20 inline-flex mb-6">
-                <Lock className="text-red-500" size={32} />
-              </div>
-              <h2 className="text-3xl font-bold mb-4">{t.training.lockedTitle}</h2>
-              <p className="text-gray-400 mb-8 max-w-xl mx-auto leading-relaxed">
-                {t.training.lockedDesc}
-              </p>
-              <Link
-                href="/dashboard/profile?tab=plan"
-                className="px-10 py-4 bg-red-500 text-white rounded-2xl font-bold shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_40px_rgba(239,68,68,0.7)] transition-all inline-block"
-              >
-                {t.common.upgrade} Plan Now
-              </Link>
-            </div>
-          </div>
+          <LockedPanel
+            label={t.featureUi.lockedLabel}
+            title={t.training.lockedTitle}
+            description={t.training.lockedDesc}
+            ctaLabel={t.featureUi.seePlans}
+            image="/landing/team.webp"
+          />
         )}
 
-        {/* EMPTY STATE — Partner with no published trainings yet */}
+        {/* EMPTY — Partner with no published trainings yet */}
         {!trainingLocked && trainings.length === 0 && (
-          <div className="bg-white/5 border border-dashed border-white/10 rounded-[3rem] p-16 text-center">
-            <div className="p-5 bg-red-500/10 rounded-2xl border border-red-500/20 inline-flex mb-6">
-              <GraduationCap className="text-red-500" size={32} />
-            </div>
-            <h2 className="text-2xl font-bold mb-3">{t.training.emptyTitle}</h2>
-            <p className="text-gray-500 max-w-md mx-auto">{t.training.emptyDesc}</p>
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-6 py-20 text-center">
+            <span className="mb-5 grid h-11 w-11 place-items-center rounded-full border border-white/10">
+              <GraduationCap className="text-stone" size={18} aria-hidden />
+            </span>
+            <h2 className="font-display text-3xl font-light text-white">{t.training.emptyTitle}</h2>
+            <p className="mt-3 max-w-md text-sm text-stone">{t.training.emptyDesc}</p>
           </div>
         )}
 
-        {/* TRAINING GRID — compact Apple-glass cards; click through to the detail page */}
+        {/* GRID */}
         {!trainingLocked && trainings.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {trainings.map((training) => {
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {trainings.map((training, index) => {
               const meta = TYPE_META[training.type] || TYPE_META.document;
               const TypeIcon = meta.icon;
               const typeLabel =
@@ -117,44 +98,38 @@ export default function TrainingClient({ trainings, profile }: TrainingClientPro
                 <Link
                   key={training.id}
                   href={`/dashboard/training/${training.id}`}
-                  className="group rounded-2xl bg-white/[0.04] backdrop-blur-2xl border border-white/[0.08] p-4 flex flex-col hover:border-white/[0.14] hover:bg-white/[0.06] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)] transition-all duration-300"
+                  className="group flex min-h-[240px] flex-col rounded-2xl border border-white/[0.08] bg-ink-2 p-6 transition-colors duration-500 hover:border-white/20"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`p-2.5 rounded-xl border ${meta.classes}`}>
-                      <TypeIcon size={16} />
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-600 group-hover:text-gray-400 transition-colors flex items-center gap-0.5">
-                      {typeLabel}
-                      <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                  <div className="flex items-center justify-between">
+                    <span className="font-label text-xs text-red-500">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="flex items-center gap-2 font-label text-[10px] uppercase tracking-[0.15em] text-stone">
+                      <TypeIcon size={13} aria-hidden /> {typeLabel}
                     </span>
                   </div>
 
-                  <h3 className="text-sm font-semibold text-white mb-1.5 truncate group-hover:text-red-400 transition-colors">
-                    {training.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-3">
-                    {training.description || ""}
-                  </p>
+                  <h3 className="mt-6 line-clamp-2 font-display text-2xl font-light leading-snug text-white">{training.title}</h3>
+                  <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-stone">{training.description || ""}</p>
 
-                  <div className="mt-auto flex items-center gap-3 text-[10px] text-gray-600">
-                    {training.parts_count > 0 ? (
-                      <span className="flex items-center gap-1 text-red-400">
-                        <Clock size={10} /> {training.parts_count} {t.training.videosCount}
-                      </span>
-                    ) : training.duration_minutes ? (
-                      <span className="flex items-center gap-1">
-                        <Clock size={10} /> {training.duration_minutes} {t.training.minutes}
-                      </span>
-                    ) : null}
-                    {fileSize ? <span>{fileSize}</span> : null}
+                  <div className="mt-auto flex items-center justify-between gap-3 border-t border-white/[0.08] pt-4 text-xs text-stone">
+                    <span className="flex items-center gap-3">
+                      {training.parts_count > 0 ? (
+                        <span className="flex items-center gap-1.5 text-white/80">
+                          <Clock size={12} aria-hidden /> {training.parts_count} {t.training.videosCount}
+                        </span>
+                      ) : training.duration_minutes ? (
+                        <span className="flex items-center gap-1.5">
+                          <Clock size={12} aria-hidden /> {training.duration_minutes} {t.training.minutes}
+                        </span>
+                      ) : null}
+                      {fileSize ? <span>{fileSize}</span> : null}
+                    </span>
+                    <ArrowUpRight size={15} className="text-stone transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-red-500" aria-hidden />
                   </div>
                 </Link>
               );
             })}
           </div>
         )}
-
-        {/* (in-page playback now lives on each training's own detail page) */}
       </div>
     </div>
   );

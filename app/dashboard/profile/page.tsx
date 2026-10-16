@@ -6,7 +6,8 @@ import SupplierCard from "@/components/dashboard/supplier-card";
 import ProductCard from "@/components/dashboard/product-card";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
-import { CheckCircle2, Zap, CreditCard, Star, User, Globe, Loader2, Package, Shield, Phone, AlertCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, Star, User, Globe, Loader2, Shield, AlertCircle } from "lucide-react";
+import { DisplayHeading, SectionLabel } from "@/components/landing/primitives";
 import { supabase } from "@/lib/supabase/client";
 import { useUser } from "@/lib/supabase/provider";
 import { PLANS, type PaidPlan } from "@/lib/plans";
@@ -219,8 +220,8 @@ function ProfileContent() {
   // Show spinner while auth is resolving or data is loading for a confirmed user.
   if (userLoading || (loading && !user)) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-red-500" />
+      <div className="flex min-h-screen items-center justify-center bg-ink">
+        <Loader2 className="h-8 w-8 animate-spin text-red-500" />
       </div>
     );
   }
@@ -228,10 +229,10 @@ function ProfileContent() {
   // Only show the login wall when we are certain there is no authenticated user.
   if (!user) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
-        <AlertCircle className="text-red-500 mb-4" size={48} />
-        <h1 className="text-xl font-bold mb-4">{t.profile.notLoggedIn}</h1>
-        <button onClick={() => router.push("/auth/login")} className="px-8 py-3 bg-red-500 rounded-xl font-bold">{t.profile.login}</button>
+      <div className="editorial flex min-h-screen flex-col items-center justify-center p-4 text-center">
+        <AlertCircle className="mb-5 text-red-500" size={28} />
+        <h1 className="mb-6 font-display text-3xl font-light">{t.profile.notLoggedIn}</h1>
+        <button onClick={() => router.push("/auth/login")} className="rounded-full bg-red-500 px-8 py-3 text-sm font-medium text-white transition hover:bg-red-600">{t.profile.login}</button>
       </div>
     );
   }
@@ -241,8 +242,21 @@ function ProfileContent() {
     router.push(`/dashboard/profile?tab=${tab}`, { scroll: false });
   };
 
+  const tabTitle =
+    activeTab === "contacts" ? t.profile.contacts
+    : activeTab === "fav-suppliers" ? t.profile.favoritesSuppliers
+    : activeTab === "fav-products" ? t.profile.favoritesProducts
+    : activeTab === "settings" ? t.profile.settings
+    : t.profile.plan;
+
+  const daysLeft = getDaysRemaining(userProfile?.plan_expires_at);
+  const currentPlanName =
+    (userProfile?.active_plan && PLANS[userProfile.active_plan as keyof typeof PLANS]?.name[lang]) ||
+    userProfile?.active_plan ||
+    t.common.free;
+
   return (
-    <div className="min-h-screen bg-black text-white flex selection:bg-red-500/30">
+    <div className="editorial flex min-h-screen selection:bg-red-500/30">
       {/* SIDEBAR */}
       <ProfileSidebar
         activeTab={activeTab}
@@ -252,218 +266,197 @@ function ProfileContent() {
       />
 
       {/* CONTENT */}
-      <div className={`${sidebarExpanded ? "ml-64" : "ml-20"} w-full p-8 lg:p-12 transition-all duration-300`}>
-        
-        {/* HEADER */}
-        <div className="mb-12 border-b border-white/5 pb-6">
-          <h1 className="text-3xl font-bold tracking-tight capitalize">
-            {activeTab === "contacts" && t.profile.contacts}
-            {activeTab === "fav-suppliers" && t.profile.favoritesSuppliers}
-            {activeTab === "fav-products" && t.profile.favoritesProducts}
-            {activeTab === "settings" && t.profile.settings}
-            {activeTab === "plan" && t.profile.plan}
-          </h1>
-          <p className="text-gray-400 mt-2 text-sm">
-            {t.profile.subtitle}
-          </p>
-        </div>
+      <div className={`${sidebarExpanded ? "ml-64" : "ml-20"} w-full min-w-0 px-5 py-10 transition-[margin] duration-300 sm:px-8 lg:px-12 lg:py-14`}>
 
-        <div className="animate-in fade-in duration-500">
+        {/* HEADER */}
+        <header key={activeTab} className="mb-12 border-b border-white/[0.08] pb-8 animate-in fade-in slide-in-from-bottom-1 duration-500">
+          <SectionLabel>{t.navbar.profile}</SectionLabel>
+          <DisplayHeading as="h1" className="mt-4 text-4xl leading-[1.05] sm:text-5xl">
+            {tabTitle}
+          </DisplayHeading>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-stone sm:text-base">{t.profile.subtitle}</p>
+        </header>
+
+        <div key={`body-${activeTab}`} className="animate-in fade-in duration-500">
           {/* The plan and settings tabs don't depend on favorites/contacts data,
               so we never block them behind the loading spinner. */}
           {loading && activeTab !== "plan" && activeTab !== "settings" ? (
-             <div className="flex justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-red-500" />
-             </div>
+            <div className="flex justify-center py-20">
+              <Loader2 className="h-7 w-7 animate-spin text-red-500" />
+            </div>
           ) : (
             <>
               {/* ================= CONTACTED SUPPLIERS ================= */}
               {activeTab === "contacts" && (
-                <>
-                  {contactedSuppliers.length === 0 ? (
-                    <Empty text={t.profile.emptyContacts} icon={<Globe size={40} className="mb-4 text-gray-600" />} />
-                  ) : (
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {contactedSuppliers.map((supplier, i) => (
-                        <SupplierCard key={i} supplier={supplier} />
-                      ))}
-                    </div>
-                  )}
-                </>
+                contactedSuppliers.length === 0 ? (
+                  <Empty text={t.profile.emptyContacts} icon={<Globe size={20} />} />
+                ) : (
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {contactedSuppliers.map((supplier, i) => (
+                      <SupplierCard key={supplier.id ?? i} supplier={supplier} />
+                    ))}
+                  </div>
+                )
               )}
 
               {/* ================= FAVORITE PRODUCTS ================= */}
               {activeTab === "fav-products" && (
-                <>
-                  {favoriteProducts.length === 0 ? (
-                    <Empty text={t.profile.emptyFavProducts} icon={<Star size={40} className="mb-4 text-gray-600" />} />
-                  ) : (
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {favoriteProducts.map((p, i) => (
-                        <ProductCard key={i} product={p} />
-                      ))}
-                    </div>
-                  )}
-                </>
+                favoriteProducts.length === 0 ? (
+                  <Empty text={t.profile.emptyFavProducts} icon={<Star size={20} />} />
+                ) : (
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {favoriteProducts.map((p, i) => (
+                      <ProductCard key={p.id ?? i} product={p} />
+                    ))}
+                  </div>
+                )
               )}
 
               {/* ================= FAVORITE SUPPLIERS ================= */}
               {activeTab === "fav-suppliers" && (
-                <>
-                  {favoriteSuppliers.length === 0 ? (
-                    <Empty text={t.profile.emptyFavSuppliers} icon={<Shield size={40} className="mb-4 text-gray-600" />} />
-                  ) : (
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{favoriteSuppliers.map((s, i) => (
-                        <SupplierCard key={i} supplier={s} />
-                      ))}
-                    </div>
-                  )}
-                </>
+                favoriteSuppliers.length === 0 ? (
+                  <Empty text={t.profile.emptyFavSuppliers} icon={<Shield size={20} />} />
+                ) : (
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {favoriteSuppliers.map((s, i) => (
+                      <SupplierCard key={s.id ?? i} supplier={s} />
+                    ))}
+                  </div>
+                )
               )}
 
               {/* ================= SETTINGS ================= */}
               {activeTab === "settings" && (
-                <div className="max-w-3xl space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Box title={t.settings.account} icon={<User size={18} className="text-gray-400"/>}>
-                      <div className="space-y-4 mt-2">
-                        <div>
-                          <label className="text-xs text-gray-500 mb-1 block">{t.settings.email}</label>
-                          <input
-                            type="email"
-                            disabled
-                            value={userProfile?.email || ""}
-                            className="w-full p-3 rounded-xl bg-black/50 border border-white/10 opacity-60 cursor-not-allowed text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-500 mb-1 block">{t.settings.role}</label>
-                          <input
-                            disabled
-                            value={userProfile?.role || "user"}
-                            className="w-full p-3 rounded-xl bg-black/50 border border-white/10 opacity-60 cursor-not-allowed text-sm capitalize"
-                          />
-                        </div>
-                      </div>
-                    </Box>
+                <div className="grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-2">
+                  <Box title={t.settings.account} icon={<User size={16} />}>
+                    <Field label={t.settings.email}>
+                      <input
+                        type="email"
+                        disabled
+                        value={userProfile?.email || ""}
+                        className="w-full cursor-not-allowed rounded-xl border border-white/[0.08] bg-ink px-4 py-3 text-sm text-white/60"
+                      />
+                    </Field>
+                    <Field label={t.settings.role}>
+                      <input
+                        disabled
+                        value={userProfile?.role || "user"}
+                        className="w-full cursor-not-allowed rounded-xl border border-white/[0.08] bg-ink px-4 py-3 text-sm capitalize text-white/60"
+                      />
+                    </Field>
+                  </Box>
 
-                    <div className="space-y-6">
-                      <Box title={t.settings.language} icon={<Globe size={18} className="text-gray-400"/>}>
-                        <div className="mt-2 relative">
-                          <select
-                            value={lang}
-                            onChange={(e) => updateSetting("language", e.target.value)}
-                            className="w-full bg-black/50 border border-white/10 p-3 rounded-xl appearance-none focus:border-red-500/50 focus:outline-none transition-all text-sm text-white"
-                          >
-                            <option value="EN" className="bg-black">English (US)</option>
-                            <option value="FR" className="bg-black">Français (FR)</option>
-                            <option value="CN" className="bg-black">中文 (CN)</option>
-                          </select>
-                          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-500">
-                            ▼
-                          </div>
-                        </div>
-                      </Box>
-                    </div>
-                  </div>
+                  <Box title={t.settings.language} icon={<Globe size={16} />}>
+                    <Field label={t.settings.language}>
+                      <div className="relative">
+                        <select
+                          value={lang}
+                          onChange={(e) => updateSetting("language", e.target.value)}
+                          className="w-full appearance-none rounded-xl border border-white/10 bg-ink px-4 py-3 text-sm text-white transition focus:border-red-500/50 focus:outline-none"
+                        >
+                          <option value="FR" className="bg-ink">Français (FR)</option>
+                          <option value="EN" className="bg-ink">English (US)</option>
+                          <option value="CN" className="bg-ink">中文 (CN)</option>
+                        </select>
+                        <ChevronDown size={15} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-stone" aria-hidden />
+                      </div>
+                    </Field>
+                  </Box>
                 </div>
               )}
 
               {/* ================= PLAN ================= */}
               {activeTab === "plan" && (
                 <div className="max-w-6xl">
-                  
-                  {/* Current Status Bar */}
-                  <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-2xl p-6 mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30">
-                        <CreditCard className="text-red-500" size={24} />
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-sm">{t.profile.currentPlan}</p>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-xl font-bold uppercase">{userProfile?.active_plan || t.common.free}</h2>
-                          <span className="bg-white/10 text-xs px-2 py-1 rounded-md text-gray-300 capitalize">{userProfile?.subscription_status || t.common.active}</span>
-                        </div>
-                      </div>
+
+                  {/* Current status (hairline strip) */}
+                  <dl className="mb-12 grid border-y border-white/[0.08] sm:grid-cols-2">
+                    <div className="py-6 sm:pr-6">
+                      <dt className="font-label text-[10px] uppercase tracking-[0.18em] text-stone">{t.profile.currentPlan}</dt>
+                      <dd className="mt-3 flex items-center gap-3">
+                        <span className="font-display text-4xl font-light text-white">{currentPlanName}</span>
+                        <span className="rounded-full border border-white/10 px-2.5 py-0.5 font-label text-[10px] uppercase tracking-[0.12em] text-white/70">
+                          {userProfile?.subscription_status || t.common.active}
+                        </span>
+                      </dd>
                     </div>
 
-                    {/* 30-day countdown from plan_expires_at */}
-                    {userProfile?.plan_expires_at && userProfile.subscription_status === 'active' && (
-                      <div className="text-left md:text-right">
-                        <p className="text-sm text-gray-400">{t.subscription.expiresIn}</p>
-                        <p className="font-medium">
-                          {(() => {
-                            const days = getDaysRemaining(userProfile.plan_expires_at);
-                            return days === null
-                              ? "—"
-                              : `${days} ${days === 1 ? ((t.common as any).day ?? "day") : ((t.common as any).days ?? "days")}`;
-                          })()}
-                          <span className="text-gray-500 text-sm ml-2">
-                            ({new Date(userProfile.plan_expires_at).toLocaleDateString()})
-                          </span>
-                        </p>
-                      </div>
+                    {userProfile?.plan_expires_at && userProfile.subscription_status === "active" && (
+                      <>
+                        <div className="border-t border-white/[0.08] py-6 sm:border-l sm:border-t-0 sm:px-6">
+                          <dt className="font-label text-[10px] uppercase tracking-[0.18em] text-stone">{t.subscription.expiresIn}</dt>
+                          <dd className="mt-3 font-display text-4xl font-light text-white">
+                            {daysLeft === null ? "—" : daysLeft}{" "}
+                            <span className="font-text text-sm text-stone">{t.dashboardUi.supplier.days}</span>
+                          </dd>
+                          <dd className="mt-1 font-label text-[11px] text-stone-2">
+                            {new Date(userProfile.plan_expires_at).toLocaleDateString(lang === "FR" ? "fr-FR" : lang === "CN" ? "zh-CN" : "en-US")}
+                          </dd>
+                        </div>
+                      </>
                     )}
 
                     {/* Trial countdown (kept for backward compatibility) */}
-                    {userProfile?.trial_ends_at && userProfile.subscription_status === 'trialing' && (
-                      <div className="text-left md:text-right">
-                        <p className="text-sm text-gray-400">{t.profile.trialEnds}</p>
-                        <p className="font-medium">{new Date(userProfile.trial_ends_at).toLocaleDateString()}</p>
+                    {userProfile?.trial_ends_at && userProfile.subscription_status === "trialing" && (
+                      <div className="border-t border-white/[0.08] py-6 sm:border-l sm:border-t-0 sm:px-6">
+                        <dt className="font-label text-[10px] uppercase tracking-[0.18em] text-stone">{t.profile.trialEnds}</dt>
+                        <dd className="mt-3 font-display text-4xl font-light text-white">
+                          {new Date(userProfile.trial_ends_at).toLocaleDateString()}
+                        </dd>
                       </div>
                     )}
-                  </div>
+                  </dl>
 
                   {checkoutError && (
-                    <p role="alert" className="text-sm text-red-400">{t.subscription.checkoutError}</p>
+                    <p role="alert" className="mb-6 text-sm text-red-400">{t.subscription.checkoutError}</p>
                   )}
 
-                  <CountrySelect
-                    countries={billingCountries}
-                    value={billingCountry.iso}
-                    onChange={setBillingCountry}
-                    lang={lang}
-                    label={t.subscription.payFrom}
-                  />
+                  <div className="mb-10">
+                    <CountrySelect
+                      countries={billingCountries}
+                      value={billingCountry.iso}
+                      onChange={setBillingCountry}
+                      lang={lang}
+                      label={t.subscription.payFrom}
+                    />
+                  </div>
 
-                  {/* Pricing Cards Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Pricing cards */}
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     {pricingPlans.map((plan) => {
                       const isActive = userProfile?.active_plan?.toLowerCase() === plan.type.toLowerCase();
-                      
                       return (
-                        <div 
-                          key={plan.name} 
-                          className={`relative bg-white/5 backdrop-blur-xl rounded-3xl p-8 flex flex-col transition-all duration-500
-                            ${plan.popular ? 'border border-red-500 shadow-[0_0_40px_rgba(239,68,68,0.15)] -translate-y-2' : 'border border-white/10 hover:border-white/30'}
-                          `}
+                        <div
+                          key={plan.name}
+                          className={`relative flex flex-col rounded-2xl border p-8 transition-colors duration-500 ${
+                            plan.popular
+                              ? "border-red-500/50 bg-gradient-to-b from-red-500/[0.08] to-ink-2 shadow-[0_30px_80px_-40px_rgba(239,68,68,0.6)]"
+                              : "border-white/[0.08] bg-ink-2 hover:border-white/20"
+                          }`}
                         >
-                          {/* Glow effect for Pro card */}
                           {plan.popular && (
-                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-red-500/20 rounded-full blur-[60px] pointer-events-none"></div>
+                            <span className="absolute -top-3 left-8 rounded-full bg-red-500 px-3 py-1 font-label text-[10px] uppercase tracking-[0.15em] text-white">
+                              {t.profile.mostPopular}
+                            </span>
+                          )}
+                          {isActive && (
+                            <span className="absolute right-6 top-6 rounded-full border border-white/15 px-2.5 py-0.5 font-label text-[10px] uppercase tracking-[0.12em] text-white/80">
+                              {t.profile.currentPlanBtn}
+                            </span>
                           )}
 
-                          {plan.popular && (
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.5)] flex items-center gap-1">
-                              <Zap size={12} /> {t.profile.mostPopular}
-                            </div>
-                          )}
+                          <p className="font-label text-[11px] uppercase tracking-[0.18em] text-stone">{plan.name}</p>
+                          <p className="mt-3 min-h-10 text-sm leading-relaxed text-stone">{plan.description}</p>
 
-                          <div className="mb-8">
-                            <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
-                            <p className="text-gray-400 text-sm h-10">{plan.description}</p>
-                          </div>
+                          <p className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                            <span className="font-display text-5xl font-light tracking-[-0.02em] text-white">{priceLabel(plan.type, lang)}</span>
+                            <span className="whitespace-nowrap text-sm text-stone">{t.landing.pricing.perMonth}</span>
+                          </p>
 
-                          <div className="mb-8">
-                            <span className="text-3xl font-bold tracking-tight">{priceLabel(plan.type, lang)}</span>
-                            <span className="text-gray-500 text-sm">/{t.common.month}</span>
-                          </div>
-
-                          <ul className="space-y-4 mb-10 flex-1">
+                          <ul className="mt-8 flex-1 space-y-3.5 border-t border-white/[0.08] pt-8">
                             {plan.features.map((feature, idx) => (
-                              <li key={idx} className="flex items-start gap-3 text-sm text-gray-300">
-                                <CheckCircle2 size={18} className={plan.popular ? "text-red-500 shrink-0" : "text-gray-500 shrink-0"} />
+                              <li key={idx} className="flex items-start gap-3 text-sm leading-snug text-white/75">
+                                <CheckCircle2 size={16} className={`mt-0.5 shrink-0 ${plan.popular ? "text-red-500" : "text-white/40"}`} aria-hidden />
                                 <span>{feature}</span>
                               </li>
                             ))}
@@ -472,14 +465,11 @@ function ProfileContent() {
                           <button
                             onClick={() => startCheckout(plan.type, billingCountry.iso)}
                             disabled={pendingPlan !== null}
-                            className={`w-full py-3.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed
-                              ${isActive
-                                ? 'border border-white/20 bg-transparent text-white hover:bg-white/10'
-                                : plan.popular
-                                  ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] hover:bg-red-600'
-                                  : 'bg-white/10 text-white hover:bg-white/20'
-                              }
-                            `}
+                            className={`mt-10 flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-70 ${
+                              plan.popular && !isActive
+                                ? "bg-red-500 text-white hover:bg-red-600"
+                                : "border border-white/15 bg-white/[0.04] text-white hover:border-white/30 hover:bg-white/10"
+                            }`}
                           >
                             {pendingPlan === plan.type && <Loader2 size={16} className="animate-spin" />}
                             {pendingPlan === plan.type
@@ -492,12 +482,10 @@ function ProfileContent() {
                       );
                     })}
                   </div>
-
                 </div>
               )}
             </>
           )}
-
         </div>
       </div>
     </div>
@@ -508,8 +496,8 @@ function ProfileContent() {
 export default function ProfilePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-red-500" />
+      <div className="flex min-h-screen items-center justify-center bg-ink">
+        <Loader2 className="h-8 w-8 animate-spin text-red-500" />
       </div>
     }>
       <ProfileContent />
@@ -518,23 +506,32 @@ export default function ProfilePage() {
 }
 
 /* ================= UI COMPONENTS ================= */
-function Box({ title, icon, children }: any) {
+function Box({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
-      <div className="flex items-center gap-2 mb-4">
-        {icon}
-        <h3 className="font-medium text-gray-200">{title}</h3>
+    <section className="rounded-2xl border border-white/[0.08] bg-ink-2 p-6">
+      <div className="mb-6 flex items-center gap-3 border-b border-white/[0.08] pb-5">
+        <span className="grid h-8 w-8 place-items-center rounded-full border border-white/10 text-stone">{icon}</span>
+        <h2 className="font-display text-2xl font-light text-white">{title}</h2>
       </div>
-      {children}
-    </div>
+      <div className="space-y-5">{children}</div>
+    </section>
   );
 }
 
-function Empty({ text, icon }: { text: string, icon?: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white/5 border border-white/10 border-dashed rounded-3xl p-16 flex flex-col items-center justify-center text-center">
-      {icon}
-      <p className="text-gray-400 font-medium">{text}</p>
+    <label className="block">
+      <span className="mb-2 block font-label text-[10px] uppercase tracking-[0.18em] text-stone-2">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function Empty({ text, icon }: { text: string; icon?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-6 py-20 text-center">
+      <span className="mb-5 grid h-11 w-11 place-items-center rounded-full border border-white/10 text-stone">{icon}</span>
+      <p className="max-w-sm text-sm leading-relaxed text-stone">{text}</p>
     </div>
   );
 }

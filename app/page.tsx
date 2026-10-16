@@ -1,21 +1,31 @@
-import Navbar from "@/components/layout/navbar"
-import CarouselHero from "@/components/sections/hero-carousel"
-import Features from "@/components/sections/features"
-import HowItWorks from "@/components/sections/how-it-works"
+import LandingNav from "@/components/landing/landing-nav"
+import Hero from "@/components/landing/hero"
+import IntroStats from "@/components/landing/intro-stats"
+import ProductTabs from "@/components/landing/product-tabs"
+import Solutions from "@/components/landing/solutions"
+import AiShowcase from "@/components/landing/ai-showcase"
+import Steps from "@/components/landing/steps"
+import VideoBand from "@/components/landing/video-band"
 import Pricing from "@/components/sections/pricing"
-import About from "@/components/sections/about"
-import Footer from "@/components/sections/footer"
+import Faq from "@/components/landing/faq"
+import FinalCta from "@/components/landing/final-cta"
+import LandingFooter from "@/components/landing/landing-footer"
 
 export default function Home() {
   return (
-    <main className="bg-black text-white">
-      <Navbar />
-      <CarouselHero />
-      <Features />
-      <HowItWorks />
+    <main className="landing min-h-screen">
+      <LandingNav />
+      <Hero />
+      <IntroStats />
+      <ProductTabs />
+      <Solutions />
+      <AiShowcase />
+      <Steps />
+      <VideoBand />
       <Pricing />
-      <About />
-      <Footer />
+      <Faq />
+      <FinalCta />
+      <LandingFooter />
     </main>
   )
 }

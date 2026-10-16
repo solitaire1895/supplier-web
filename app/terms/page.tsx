@@ -3,7 +3,7 @@
 import { useI18n } from "@/lib/i18n";
 import { motion } from "framer-motion";
 import Navbar from "@/components/navbar/navbar";
-import Footer from "@/components/sections/footer";
+import LandingFooter from "@/components/landing/landing-footer";
 
 export default function TermsPage() {
   const { t } = useI18n();
@@ -62,7 +62,7 @@ export default function TermsPage() {
         </div>
       </main>
 
-      <Footer />
+      <LandingFooter />
     </div>
   );
 }
