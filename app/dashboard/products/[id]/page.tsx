@@ -14,6 +14,7 @@ import { submitReview, trackActivityAction, recordSourcingRequest } from "@/lib/
 import { useUser } from "@/lib/supabase/provider";
 import { useI18n } from "@/lib/i18n";
 import { getPlanFeatures } from "@/lib/plans";
+import { SUPPLIER_WITH_CONTACTS, flattenContacts } from "@/lib/supplier-contacts";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -90,7 +91,7 @@ export default function ProductDetailPage() {
         // Try searching for the product name in suppliers first (Dynamic Indexing)
         const { data: searchSups } = await supabase
           .from('suppliers')
-          .select('*')
+          .select(SUPPLIER_WITH_CONTACTS)
           .textSearch('search_vector', prod.name, {
             type: 'websearch',
             config: 'english'
@@ -103,7 +104,7 @@ export default function ProductDetailPage() {
           // Fallback to category if name search fails
           const { data: catSups } = await supabase
             .from('suppliers')
-            .select('*')
+            .select(SUPPLIER_WITH_CONTACTS)
             .eq('category', prod.category)
             .limit(4);
           sups = catSups || [];
@@ -112,7 +113,7 @@ export default function ProductDetailPage() {
         console.error("Error in live indexing suppliers:", err);
       }
       
-      setMatchedSuppliers(sups);
+      setMatchedSuppliers(sups.map(flattenContacts));
 
       // 3. Fetch Reviews
       const { data: revs } = await supabase

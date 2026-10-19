@@ -1,4 +1,5 @@
 import { createClient } from './server'
+import { SUPPLIER_WITH_CONTACTS, flattenContacts } from '@/lib/supplier-contacts'
 import { cache } from 'react'
 import { getPlanFeatures, withEffectivePlan } from '../plans'
 
@@ -36,7 +37,7 @@ export const getSuppliers = cache(async () => {
 
   let query = supabase
     .from('suppliers')
-    .select('*')
+    .select(SUPPLIER_WITH_CONTACTS)
     .order('created_at', { ascending: false })
 
   if (supplierLimit !== 'unlimited') {
@@ -50,7 +51,7 @@ export const getSuppliers = cache(async () => {
     return []
   }
 
-  return data
+  return (data ?? []).map(flattenContacts)
 })
 
 export const getProducts = cache(async () => {

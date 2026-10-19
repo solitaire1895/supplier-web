@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import SupplierDetailClient from "./supplier-detail-client";
 import { notFound } from "next/navigation";
+import { SUPPLIER_WITH_CONTACTS, flattenContacts } from "@/lib/supplier-contacts";
 
 export default async function SupplierPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,11 +18,10 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
   // Fetch supplier server-side (bypasses RLS mismatch between anon client and service role)
   const { data: supplier, error: supplierError } = await supabase
     .from("suppliers")
-    .select("*")
+    .select(SUPPLIER_WITH_CONTACTS)
     .eq("id", id)
     .maybeSingle();
 
-  console.log("Server-side supplier fetch:", { id, supplier, supplierError });
 
   if (supplierError) {
     console.error("Error fetching supplier:", supplierError);
@@ -45,7 +45,7 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
   }
 
   const enrichedSupplier = {
-    ...supplier,
+    ...flattenContacts(supplier),
     rating: 4.8,
     reviewsCount: reviews?.length || 0,
     description:
