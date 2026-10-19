@@ -54,12 +54,9 @@ export default function Navbar() {
     <>
       {/* ================= MOBILE NAV (FLOATING PILL) ================= */}
       <div className="fixed bottom-5 left-0 z-50 w-full px-4 font-text md:hidden">
-        <div className="mx-auto flex w-full max-w-[320px] items-center justify-between rounded-full border border-white/10 bg-ink/85 px-5 py-2.5 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)] backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-[260px] items-center justify-between rounded-full border border-white/10 bg-ink/85 px-5 py-2.5 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)] backdrop-blur-xl">
           <button onClick={() => setNavOpen(true)} aria-label="Menu" className={navOpen ? activeIcon : inactiveIcon}>
             <Menu size={17} />
-          </button>
-          <button onClick={() => setSearchOpen(true)} aria-label={t.common.search} className={inactiveIcon}>
-            <Search size={17} />
           </button>
           <button onClick={() => setFilterOpen(true)} aria-label={t.common.filter} className={inactiveIcon}>
             <Filter size={17} />
