@@ -10,6 +10,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useUser } from "@/lib/supabase/provider";
+import { UnreadBadge, useSupportNotifications } from "@/lib/support-notifications";
 import {
   createConversation, sendMessage, updateConversationStatus,
 } from "@/lib/supabase/actions";
@@ -87,6 +88,7 @@ export default function SupportPage() {
   /* Chat state */
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const { unreadFor, setViewing } = useSupportNotifications();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -137,6 +139,29 @@ export default function SupportPage() {
       setMessages([]);
     }
   }, [activeConversation, fetchMessages]);
+
+  /* ── Unread: the open conversation is read; leaving it stops that ── */
+  const openId = view === "chat" ? activeConversation?.id ?? null : null;
+  useEffect(() => {
+    setViewing(openId, "user");
+    return () => setViewing(null, "user");
+  }, [openId, setViewing]);
+
+  /* ── Deep link from a notification: /dashboard/support?c=<conversation id> ── */
+  const deepLinked = useRef(false);
+  useEffect(() => {
+    if (deepLinked.current || conversations.length === 0) return;
+    const wanted = new URLSearchParams(window.location.search).get("c");
+    const match = wanted ? conversations.find((c) => c.id === wanted) : undefined;
+    deepLinked.current = true;
+    if (match) {
+      // One-time open from the URL, deferred out of the effect body.
+      queueMicrotask(() => {
+        setActiveConversation(match);
+        setView("chat");
+      });
+    }
+  }, [conversations]);
 
   /* ── Realtime: conversations ── */
   useEffect(() => {
@@ -299,7 +324,10 @@ export default function SupportPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-0.5">
                         <span className="text-sm font-bold text-white truncate">{conv.subject}</span>
-                        <span className="text-[10px] text-gray-500 flex-shrink-0">{formatListTime(conv.updated_at)}</span>
+                        <span className="flex flex-shrink-0 items-center gap-2">
+                          <span className={`text-[10px] ${unreadFor(conv.id, "user") ? "text-red-500" : "text-gray-500"}`}>{formatListTime(conv.updated_at)}</span>
+                          <UnreadBadge count={unreadFor(conv.id, "user")} />
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         {conv.ticket_id && (

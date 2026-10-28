@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Filter, User, Menu } from "lucide-react";
+import { Search, Filter, User, Menu, MessageCircle } from "lucide-react";
+import Link from "next/link";
+import { UnreadBadge, useSupportNotifications } from "@/lib/support-notifications";
 import SearchBar from "./search-bar";
 import FilterPanel from "./filter-panel";
 import ProfileMenu from "./profile-menu";
@@ -20,6 +22,9 @@ export default function Navbar() {
   const [navOpen, setNavOpen] = useState(false);
   const { t, lang } = useI18n();
   const { profile } = useUser();
+  const { total: supportUnread, adminUnread } = useSupportNotifications();
+  // Admins with customer messages waiting go to the admin inbox, everyone else to their chat.
+  const supportHref = adminUnread > 0 ? "/admin?tab=Support" : "/dashboard/support";
 
   const router = useRouter();
   const pathname = usePathname();
@@ -55,8 +60,9 @@ export default function Navbar() {
       {/* ================= MOBILE NAV (FLOATING PILL) ================= */}
       <div className="fixed bottom-5 left-0 z-50 w-full px-4 font-text md:hidden">
         <div className="mx-auto flex w-full max-w-[260px] items-center justify-between rounded-full border border-white/10 bg-ink/85 px-5 py-2.5 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)] backdrop-blur-xl">
-          <button onClick={() => setNavOpen(true)} aria-label="Menu" className={navOpen ? activeIcon : inactiveIcon}>
+          <button onClick={() => setNavOpen(true)} aria-label="Menu" className={`relative ${navOpen ? activeIcon : inactiveIcon}`}>
             <Menu size={17} />
+            {supportUnread > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-ink" aria-label={`${supportUnread} unread`} />}
           </button>
           <button onClick={() => setFilterOpen(true)} aria-label={t.common.filter} className={inactiveIcon}>
             <Filter size={17} />
@@ -116,6 +122,16 @@ export default function Navbar() {
             </button>
 
             <span className="mx-1 hidden h-6 w-px bg-white/10 md:block" aria-hidden />
+
+            <Link
+              href={supportHref}
+              aria-label={t.navbar.support}
+              title={t.navbar.support}
+              className={`relative hidden md:grid ${pathname.startsWith("/dashboard/support") ? activeIcon : inactiveIcon}`}
+            >
+              <MessageCircle size={17} />
+              <UnreadBadge count={supportUnread} className="absolute -right-1 -top-1 ring-2 ring-ink" />
+            </Link>
 
             <button onClick={() => setFilterOpen(true)} aria-label={t.common.filter} className={inactiveIcon}>
               <Filter size={17} />

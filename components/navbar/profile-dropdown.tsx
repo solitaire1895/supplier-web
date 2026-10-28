@@ -15,6 +15,7 @@ import {
 import { useI18n, Lang } from "@/lib/i18n";
 import { useUser } from "@/lib/supabase/provider";
 import { logoutAndRedirect } from "@/lib/logout";
+import { UnreadBadge, useSupportNotifications } from "@/lib/support-notifications";
 
 const languages = [
   { code: "FR" as Lang, label: "Français" },
@@ -27,6 +28,7 @@ export default function ProfileDropdown({ onNavigate }: { onNavigate?: () => voi
   const router = useRouter();
   const { t, lang, setLanguage } = useI18n();
   const { profile, user, refreshProfile } = useUser();
+  const { userUnread } = useSupportNotifications();
 
   // Self-heal: if the session exists but the profile row didn't load
   // (transient null), refetch it so the card always shows user info.
@@ -100,7 +102,7 @@ export default function ProfileDropdown({ onNavigate }: { onNavigate?: () => voi
 
         <div className="my-1.5 border-t border-white/[0.06]" />
 
-        <DropdownItem icon={<LifeBuoy size={15} />} label={t.navbar.support} onClick={() => go("/dashboard/support")} />
+        <DropdownItem icon={<LifeBuoy size={15} />} label={t.navbar.support} onClick={() => go("/dashboard/support")} badge={userUnread} />
         <DropdownItem
           icon={<LogOut size={15} />}
           label={t.profile.logout}
@@ -119,11 +121,13 @@ function DropdownItem({
   label,
   onClick,
   className = "",
+  badge = 0,
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
   className?: string;
+  badge?: number;
 }) {
   return (
     <button
@@ -132,6 +136,7 @@ function DropdownItem({
     >
       <span className="shrink-0 text-stone">{icon}</span>
       <span>{label}</span>
+      <UnreadBadge count={badge} className="ml-auto" />
     </button>
   );
 }

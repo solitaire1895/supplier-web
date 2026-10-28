@@ -4,11 +4,13 @@ import { motion } from "framer-motion"
 import { Home, Package, X, LifeBuoy, GraduationCap } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useI18n } from "@/lib/i18n"
+import { UnreadBadge, useSupportNotifications } from "@/lib/support-notifications"
 
 export default function MobileNavMenu({ close }: { close: () => void }) {
   const router = useRouter()
   const pathname = usePathname()
   const { t } = useI18n()
+  const { userUnread } = useSupportNotifications()
 
   const items = [
     { label: t.navbar.home, icon: Home, path: "/dashboard" },
@@ -55,6 +57,7 @@ export default function MobileNavMenu({ close }: { close: () => void }) {
               >
                 <Icon size={16} className={active ? "text-red-500" : "text-stone"} />
                 <span className="font-display text-xl font-light">{item.label}</span>
+                {item.path === "/dashboard/support" && <UnreadBadge count={userUnread} className="ml-auto" />}
               </button>
             )
           })}

@@ -1,5 +1,7 @@
 "use client";
 
+import { UnreadBadge, useSupportNotifications } from "@/lib/support-notifications";
+
 import React from "react";
 import { 
   Home, Users, Truck, Package, 
@@ -19,6 +21,7 @@ export default function AdminSidebar({
   onLogout,
   currentUser 
 }: AdminSidebarProps) {
+  const { adminUnread } = useSupportNotifications();
   const menuItems = [
     { id: "User", name: "User Management", icon: Users, category: "Overview" },
     { id: "Supplier", name: "Suppliers", icon: Truck, category: "Content" },
@@ -92,6 +95,7 @@ export default function AdminSidebar({
               onClick={() => setActiveTab("Support")}
               icon={<LifeBuoy size={20} />}
               label="User Support"
+              badge={adminUnread}
             />
           </div>
         </div>
@@ -121,7 +125,7 @@ export default function AdminSidebar({
   );
 }
 
-function SidebarButton({ active, onClick, icon, label }: any) {
+function SidebarButton({ active, onClick, icon, label, badge = 0 }: any) {
   return (
     <button 
       onClick={onClick}
@@ -139,7 +143,7 @@ function SidebarButton({ active, onClick, icon, label }: any) {
         </span>
         <span className="text-sm font-bold tracking-tight">{label}</span>
       </div>
-      {active && <ChevronRight size={14} className="opacity-50" />}
+      {badge > 0 ? <UnreadBadge count={badge} /> : active && <ChevronRight size={14} className="opacity-50" />}
     </button>
   );
 }

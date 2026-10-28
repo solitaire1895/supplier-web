@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/lib/supabase/provider";
+import { SupportNotificationsProvider } from "@/lib/support-notifications";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +46,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-black text-white">
         <UserProvider>
-          {children}
+          <SupportNotificationsProvider>{children}</SupportNotificationsProvider>
         </UserProvider>
       </body>
     </html>
