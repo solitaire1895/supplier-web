@@ -46,3 +46,7 @@ next-env.d.ts
 /asset/pexels-*.jpg
 /asset/video/
 /nexus template/
+
+# Logs
+*.log
+!.env.example

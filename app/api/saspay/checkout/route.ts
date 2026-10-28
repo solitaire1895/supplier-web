@@ -19,6 +19,9 @@ export const dynamic = 'force-dynamic'
 const SESSION_TTL_MINUTES = 60
 /** A pending checkout younger than this is reused (double clicks, back button). */
 const REUSE_WINDOW_MINUTES = 30
+/** At most this many new checkouts per account per window. */
+const RATE_MAX_CHECKOUTS = 8
+const RATE_WINDOW_MINUTES = 15
 
 export async function POST(req: Request) {
   if (!isSaspayConfigured()) {
@@ -52,6 +55,21 @@ export async function POST(req: Request) {
 
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized. Please sign in again.' }, { status: 401 })
+  }
+
+  // Rate limit, persisted in the database: each checkout creates a payment row
+  // and a SasPay session, so cap how many one account can open.
+  const windowStart = new Date(Date.now() - RATE_WINDOW_MINUTES * 60_000).toISOString()
+  const { count: recentCheckouts } = await db
+    .from('plan_payments')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .gte('created_at', windowStart)
+  if ((recentCheckouts ?? 0) >= RATE_MAX_CHECKOUTS) {
+    return NextResponse.json(
+      { error: 'Too many payment attempts. Please wait a few minutes.' },
+      { status: 429, headers: { 'Retry-After': String(RATE_WINDOW_MINUTES * 60) } }
+    )
   }
 
   // The country decides the currency; the price comes from the server-side table.

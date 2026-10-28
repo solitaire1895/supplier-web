@@ -3,6 +3,48 @@
 import { createClient } from './server'
 import { revalidatePath } from 'next/cache'
 import { getPlanFeatures, withEffectivePlan } from '@/lib/plans'
+import { z } from 'zod'
+import { after } from 'next/server'
+import { notifySupportMessage } from '@/lib/notifications'
+import { splitSupplierForm } from '@/lib/supplier-contacts'
+
+/* ================= GUARDS ================= */
+
+const uuid = z.string().uuid()
+const uuidList = z.array(uuid).min(1).max(500)
+
+/** Server-side admin check. RLS is the second line of defence, not the only one. */
+async function requireAdmin() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'You must be logged in.' as const }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+    return { error: 'Unauthorized: admins only.' as const }
+  }
+  return { supabase, user }
+}
+
+/** Generic message for the browser; the detail stays in the server log. */
+function fail(context: string, error: unknown) {
+  console.error(context, error)
+  return { error: 'The operation failed. Please try again.', success: false as const }
+}
+
+/** Escapes a term for PostgREST .or()/.ilike filters (wildcards and filter syntax). */
+function escapeFilterTerm(term: string) {
+  return term.replace(/[%_\\]/g, (m) => `\\${m}`).replace(/[,()"]/g, ' ')
+}
+
+async function saveSupplierContacts(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  supplierIds: string[],
+  contacts: Record<string, string | null>
+) {
+  const rows = supplierIds.map((supplier_id) => ({ supplier_id, ...contacts, updated_at: new Date().toISOString() }))
+  const { error } = await supabase.from('supplier_contacts').upsert(rows, { onConflict: 'supplier_id' })
+  return error
+}
 
 /* ================= STORAGE ACTIONS ================= */
 
@@ -27,8 +69,21 @@ export async function uploadImage(file: File, path: string) {
     return { error: 'Unauthorized: Only admins can upload images.' }
   }
   
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
+  // Images only, max 5 MB. The extension comes from the MIME type, never the file name.
+  const ALLOWED: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' }
+  if (!(file instanceof File) || !ALLOWED[file.type]) return { error: 'Only JPG, PNG, WebP or GIF images are allowed.' }
+  if (file.size > 5 * 1024 * 1024) return { error: 'Image too large (max 5 MB).' }
+  const head = new Uint8Array(await file.slice(0, 12).arrayBuffer())
+  const isImage =
+    (head[0] === 0xff && head[1] === 0xd8) || // JPEG
+    (head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47) || // PNG
+    (head[0] === 0x47 && head[1] === 0x49 && head[2] === 0x46) || // GIF
+    (head[8] === 0x57 && head[9] === 0x45 && head[10] === 0x42 && head[11] === 0x50) // WEBP
+  if (!isImage) return { error: 'The file is not a valid image.' }
+  if (!/^[a-z0-9/_-]{1,64}$/i.test(path) || path.includes('..')) return { error: 'Invalid upload path.' }
+
+  const fileExt = ALLOWED[file.type]
+  const fileName = `${crypto.randomUUID()}.${fileExt}`
   const filePath = `${path}/${fileName}`
 
   // 3. Perform Upload
@@ -39,10 +94,7 @@ export async function uploadImage(file: File, path: string) {
       upsert: false
     })
 
-  if (error) {
-    console.error('Supabase storage upload error:', error)
-    return { error: error.message }
-  }
+  if (error) return fail('Supabase storage upload error:', error)
 
   const { data: { publicUrl } } = supabase.storage
     .from('uploads')
@@ -54,12 +106,17 @@ export async function uploadImage(file: File, path: string) {
 /* ================= SUPPLIERS ACTIONS ================= */
 
 export async function addSupplier(formData: any) {
-  const supabase = await createClient()
-  const { error } = await supabase.from('suppliers').insert([formData])
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
+  const { row, contacts, hasContacts } = splitSupplierForm(formData)
+  const { data: created, error } = await supabase.from('suppliers').insert([row]).select('id').single()
 
-  if (error) {
-    console.error('Error adding supplier:', error)
-    return { error: error.message }
+  if (error || !created) return fail('Error adding supplier:', error)
+
+  if (hasContacts) {
+    const contactError = await saveSupplierContacts(supabase, [created.id], contacts)
+    if (contactError) return fail('Error saving supplier contacts:', contactError)
   }
 
   revalidatePath('/admin')
@@ -68,12 +125,18 @@ export async function addSupplier(formData: any) {
 }
 
 export async function updateSupplier(id: string, formData: any) {
-  const supabase = await createClient()
-  const { error } = await supabase.from('suppliers').update(formData).eq('id', id)
-
-  if (error) {
-    console.error('Error updating supplier:', error)
-    return { error: error.message }
+  if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
+  const { row, contacts, hasContacts } = splitSupplierForm(formData)
+  if (Object.keys(row).length > 0) {
+    const { error } = await supabase.from('suppliers').update(row).eq('id', id)
+    if (error) return fail('Error updating supplier:', error)
+  }
+  if (hasContacts) {
+    const contactError = await saveSupplierContacts(supabase, [id], contacts)
+    if (contactError) return fail('Error saving supplier contacts:', contactError)
   }
 
   revalidatePath('/admin')
@@ -82,12 +145,18 @@ export async function updateSupplier(id: string, formData: any) {
 }
 
 export async function updateSuppliersBulk(ids: string[], formData: any) {
-  const supabase = await createClient()
-  const { error } = await supabase.from('suppliers').update(formData).in('id', ids)
-
-  if (error) {
-    console.error('Error updating suppliers bulk:', error)
-    return { error: error.message }
+  if (!uuidList.safeParse(ids).success) return { error: 'Invalid selection' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
+  const { row, contacts, hasContacts } = splitSupplierForm(formData)
+  if (Object.keys(row).length > 0) {
+    const { error } = await supabase.from('suppliers').update(row).in('id', ids)
+    if (error) return fail('Error updating suppliers bulk:', error)
+  }
+  if (hasContacts) {
+    const contactError = await saveSupplierContacts(supabase, ids, contacts)
+    if (contactError) return fail('Error saving supplier contacts:', contactError)
   }
 
   revalidatePath('/admin')
@@ -96,7 +165,10 @@ export async function updateSuppliersBulk(ids: string[], formData: any) {
 }
 
 export async function deleteSupplier(id: string) {
-  const supabase = await createClient()
+  if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
   const { error } = await supabase.from('suppliers').delete().eq('id', id)
 
   if (error) {
@@ -112,7 +184,9 @@ export async function deleteSupplier(id: string) {
 /* ================= PRODUCTS ACTIONS ================= */
 
 export async function addProduct(formData: any) {
-  const supabase = await createClient()
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
   const { error } = await supabase.from('products').insert([formData])
 
   if (error) {
@@ -126,7 +200,10 @@ export async function addProduct(formData: any) {
 }
 
 export async function updateProduct(id: string, formData: any) {
-  const supabase = await createClient()
+  if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
   const { error } = await supabase.from('products').update(formData).eq('id', id)
 
   if (error) {
@@ -140,7 +217,10 @@ export async function updateProduct(id: string, formData: any) {
 }
 
 export async function updateProductsBulk(ids: string[], formData: any) {
-  const supabase = await createClient()
+  if (!uuidList.safeParse(ids).success) return { error: 'Invalid selection' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
   const { error } = await supabase.from('products').update(formData).in('id', ids)
 
   if (error) {
@@ -154,7 +234,10 @@ export async function updateProductsBulk(ids: string[], formData: any) {
 }
 
 export async function deleteProduct(id: string) {
-  const supabase = await createClient()
+  if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
   const { error } = await supabase.from('products').delete().eq('id', id)
 
   if (error) {
@@ -169,14 +252,29 @@ export async function deleteProduct(id: string) {
 
 /* ================= USERS ACTIONS ================= */
 
-export async function updateUser(id: string, formData: any) {
-  const supabase = await createClient()
-  const { error } = await supabase.from('profiles').update(formData).eq('id', id)
+const userUpdateSchema = z
+  .object({
+    role: z.enum(['user', 'admin', 'super_admin']).optional(),
+    status: z.enum(['active', 'suspended']).optional(),
+    full_name: z.string().trim().max(120).optional(),
+  })
+  .strict()
 
-  if (error) {
-    console.error('Error updating user:', error)
-    return { error: error.message }
+export async function updateUser(id: string, formData: unknown) {
+  if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
+  const parsed = userUpdateSchema.safeParse(formData)
+  if (!parsed.success) return { error: 'Invalid user fields' }
+  // Only a super admin may grant or remove admin roles.
+  if (parsed.data.role !== undefined) {
+    const { data: me } = await supabase.from('profiles').select('role').eq('id', guard.user.id).single()
+    if (me?.role !== 'super_admin' && parsed.data.role !== 'user') return { error: 'Only a super admin can grant admin roles.' }
   }
+
+  const { error } = await supabase.from('profiles').update(parsed.data).eq('id', id)
+  if (error) return fail('Error updating user:', error)
 
   revalidatePath('/admin')
   return { success: true }
@@ -247,7 +345,10 @@ export async function updateUserPlan(userId: string, plan: string) {
 }
 
 export async function deleteUser(id: string) {
-  const supabase = await createClient()
+  if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
   const { error } = await supabase.from('profiles').delete().eq('id', id)
 
   if (error) {
@@ -260,7 +361,10 @@ export async function deleteUser(id: string) {
 }
 
 export async function suspendUser(id: string) {
-  const supabase = await createClient()
+  if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
   const { error } = await supabase.from('profiles').update({ status: 'suspended' }).eq('id', id)
 
   if (error) {
@@ -453,6 +557,9 @@ export async function sendMessage(
     return { error: error.message }
   }
 
+  // Email the other side (support team or customer) once the response is sent.
+  after(() => notifySupportMessage(data.id))
+
   revalidatePath('/dashboard/support')
   revalidatePath('/admin')
   return { success: true, message: data }
@@ -571,7 +678,8 @@ export async function searchAction(
   const features = getPlanFeatures(plan)
 
   // Escape LIKE wildcards so user input can't break the pattern.
-  const safe = term.replace(/[%_\\]/g, (m) => `\\${m}`)
+  const safe = escapeFilterTerm(term).trim()
+  if (safe.length < 2) return { products: [], suppliers: [] }
   const pattern = `%${safe}%`
 
   // ---- PRODUCTS (winning products) ----------------------------------------
@@ -726,7 +834,9 @@ export async function getRecommendedSuppliersAction(limit: number = 4) {
    that policy exactly like the supplier/product actions do. */
 
 export async function addTraining(trainingData: any) {
-  const supabase = await createClient()
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
   const { parts, ...row } = trainingData
 
   const { data: created, error } = await supabase
@@ -766,7 +876,10 @@ export async function addTraining(trainingData: any) {
 }
 
 export async function updateTraining(id: string, trainingData: any) {
-  const supabase = await createClient()
+  if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
   const { parts, ...row } = trainingData
 
   // 1. Replace the playlist when a parts array is provided (video type).
@@ -833,7 +946,10 @@ export async function updateTraining(id: string, trainingData: any) {
 }
 
 export async function deleteTraining(id: string) {
-  const supabase = await createClient()
+  if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
+  const guard = await requireAdmin()
+  if ('error' in guard) return { error: guard.error }
+  const supabase = guard.supabase
 
   // Look up the row + its playlist parts so we can also remove all
   // their files from storage. (Part rows cascade-delete with the parent.)

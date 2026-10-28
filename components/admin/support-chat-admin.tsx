@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase/client";
+import { UnreadBadge, useSupportNotifications } from "@/lib/support-notifications";
 import {
   sendMessage, updateConversationStatus, assignAgent,
 } from "@/lib/supabase/actions";
@@ -64,6 +65,12 @@ interface ChatMessage {
 export default function SupportChatAdmin() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const { unreadFor, setViewing } = useSupportNotifications();
+  const openId = activeConversation?.id ?? null;
+  useEffect(() => {
+    setViewing(openId, "admin");
+    return () => setViewing(null, "admin");
+  }, [openId, setViewing]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -376,7 +383,10 @@ export default function SupportChatAdmin() {
                             {conv.subject}
                           </span>
                         </div>
-                        <span className={`flex-shrink-0 w-2 h-2 rounded-full mt-1.5 ${STATUS_COLORS[conv.status] || "bg-gray-600"}`} />
+                        <span className="flex flex-shrink-0 items-center gap-2">
+                          <UnreadBadge count={unreadFor(conv.id, "admin")} />
+                          <span className={`w-2 h-2 rounded-full ${STATUS_COLORS[conv.status] || "bg-gray-600"}`} />
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 mb-1">
                         {conv.ticket_id && (
