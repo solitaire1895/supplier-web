@@ -4,6 +4,8 @@ import { createClient } from './server'
 import { revalidatePath } from 'next/cache'
 import { getPlanFeatures, withEffectivePlan } from '@/lib/plans'
 import { z } from 'zod'
+import { after } from 'next/server'
+import { notifySupportMessage } from '@/lib/notifications'
 import { splitSupplierForm } from '@/lib/supplier-contacts'
 
 /* ================= GUARDS ================= */
@@ -554,6 +556,9 @@ export async function sendMessage(
     console.error('Error sending message:', error)
     return { error: error.message }
   }
+
+  // Email the other side (support team or customer) once the response is sent.
+  after(() => notifySupportMessage(data.id))
 
   revalidatePath('/dashboard/support')
   revalidatePath('/admin')

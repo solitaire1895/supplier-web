@@ -8,6 +8,8 @@
 // always re-read the transaction from the API before granting anything.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { after } from 'next/server'
+import { sendPaymentConfirmation } from '@/lib/notifications'
 import {
   getCheckoutSession,
   sessionTransactionId,
@@ -231,6 +233,12 @@ async function applySuccessfulTransaction(
 
   const out = (data ?? {}) as { outcome?: string; plan?: string; plan_expires_at?: string }
   console.log(`BILLING payment ${payment.id} ${out.outcome}: ${out.plan} until ${out.plan_expires_at}`)
+
+  // Receipt email, only the first time the payment is applied. Runs after the
+  // response so the webhook / return page never wait on Resend.
+  if (out.outcome === 'fulfilled') {
+    after(() => sendPaymentConfirmation(payment.id))
+  }
   return {
     status: 'paid',
     plan: out.plan ?? payment.plan,
