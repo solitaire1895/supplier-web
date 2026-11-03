@@ -91,14 +91,14 @@ export const getTrainings = cache(async () => {
     .from('trainings')
     .select('*, parts_count:training_parts(count)')
     .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: true })
 
   if (result.error?.code === 'PGRST202') {
     result = await supabase
       .from('trainings')
       .select('*')
       .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
   }
 
   const { data, error } = result

@@ -14,6 +14,7 @@ import CSVImport from "./csv-import";
 export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers: any[] }) {
   const [suppliers, setSuppliers] = useState(initialSuppliers);
   const [search, setSearch] = useState("");
+  const [platformFilter, setPlatformFilter] = useState("all");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
@@ -50,9 +51,20 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
     moq: undefined as number | undefined
   });
 
-  const filtered = suppliers.filter(s => 
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.platform.toLowerCase().includes(search.toLowerCase())
+  // Platforms present in the directory, with how many suppliers each has.
+  const platforms = Object.entries(
+    suppliers.reduce((acc: Record<string, number>, s) => {
+      const p = s.platform || "Other";
+      acc[p] = (acc[p] || 0) + 1;
+      return acc;
+    }, {})
+  ).sort((a, b) => b[1] - a[1]);
+
+  const filtered = suppliers.filter(s =>
+    (platformFilter === "all" || (s.platform || "Other") === platformFilter) && (
+    (s.name || "").toLowerCase().includes(search.toLowerCase()) ||
+    (s.platform || "").toLowerCase().includes(search.toLowerCase()) ||
+    (s.category || "").toLowerCase().includes(search.toLowerCase()))
   );
 
   const toggleSelectAll = () => {
@@ -203,7 +215,11 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h3 className="text-lg font-bold">Suppliers Directory</h3>
-          <p className="text-xs text-gray-500">Manage {suppliers.length} indexed manufacturers and platforms.</p>
+          <p className="text-xs text-gray-500">
+            {filtered.length === suppliers.length
+              ? `${suppliers.length} suppliers indexed`
+              : `Showing ${filtered.length} of ${suppliers.length} suppliers`}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           {selectedIds.length > 0 && (
@@ -214,6 +230,17 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
               <Edit size={16} /> Bulk Edit ({selectedIds.length})
             </button>
           )}
+          <select
+            value={platformFilter}
+            onChange={(e) => { setPlatformFilter(e.target.value); setSelectedIds([]); }}
+            aria-label="Filter by platform"
+            className="bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm text-gray-200 focus:outline-none focus:border-red-500/50 transition-all"
+          >
+            <option value="all" className="bg-black">All platforms ({suppliers.length})</option>
+            {platforms.map(([name, count]) => (
+              <option key={name} value={name} className="bg-black">{name} ({count})</option>
+            ))}
+          </select>
           <div className="relative group">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-red-500 transition-colors" />
             <input 
@@ -243,6 +270,7 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
                     {selectedIds.length === filtered.length && filtered.length > 0 ? <CheckSquare size={16} className="text-red-500" /> : <Square size={16} />}
                   </button>
                 </th>
+                <th className="px-3 py-4 uppercase tracking-wider text-[10px] w-12">#</th>
                 <th className="px-6 py-4 uppercase tracking-wider text-[10px]">Supplier</th>
                 <th className="px-6 py-4 uppercase tracking-wider text-[10px]">Platform</th>
                 <th className="px-6 py-4 uppercase tracking-wider text-[10px]">Status</th>
@@ -250,13 +278,14 @@ export default function SuppliersAdmin({ initialSuppliers }: { initialSuppliers:
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {filtered.map((s) => (
+              {filtered.map((s, index) => (
                 <tr key={s.id} className={`hover:bg-white/5 transition-colors group ${selectedIds.includes(s.id) ? 'bg-red-500/5' : ''}`}>
                   <td className="px-6 py-4">
                     <button onClick={() => toggleSelect(s.id)} className="text-gray-500 hover:text-white transition-colors">
                       {selectedIds.includes(s.id) ? <CheckSquare size={16} className="text-red-500" /> : <Square size={16} />}
                     </button>
                   </td>
+                  <td className="px-3 py-4 font-mono text-xs text-gray-500">{index + 1}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-white/10 overflow-hidden border border-white/5">
