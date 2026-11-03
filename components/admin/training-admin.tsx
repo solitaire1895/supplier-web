@@ -71,7 +71,7 @@ export default function TrainingAdmin() {
       .from("trainings")
       .select("*")
       .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
     if (fetchError) {
       console.error("Error fetching trainings:", fetchError);
       setError(fetchError.message);

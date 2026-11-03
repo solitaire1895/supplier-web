@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import AdminDashboardClient from "@/components/admin/admin-dashboard-client";
-import { getSuppliers, getProducts, getUsers, getUserProfile } from "@/lib/supabase/queries";
+import { getUserProfile } from "@/lib/supabase/queries";
+import { getAdminData } from "@/lib/supabase/admin-queries";
 import { redirect } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
@@ -12,11 +13,8 @@ export default async function AdminDashboard() {
     redirect('/dashboard');
   }
 
-  const [suppliers, products, users] = await Promise.all([
-    getSuppliers(),
-    getProducts(),
-    getUsers()
-  ]);
+  // Unlimited, real data (service role) — only after the role check above.
+  const { suppliers, products, users, stats } = await getAdminData();
 
   return (
     <Suspense fallback={
@@ -28,6 +26,7 @@ export default async function AdminDashboard() {
         initialSuppliers={suppliers} 
         initialProducts={products} 
         initialUsers={users}
+        stats={stats}
         currentUser={profile}
       />
     </Suspense>

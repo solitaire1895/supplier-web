@@ -15,17 +15,20 @@ import TrainingAdmin from "./training-admin";
 import DashboardOverview from "./dashboard-overview";
 import AdminSidebar from "./admin-sidebar";
 import { logoutAndRedirect } from "@/lib/logout";
+import type { AdminStats, AdminUser } from "@/lib/supabase/admin-queries";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AdminDashboardClient({ 
   initialSuppliers, 
   initialProducts,
   initialUsers,
+  stats,
   currentUser
 }: { 
   initialSuppliers: any[], 
   initialProducts: any[],
-  initialUsers: any[],
+  initialUsers: AdminUser[],
+  stats: AdminStats | null,
   currentUser: any
 }) {
   const router = useRouter();
@@ -43,7 +46,7 @@ export default function AdminDashboardClient({
   const renderView = () => {
     switch (activeTab) {
       case "User":
-        return <UsersAdmin initialUsers={initialUsers} currentUser={currentUser} />;
+        return <UsersAdmin initialUsers={initialUsers} stats={stats} currentUser={currentUser} />;
       case "Supplier":
         return <SuppliersAdmin initialSuppliers={initialSuppliers} />;
       case "Product":
@@ -58,6 +61,7 @@ export default function AdminDashboardClient({
             initialSuppliers={initialSuppliers}
             initialProducts={initialProducts}
             initialUsers={initialUsers}
+            stats={stats}
             setActiveTab={setActiveTab}
           />
         );
@@ -87,7 +91,7 @@ export default function AdminDashboardClient({
         <header className="flex items-center justify-between mb-10 pb-6 border-b border-white/5">
           <div>
             <h2 className="text-2xl font-black text-white tracking-tight">Admin Console</h2>
-            <p className="text-xs text-gray-500 font-medium">Internal System Control • Nexusply Engine v2.4</p>
+            <p className="text-xs text-gray-500 font-medium">Live data from your Supabase database</p>
           </div>
           
           <div className="flex items-center gap-6">

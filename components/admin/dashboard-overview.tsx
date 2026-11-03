@@ -6,12 +6,13 @@ import {
   ChevronRight
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
-import { PLANS } from "@/lib/plans";
+import type { AdminStats } from "@/lib/supabase/admin-queries";
 
 interface DashboardOverviewProps {
   initialSuppliers: any[];
   initialProducts: any[];
   initialUsers: any[];
+  stats: AdminStats | null;
   setActiveTab: (tab: string) => void;
 }
 
@@ -60,6 +61,7 @@ export default function DashboardOverview({
   initialSuppliers,
   initialProducts,
   initialUsers,
+  stats,
   setActiveTab,
 }: DashboardOverviewProps) {
   // Self-fetched sections (RLS permits admins) — same pattern as
@@ -67,14 +69,16 @@ export default function DashboardOverview({
   // lists when their migrations have not been run yet.
   const [trainings, setTrainings] = useState<any[] | null>(null);
   const [conversations, setConversations] = useState<any[] | null>(null);
+  // Exact totals (head-only count queries), separate from the short "latest" lists.
+  const [trainingsTotal, setTrainingsTotal] = useState<number | null>(null);
+  const [openTickets, setOpenTickets] = useState<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
     supabase
       .from("trainings")
-      .select("id, title, type, sort_order")
-      .order("sort_order", { ascending: true })
+      .select("id, title, type, created_at")
       .order("created_at", { ascending: false })
       .limit(3)
       .then(({ data, error }: any) => {
@@ -107,20 +111,28 @@ export default function DashboardOverview({
         }
       });
 
+    supabase
+      .from("trainings")
+      .select("id", { count: "exact", head: true })
+      .then(({ count, error }: any) => {
+        if (mounted) setTrainingsTotal(error ? 0 : count ?? 0);
+      });
+
+    supabase
+      .from("support_conversations")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["open", "waiting"])
+      .then(({ count, error }: any) => {
+        if (mounted) setOpenTickets(error ? 0 : count ?? 0);
+      });
+
     return () => {
       mounted = false;
     };
   }, []);
 
-  /* Monthly revenue (same math as UsersAdmin) */
-  const monthlyRevenue = initialUsers.reduce((acc: number, user: any) => {
-    const plan = user?.active_plan as keyof typeof PLANS;
-    return acc + (plan && PLANS[plan]?.price ? PLANS[plan].price : 0);
-  }, 0);
-
-  const openTickets = (conversations || []).filter(
-    (c) => c.status === "open" || c.status === "waiting"
-  ).length;
+  /* Real revenue: confirmed plan payments in the last 30 days (XAF). */
+  const revenue30d = stats?.revenue30d ?? null;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -147,22 +159,22 @@ export default function DashboardOverview({
         <StatTile
           icon={<GraduationCap size={18} />}
           label="Trainings"
-          value={trainings === null ? "—" : String(trainings.length)}
+          value={trainingsTotal === null ? "—" : String(trainingsTotal)}
           onClick={() => setActiveTab("Training")}
         />
         <StatTile
           icon={<LifeBuoy size={18} />}
           label="Open Tickets"
-          value={conversations === null ? "—" : String(openTickets)}
+          value={openTickets === null ? "—" : String(openTickets)}
           onClick={() => setActiveTab("Support")}
-          accent={(conversations?.length && openTickets > 0) || false}
+          accent={(openTickets ?? 0) > 0}
         />
         <StatTile
           icon={<TrendingUp size={18} />}
-          label="Monthly Revenue"
-          value={`${monthlyRevenue.toLocaleString()} F`}
+          label="Revenue · 30 days"
+          value={revenue30d === null ? "—" : `${Math.round(revenue30d).toLocaleString("fr-FR")} F`}
           onClick={() => setActiveTab("User")}
-          accent={monthlyRevenue > 0}
+          accent={(revenue30d ?? 0) > 0}
         />
       </div>
 
@@ -220,14 +232,14 @@ export default function DashboardOverview({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <SectionCard
           icon={<Users size={18} />}
-          title="Newest Users"
-          count={initialUsers.length}
+          title="Paying Customers"
+          count={stats?.payingCount ?? null}
           onViewAll={() => setActiveTab("User")}
         >
-          {initialUsers.length === 0 ? (
-            <EmptyRow label="No users registered yet." />
+          {initialUsers.filter((u: any) => u.is_paying).length === 0 ? (
+            <EmptyRow label="No paying customers yet." />
           ) : (
-            initialUsers.slice(0, 5).map((u: any) => (
+            initialUsers.filter((u: any) => u.is_paying).slice(0, 5).map((u: any) => (
               <ListRow
                 key={u.id}
                 title={u.full_name || u.email || "Unknown"}
@@ -245,7 +257,7 @@ export default function DashboardOverview({
         <SectionCard
           icon={<GraduationCap size={18} />}
           title="Latest Training Modules"
-          count={trainings === null ? null : trainings.length}
+          count={trainingsTotal}
           onViewAll={() => setActiveTab("Training")}
         >
           {trainings === null ? (
@@ -257,7 +269,7 @@ export default function DashboardOverview({
               <ListRow
                 key={tr.id}
                 title={tr.title}
-                subtitle={`Order ${tr.sort_order ?? 0}`}
+                subtitle={`Added ${timeAgo(tr.created_at)}`}
                 badge={
                   <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${TYPE_BADGE[tr.type] || TYPE_BADGE.document}`}>
                     {tr.type}
