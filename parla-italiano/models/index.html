@@ -1,0 +1,36 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Parla Italiano cast</title>
+<link rel="stylesheet" href="/core/fonts/fonts.css">
+<style>html,body{margin:0;background:#f4ecdc;overflow:hidden}canvas{display:block}</style></head><body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script type="module">
+import { drawOrso, drawGiulia, CHAR_W, CHAR_H } from './engine/cast.js';
+import { cv, paperFill, INK } from './engine/paper.js';
+await Promise.all(['700 30px Fredoka', '40px "Lilita One"'].map(f => document.fonts.load(f)));
+const C = document.getElementById('c').getContext('2d');
+paperFill(C, 1920, 1080, '#f4ecdc', 3, .05);
+C.fillStyle = INK; C.textAlign = 'left'; C.font = '56px "Lilita One"'; C.fillText('Parla Italiano!  ·  model sheet', 40, 80);
+C.font = '600 26px Fredoka'; C.fillStyle = '#6b5a4c'; C.fillText('Original cast, cut paper. Top: Orso (learner). Bottom: Giulia (guide).', 40, 120);
+const put = (fn, pose, x, baseY, h, label) => {
+  const k = cv(CHAR_W, CHAR_H); fn(k.getContext('2d'), pose);
+  const w = CHAR_W * h / CHAR_H; C.drawImage(k, x - w / 2, baseY - h, w, h);
+  C.fillStyle = INK; C.font = '600 22px Fredoka'; C.textAlign = 'center'; C.fillText(label, x, baseY + 28);
+};
+const H = 400, row1 = 560, row2 = 1035;
+const orso = [
+  [{}, 'neutral'], [{ armR: -2.6, mouth: 'open', eyes: 'happy', brows: 'up' }, 'Ciao! (wave)'],
+  [{ mouth: 'worried', brows: 'worried', look: [.6, -.6], armR: -2.2 }, 'confused'],
+  [{ prop: 'thumb', armR: -1.9, mouth: 'grin', eyes: 'happy', brows: 'up', propL: 'book', armL: .9 }, 'proud + book'],
+  [{ mouth: 'o', eyes: 'wide', brows: 'up', armL: 1.5, armR: -1.5 }, 'surprised'],
+  [{ walk: 1.2, stride: 1, armL: .8, armR: .4, mouth: 'smile', lean: .03 }, 'walk'],
+];
+orso.forEach(([p, l], i) => put(drawOrso, p, 175 + i * 315, row1, H, l));
+const giulia = [
+  [{}, 'neutral'], [{ prop: 'flag', armR: -.9, mouth: 'smile', eyes: 'happy' }, 'guide flag'],
+  [{ prop: 'point', armR: -1.6, mouth: 'open', brows: 'up' }, 'teaching'],
+  [{ mouth: 'grin', eyes: 'happy', armL: 1.2, armR: -1.2 }, 'laughing'],
+  [{ mouth: 'flat', brows: 'frown', look: [-.5, 0] }, 'puzzled'],
+  [{ walk: 1.2, stride: 1, armL: .6, armR: .5, prop: 'flag' }, 'walk'],
+];
+giulia.forEach(([p, l], i) => put(drawGiulia, p, 175 + i * 315, row2, H, l));
+window.render = () => {}; window.DUR = 1; window.READY = true;
+</script></body></html>
