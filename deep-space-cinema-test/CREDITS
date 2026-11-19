@@ -1,0 +1,10 @@
+Journey Through the Unknown — a Deep Space Cinema test film
+
+Picture: original code (three.js), everything drawn procedurally: ship, planet, nebula, stars, hyperspace.
+Sound: original code (numpy/scipy synthesis): no samples, no recordings, no voice.
+Fonts: none (the film has no text).
+
+Third-party software (not assets in the film):
+- three.js r170 — MIT License — https://threejs.org
+- Lemo-Opuscar core tools (core/three/post.js, core/lib.js, core/audio/sfx.py, core/render/*) — MIT License —
+  https://github.com/lemomo-ai/lemo-opuscar. Techniques adapted from its glass-product and lowpoly-island demos (MIT).

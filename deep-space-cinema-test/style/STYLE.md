@@ -14,7 +14,7 @@ It is **not** a cartoon, a HUD or wireframe, a product-studio render, or a neon 
 ## 2. Materials & rendering
 
 - **three.js r170**, `MeshPhysicalMaterial`, Neutral tone mapping, 2× supersampling, bloom only above ~1.0, physical depth of field (`core/three/post.js`).
-- **Hull**: metalness ~0.85, roughness 0.35–0.55, driven by procedural canvas maps: a panel grid with plate seams (dark lines in the colour map, raised in a bump/normal map), greeble blocks and trenches as real geometry, random plate tint variation ±6 %. Never one smooth material: the eye reads scale from panel density.
+- **Hull**: sleek and streamlined. Long forms swept from superellipse cross-sections (a long taper to a fine bow, a dorsal ridge, nacelles on swept pylons), not stacked boxes. Metalness ~0.5, roughness 0.35–0.7 from procedural canvas maps: plate seams (dark in colour, recessed in bump), vents, rivets, plate tint variation. Greebles are sparse, kept to the engine section. Never one smooth material: the eye reads scale from panel density.
 - **Scale cues**: thousands of tiny windows (instanced or texture-based emission) in rows, docking-bay recesses, antenna masts, navigation beacons that blink slowly (red port, green starboard, white strobe).
 - **Engines**: nozzles with an emissive inner throat (white-hot core → ice-blue), additive plume cones and sprite halos; a faint heat shimmer is optional. Light **leaks onto the hull** around them (a blue point light per engine cluster).
 - **Light**: one directional "sun", warm white (≈ #fff1e0), hard-edged; a very weak cool fill (≈ 2–4 % of key) so the shadow side is near-black but not dead. No ambient grey wash. The environment map is a baked image of the space backdrop itself (`PMREMGenerator.fromScene`), so metal reflects the nebula and planet.
@@ -90,7 +90,7 @@ A menu: use the ones your story needs.
 
 ## 10. Engine
 
-In `demo/`: `space.js` (backdrop shader: stars + nebula; planet + atmosphere; env bake), `ship.js` (hull generation, panel/emission textures, windows, beacons, engines and plumes), `warp.js` (hyperspace star streaks and trail), `main.js` (shots, cameras, lights, post, render(t)), `story.js` (timeline and sound events shared with the mix), `mix.py` (synthesized score and sound design), `build.sh`. Techniques from `$LIB/styles/glass-product/demo/` (post, emissive pulse shaders) and `$LIB/core/three/post.js`.
+In `demo/`: `space.js` (backdrop shader: stars + nebula; planet + atmosphere; env bake), `ship.js` (swept superellipse hull, panel maps, windows in the hull shader, beacons, engines and plumes), `warp.js` (hyperspace star streaks and trail), `main.js` (shots, cameras, lights, post, render(t)), `story.js` (timeline and sound events shared with the mix), `mix.py` (synthesized score and sound design), `build.sh`. Techniques from `$LIB/styles/glass-product/demo/` (post, emissive pulse shaders) and `$LIB/core/three/post.js`.
 
 ## 11. Variation space
 

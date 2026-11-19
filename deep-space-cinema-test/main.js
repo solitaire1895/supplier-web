@@ -35,7 +35,7 @@ const PLANET_POS_A = dirAt(-27, -22).multiplyScalar(PLANET_D);
 planet.root.scale.setScalar(PLANET_D * Math.sin(PLANET_A * Math.PI / 180) / PLANET_R);
 scene.environment = bakeEnv(renderer, sky, PLANET_POS_A, PLANET_D * Math.sin(PLANET_A * Math.PI / 180), SUN);
 
-const sun = new THREE.DirectionalLight('#fff1e0', 4.2); sun.castShadow = true;
+const sun = new THREE.DirectionalLight('#fff1e0', 5.4); sun.castShadow = true;
 sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -.0004; sun.shadow.normalBias = .04;
 Object.assign(sun.shadow.camera, { left: -85, right: 85, top: 85, bottom: -85, near: 1, far: 500 });
 scene.add(sun, sun.target);
@@ -76,10 +76,10 @@ function frame(t) {
   switch (name) {
     case 'emerge': {   // the ship slides out from behind the planet's limb
       const H0 = V(1, .3, .15).normalize();
-      setShip(dirAt(-14, -9).multiplyScalar(400).addScaledVector(H0, 26 * t), H0, -.07 + .02 * Math.sin(t * .4));
+      setShip(dirAt(-16, -10).multiplyScalar(330).addScaledVector(H0, 24 * t), H0, -.07 + .02 * Math.sin(t * .4));
       planet.root.position.copy(PLANET_POS_A); planet.root.visible = true; overPlanet = true;
       pos = V(0, 0, 0).lerp(V(6, 4, -24), eio(u));
-      look = dirAt(-6, -4).multiplyScalar(400).lerp(dirAt(0, -2).multiplyScalar(400), eio(u));
+      look = dirAt(-6, -4).multiplyScalar(330).lerp(dirAt(1, -2).multiplyScalar(330), eio(u));
       fov = lerp(23, 21, eio(u)); power = .3 + .05 * Math.sin(t * 1.3);
       fade = ss(seg(t, ...T.fadeIn));
       break;

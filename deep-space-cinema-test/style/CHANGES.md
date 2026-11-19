@@ -5,7 +5,7 @@ Made from a blank page. "Base" is the technique base, Glass Product Render (glas
 | Section | Base | Now | Why |
 |---|---|---|---|
 | §1 Essence | A glass product floating in a black studio | One vast fictional starship in deep space, filmed like a feature; not a cartoon, HUD or studio render | The user's brief: cinematic, realistic sci-fi |
-| §2 Materials | Clear and frosted glass, metals, strip-light studio, mirror floor | Panelled metal hull with procedural maps and greebles, thousands of windows, emissive engines and plumes; a planet with atmosphere; nebula and star backdrop; environment baked from the backdrop | Realistic space; scale from detail density |
+| §2 Materials | Clear and frosted glass, metals, strip-light studio, mirror floor | Sleek panelled metal hull swept from superellipse sections, sparse greebles, thousands of windows, emissive engines and plumes; a planet with atmosphere; nebula and star backdrop; environment baked from the backdrop | Realistic space; scale from detail density; hull made sleek at the user's request after the first style frame |
 | §2 Light | Strip lights baked per frame, no sun | One hard warm sun, near-black shadow side, engine light leaking onto the hull | Cinematic space lighting |
 | §3 Colour | Neutral world, one accent reserved for light | Kept the logic: steel greys + warm sun; ice blue → violet for engines, windows, hyperspace; dim teal and magenta nebulae | User choice: neutral ship, blue light, nebula |
 | §4 Type | Ultra-thin grotesk titles with a glint, frosted-glass subtitle bar | Ultra-thin wide-tracked titles with an ice-blue glint, off by default; plain subtitles without a box | User choice: thin wide sci-fi titles |

@@ -2,7 +2,7 @@
 // Hull: merged boxes/cylinders with UVs in world units, procedural panel maps, greebles, windows drawn in the shader.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { mulberry } from '/core/lib.js';
+import { mulberry, monotone } from '/core/lib.js';
 
 export const LIGHT_A = new THREE.Color('#6fd6ff');   // ice blue
 export const LIGHT_B = new THREE.Color('#a48cff');   // soft violet
@@ -68,16 +68,16 @@ function hullMaterial(maps, U) {
   m.onBeforeCompile = sh => {
     Object.assign(sh.uniforms, U);
     sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>
-      attribute float aWin; varying float vWin; varying vec3 vWN; varying vec2 vU;`)
+      attribute float aWin; varying float vWin; varying vec3 vWN; varying vec2 vU; varying vec3 vLP, vLN;`)
       .replace('#include <uv_vertex>', `#include <uv_vertex>
-      vWin = aWin; vU = uv; vWN = normalize(mat3(modelMatrix) * normal);`);
+      vWin = aWin; vU = uv; vWN = normalize(mat3(modelMatrix) * normal); vLP = position; vLN = normal;`);
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-      varying float vWin; varying vec3 vWN; varying vec2 vU; uniform float uTime, uWinGain; uniform vec3 uWinA, uWinB;
+      varying float vWin; varying vec3 vWN; varying vec2 vU; varying vec3 vLP, vLN; uniform float uTime, uWinGain; uniform vec3 uWinA, uWinB;
       float wh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-      if (vWin > 0. && abs(vWN.y) < .55) {
-        vec2 q = vU / vec2(.62, 1.05); vec2 c = floor(q), f = fract(q);
-        float deck = step(wh(vec2(c.y, 7.)), .62);                       // which decks have windows
+      if (vWin > 0. && abs(normalize(vLN).x) > .72) {
+        vec2 q = vec2(vLP.z + 100. * step(0., vLP.x), vLP.y + 40.) / vec2(.62, 1.05); vec2 c = floor(q), f = fract(q);
+        float deck = step(wh(vec2(c.y, 7.)), .4);                       // which decks have windows
         float block = step(wh(vec2(floor(c.x / 9.), c.y + 31.)), .55 + .2 * min(vWin, 1.));   // lit blocks
         float on = step(wh(c), .8) * deck * block;
         float fl = wh(c + floor(uTime * (.3 + wh(c + 3.) * .9) + wh(c + 9.) * 7.));   // a few switch on and off
@@ -152,49 +152,63 @@ export function makeShip() {
     }
   };
 
-  // spine (octagonal)
-  put(cylGeo(4.5, 4.5, 74, 8, R), 0, 0, -2, 0, 0, Math.PI / 8);
-  // engine block + armour
-  box(24, 15, 22, 0, 0, -50, { win: .15 });
-  box(28, 9, 14, 0, 0, -47, { win: 0, greeble: 1.4 });
-  box(10, 4, 18, 0, 9.2, -48, { win: .6 });
-  // rear habitat section with a hangar bay on each side
-  box(20, 11, 18, 0, 0, -28, { win: 1.1 });
-  box(14, 3.5, 16, 0, 7.2, -28, { win: 1 });
-  // mid modules around the spine
-  for (const z of [-8, 10]) {
-    box(11, 5, 13, 0, 6.6, z, { win: 1.2 }); box(11, 5, 13, 0, -6.6, z, { win: 1 });
-    box(6, 8, 13, 8.6, 0, z, { win: 1.3 }); box(6, 8, 13, -8.6, 0, z, { win: 1.3 });
-    put(boxGeo(26, 1.4, 3, R), 0, 0, z + 7.6, 0, 0, 0, darks);   // structural rib
+  // —— Sleek hull: superellipse cross-sections swept along z (UV: u = z, v = arc length, both in world units) ——
+  const P = keys => monotone(keys);
+  function sweep(z0, z1, W, Hh, Y, n, segs, win, cx = 0) {
+    const pos = [], uv = [], idx = [], zs = [];
+    for (let z = z0; z < z1; z += .8) zs.push(z); zs.push(z1);
+    for (const z of zs) {
+      const w = W(z), h = Hh(z), y0 = Y(z); let arc = 0, px = null;
+      for (let j = 0; j <= segs; j++) {
+        const a = j / segs * Math.PI * 2, c = Math.cos(a), si = Math.sin(a);
+        const x = cx + w * Math.sign(c) * Math.pow(Math.abs(c), 2 / n), y = y0 + h * Math.sign(si) * Math.pow(Math.abs(si), 2 / n);
+        if (px) arc += Math.hypot(x - px[0], y - px[1]); px = [x, y];
+        pos.push(x, y, z); uv.push(z, arc);
+      }
+    }
+    for (let i = 0; i < zs.length - 1; i++) for (let j = 0; j < segs; j++) { const a = i * (segs + 1) + j, b = a + segs + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals();
+    return withWin(g, win);
   }
-  // ventral keel and dorsal conduit
-  box(4, 3, 46, 0, -6.4, -6, { win: 0, greeble: 1.6 });
-  box(2.4, 1.6, 52, 0, 5.2, 4, { win: 0, greeble: 1.8 });
-  // command section (tapered bow) and bridge
-  put(boxGeo(16, 8, 30, R, { taper: [.22, .35, -.6], win: .8 }), 0, 0, 47);
-  box(6, 3.6, 8, 0, 5.6, 38, { win: 1.6 });
-  box(3.4, 1.8, 4.6, 0, 8.3, 37.4, { win: 2 });
-  box(9, 2, 10, 0, -4.8, 40, { win: .6 });
-  // lateral radiator wings (thin) and the dorsal fin
-  for (const s of [-1, 1]) put(boxGeo(15, .7, 11, R), s * 17, 0, -30, 0, 0, s * .12, darks);
-  put(boxGeo(.8, 9, 15, R), 0, 13, -31, 0, 0, 0, darks);
-  // antenna masts on the bow
-  for (const [x, z, l] of [[1.2, 44, 7], [-1.6, 46, 5], [.6, 50, 4]]) put(cylGeo(.12, .12, l, 6, R), x, 4.2 + l / 2, z, -Math.PI / 2, 0, 0, darks);
+  const W = P([[-60, 12.5], [-50, 14], [-30, 13], [0, 10.5], [25, 8.5], [45, 5], [58, 2], [64, .3]]);
+  const Hh = P([[-60, 8], [-50, 8.6], [-30, 7.6], [0, 6], [25, 5], [45, 3.2], [58, 1.4], [64, .2]]);
+  const Y = P([[-60, 0], [30, 0], [64, -.8]]);
+  geos.push(sweep(-60, 64, W, Hh, Y, 2.8, 56, .75));
+  // dorsal ridge
+  geos.push(sweep(-46, 26, P([[-46, .5], [-40, 4], [-10, 4.2], [18, 3], [26, .5]]), P([[-46, .3], [-40, 2.6], [-10, 2.4], [18, 1.8], [26, .2]]), z => Y(z) + Hh(z) - .7, 2.4, 32, .9));
+  // bridge
+  geos.push(sweep(24, 38, P([[24, .4], [27, 3], [34, 2.8], [38, .4]]), P([[24, .3], [27, 2], [34, 1.8], [38, .2]]), z => Y(z) + Hh(z) + .6, 2.2, 32, 1.8));
+  // ventral keel
+  darks.push(sweep(-50, 30, P([[-50, .5], [-44, 2.6], [20, 2], [30, .4]]), P([[-50, .3], [-44, 1.6], [20, 1.2], [30, .2]]), z => Y(z) - Hh(z) + .3, 2.6, 24, 0));
+  // engine nacelles on swept pylons
+  for (const s of [-1, 1]) {
+    geos.push(sweep(-63, -8, P([[-63, 2.8], [-56, 3.2], [-25, 3], [-12, 1.5], [-8, .3]]), P([[-63, 2.8], [-56, 3.2], [-25, 3], [-12, 1.5], [-8, .3]]), () => -1, 2.2, 32, .3, s * 18));
+    put(boxGeo(7, .8, 16, R), s * 15.2, -.6, -40, 0, s * .18, s * -.05, darks);
+  }
+  // engine plate, dorsal fin, antennas
+  put(boxGeo(19, 11, 2, R), 0, 0, -60.4, 0, 0, 0, darks);
+  for (const [x, z, l] of [[1, 29, 5], [-1.2, 31, 3.6], [.4, 33, 2.6]]) put(cylGeo(.12, .12, l, 6, R), x, Hh(z) + 3.4 + l / 2, z, -Math.PI / 2, 0, 0, darks);
 
-  // greebles: small boxes on the big faces
+  // sparse greebles: the rear quarter of the dorsal surface, and the engine plate
   const gR = mulberry(19);
+  for (let i = 0; i < 170; i++) {
+    const z = -58 + gR() * 20, w = W(z), h = Hh(z), x = (gR() * 2 - 1) * w * .55;
+    const y = Y(z) + h * Math.pow(Math.max(0, 1 - Math.pow(Math.abs(x) / w, 2.8)), 1 / 2.8);
+    const sw = .3 + gR() * 1.4, sl = .4 + gR() * 2.4, sh = .15 + gR() * .5;
+    const g = boxGeo(sw, sh, sl, gR); g.translate(x, y + sh / 2 - .1, z);
+    (gR() < .4 ? darks : geos).push(withWin(g, 0));
+  }
   for (const f of greebleFaces) {
-    const area = f.eu * f.ev * 4, n = Math.floor(area * .22 * f.dens);
+    const n = Math.floor(f.eu * f.ev * 4 * .12 * f.dens);
     for (let i = 0; i < n; i++) {
-      const a = (gR() * 2 - 1) * f.eu * .92, b = (gR() * 2 - 1) * f.ev * .94;
-      const big = gR() < .08, sw = big ? 1.5 + gR() * 2.5 : .25 + gR() * .9, sl = big ? 2 + gR() * 4 : .3 + gR() * 1.6, sh = big ? .5 + gR() * 1 : .1 + gR() * .45;
+      const a = (gR() * 2 - 1) * f.eu * .9, b = (gR() * 2 - 1) * f.ev * .9, sw = .25 + gR() * .9, sl = .3 + gR() * 1.4, sh = .1 + gR() * .4;
       const g = boxGeo(sw, sh, sl, gR);
-      // orient: local y → face normal, local x → u, local z → v
       const n3 = new THREE.Vector3(...f.n), u3 = new THREE.Vector3(...f.u), v3 = new THREE.Vector3(...f.v);
-      const basis = new THREE.Matrix4().makeBasis(u3, n3, v3);
-      const p = new THREE.Vector3(...f.c).addScaledVector(u3, a).addScaledVector(v3, b).addScaledVector(n3, sh / 2);
-      g.applyMatrix4(basis); g.translate(p.x, p.y, p.z);
-      (gR() < .25 ? darks : geos).push(withWin(g, 0));
+      g.applyMatrix4(new THREE.Matrix4().makeBasis(u3, n3, v3));
+      const p = new THREE.Vector3(...f.c).addScaledVector(u3, a).addScaledVector(v3, b).addScaledVector(n3, sh / 2); g.translate(p.x, p.y, p.z);
+      darks.push(withWin(g, 0));
     }
   }
 
@@ -202,11 +216,12 @@ export function makeShip() {
   const hull = new THREE.Mesh(mergeGeometries(geos), hullMat); hull.castShadow = hull.receiveShadow = true; body.add(hull);
   const dark = new THREE.Mesh(mergeGeometries(darks.map(g => { g.deleteAttribute('aWin'); return g; })), darkMat); dark.castShadow = dark.receiveShadow = true; body.add(dark);
 
-  // hangar bays: lit recesses
+  // hangar bays: lit recesses in the flanks
   const bayMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#9fd8ff').multiplyScalar(.55) });
   for (const s of [-1, 1]) {
-    const bay = new THREE.Mesh(new THREE.PlaneGeometry(9, 3.4), bayMat); bay.position.set(s * 10.04, -.6, -26); bay.rotation.y = s * Math.PI / 2; body.add(bay);
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(.3, 4.4, 10.2), darkMat); frame.position.set(s * 10.1, -.6, -26); body.add(frame);
+    const xw = W(-26);
+    const bay = new THREE.Mesh(new THREE.PlaneGeometry(9, 2.6), bayMat); bay.position.set(s * (xw + .02), -.4, -26); bay.rotation.y = s * Math.PI / 2; body.add(bay);
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(.3, 3.4, 10.2), darkMat); frame.position.set(s * (xw + .05), -.4, -26); body.add(frame);
   }
 
   // engines
@@ -214,8 +229,7 @@ export function makeShip() {
   const engines = [];
   const nozMat = new THREE.MeshStandardMaterial({ color: '#3a3d42', roughness: .35, metalness: .95, side: THREE.DoubleSide, envMapIntensity: .6 });
   const pm = plumeMat(EU);
-  for (const [x, y, r] of [[5.6, 3.7, 4.1], [-5.6, 3.7, 4.1], [5.6, -3.7, 4.1], [-5.6, -3.7, 4.1], [11.4, 0, 2.5], [-11.4, 0, 2.5]]) {
-    const z0 = -61;
+  for (const [x, y, r, z0] of [[5.8, 3.6, 3.5, -61.4], [-5.8, 3.6, 3.5, -61.4], [5.8, -3.6, 3.5, -61.4], [-5.8, -3.6, 3.5, -61.4], [18, -1, 2.4, -61.6], [-18, -1, 2.4, -61.6]]) {
     const noz = new THREE.Mesh(new THREE.CylinderGeometry(r * .82, r, 5, 32, 1, true), nozMat); noz.rotation.x = Math.PI / 2; noz.position.set(x, y, z0 - 2); body.add(noz);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(r, .35, 8, 40), nozMat); ring.position.set(x, y, z0 - 4.5); body.add(ring);
     const tU = Object.assign({}, EU, { uR: { value: r * .8 } });
@@ -225,11 +239,11 @@ export function makeShip() {
     const halo = glowSprite(LIGHT_A.clone(), r * 5); halo.position.set(x, y, z0 - 4); body.add(halo);
     engines.push({ plume, halo, r });
   }
-  const engLight = new THREE.PointLight(LIGHT_A.clone(), 0, 90, 1.4); engLight.position.set(0, 0, -68); body.add(engLight);
+  const engLight = new THREE.PointLight(LIGHT_A.clone(), 0, 90, 1.4); engLight.position.set(0, 0, -78); body.add(engLight);
 
   // beacons: port red, starboard green, white strobes
   const beacons = [];
-  for (const [x, y, z, col, ph] of [[-24.4, -.9, -30, '#ff3030', 0], [24.4, .9, -30, '#30ff70', 0], [0, 17.6, -31, '#ffffff', .5], [0, -1.5, 61.6, '#ffffff', .25], [0, 9.3, 37.4, '#ff3030', .7]]) {
+  for (const [x, y, z, col, ph] of [[-18, -1, -8.2, '#ff3030', 0], [18, -1, -8.2, '#30ff70', 0], [0, Hh(-30) + 2.4, -30, '#ffffff', .5], [0, -.8, 64.1, '#ffffff', .25], [0, Hh(31) + 2.9, 31, '#ff3030', .7]]) {
     const c = new THREE.Color(col);
     const dot = new THREE.Mesh(new THREE.SphereGeometry(.28, 12, 8), new THREE.MeshBasicMaterial({ color: c.clone() })); dot.position.set(x, y, z); body.add(dot);
     const s = glowSprite(c.clone(), 4); s.position.set(x, y, z); body.add(s);
@@ -245,10 +259,10 @@ export function makeShip() {
       e.halo.scale.setScalar(e.r * (1.8 + 1.6 * power));
       e.halo.material.color.copy(LIGHT_A).lerp(LIGHT_B, .25).multiplyScalar(.15 + .3 * Math.min(power, 1.5));
     }
-    engLight.intensity = 150 + 900 * Math.min(power, 1.5);
+    engLight.intensity = 120 + 500 * Math.min(power, 1.5);
     for (const b of beacons) {
       const p = ((t + b.ph * 1.6) % 1.6) / 1.6;
-      const on = b.strobe ? Math.exp(-p * 18) * 1.6 : .35 + .65 * Math.exp(-p * 4);
+      const on = b.strobe ? Math.exp(-p * 18) * .7 : .35 + .65 * Math.exp(-p * 4);
       b.dot.material.color.copy(b.c).multiplyScalar(1 + 6 * on);
       b.s.material.color.copy(b.c).multiplyScalar(on * 1.4);
     }
