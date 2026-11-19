@@ -1,0 +1,11 @@
+{
+  "slug": "deep-space-cinema",
+  "en": "Deep Space Cinema",
+  "cn": "深空电影",
+  "based_on": "glass-product",
+  "borrows": ["lowpoly-island"],
+  "library_version": "00a7f9e",
+  "created": "2026-11-19",
+  "line": "Feature-film space cinematography in real-time 3D: one vast fictional starship, a planet, nebulae and a hard sun; light is the only colour that burns.",
+  "line_cn": "实时 3D 的电影级太空镜头：一艘巨大的虚构星舰、行星、星云与硬朗的阳光；只有光在燃烧。"
+}
