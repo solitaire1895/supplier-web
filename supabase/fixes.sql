@@ -92,7 +92,7 @@ ALTER TABLE public.user_activity     ENABLE ROW LEVEL SECURITY;
 
 -- ------------------------------------------------------------
 -- 2. PRODUCTS
---    SELECT  — any authenticated user
+--    SELECT  — see migration 0019 (paid plans and admins only)
 --    INSERT / UPDATE / DELETE — admins only
 -- ------------------------------------------------------------
 DROP POLICY IF EXISTS "products_select_authenticated" ON public.products;
@@ -101,11 +101,10 @@ DROP POLICY IF EXISTS "products_admin_insert"         ON public.products;
 DROP POLICY IF EXISTS "products_admin_update"         ON public.products;
 DROP POLICY IF EXISTS "products_admin_delete"         ON public.products;
 
-CREATE POLICY "products_select_authenticated"
-  ON public.products
-  FOR SELECT
-  TO authenticated
-  USING (true);
+-- Read access to products is NOT granted here: migration 0019
+-- (products_select_plan) limits it to paid plans and admins. An open
+-- "USING (true)" policy here would be OR'ed with it and expose every
+-- winning product to free accounts.
 
 CREATE POLICY "products_admin_insert"
   ON public.products

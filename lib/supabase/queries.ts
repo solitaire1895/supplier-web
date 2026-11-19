@@ -20,7 +20,7 @@ const getCachedPlan = cache(async () => {
   const supabase = await createClient()
   const { data: profile } = await supabase
     .from('profiles')
-    .select('active_plan, plan_expires_at')
+    .select('active_plan, plan_expires_at, status')
     .eq('id', user.id)
     .maybeSingle()
   return withEffectivePlan(profile)?.active_plan ?? null

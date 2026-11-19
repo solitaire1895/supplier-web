@@ -106,9 +106,13 @@ export async function POST(req: Request) {
 
   const { data: profile } = await db
     .from('profiles')
-    .select('email, full_name')
+    .select('email, full_name, status')
     .eq('id', user.id)
     .maybeSingle()
+
+  if (profile?.status === 'suspended') {
+    return NextResponse.json({ error: 'This account is suspended. Please contact support.' }, { status: 403 })
+  }
 
   const email = user.email || profile?.email
   if (!email) {

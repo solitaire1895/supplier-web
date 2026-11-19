@@ -163,7 +163,10 @@ type BillingFields = {
   active_plan?: string | null;
   plan_expires_at?: string | null;
   subscription_status?: string | null;
+  status?: string | null;
 };
+
+export const isSuspended = (profile: BillingFields | null | undefined) => profile?.status === 'suspended';
 
 export function isPlanExpired(profile: BillingFields | null | undefined): boolean {
   if (!profile?.plan_expires_at || !profile.active_plan || profile.active_plan === 'free') return false;
@@ -178,6 +181,6 @@ export function isPlanExpired(profile: BillingFields | null | undefined): boolea
 export function withEffectivePlan<T extends BillingFields>(profile: T): T;
 export function withEffectivePlan<T extends BillingFields>(profile: T | null | undefined): T | null | undefined;
 export function withEffectivePlan<T extends BillingFields>(profile: T | null | undefined) {
-  if (!profile || !isPlanExpired(profile)) return profile;
+  if (!profile || (!isPlanExpired(profile) && !isSuspended(profile))) return profile;
   return { ...profile, active_plan: 'free', subscription_status: 'free' };
 }

@@ -22,7 +22,19 @@ async function requireAdmin() {
   if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
     return { error: 'Unauthorized: admins only.' as const }
   }
-  return { supabase, user }
+  return { supabase, user, role: profile.role as 'admin' | 'super_admin' }
+}
+
+/** Only a super admin may change, suspend or delete an admin or super admin account. */
+async function requireCanManageUser(targetId: string) {
+  const guard = await requireAdmin()
+  if ('error' in guard) return guard
+  if (guard.role === 'super_admin') return guard
+  const { data: target } = await guard.supabase.from('profiles').select('role').eq('id', targetId).maybeSingle()
+  if (target && ['admin', 'super_admin'].includes(target.role)) {
+    return { error: 'Only a super admin can change an admin account.' as const }
+  }
+  return guard
 }
 
 /** Generic message for the browser; the detail stays in the server log. */
@@ -262,15 +274,14 @@ const userUpdateSchema = z
 
 export async function updateUser(id: string, formData: unknown) {
   if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
-  const guard = await requireAdmin()
+  const guard = await requireCanManageUser(id)
   if ('error' in guard) return { error: guard.error }
   const supabase = guard.supabase
   const parsed = userUpdateSchema.safeParse(formData)
   if (!parsed.success) return { error: 'Invalid user fields' }
-  // Only a super admin may grant or remove admin roles.
-  if (parsed.data.role !== undefined) {
-    const { data: me } = await supabase.from('profiles').select('role').eq('id', guard.user.id).single()
-    if (me?.role !== 'super_admin' && parsed.data.role !== 'user') return { error: 'Only a super admin can grant admin roles.' }
+  // Only a super admin may grant admin roles (removing them is covered by requireCanManageUser).
+  if (parsed.data.role !== undefined && parsed.data.role !== 'user' && guard.role !== 'super_admin') {
+    return { error: 'Only a super admin can grant admin roles.' }
   }
 
   const { error } = await supabase.from('profiles').update(parsed.data).eq('id', id)
@@ -346,7 +357,7 @@ export async function updateUserPlan(userId: string, plan: string) {
 
 export async function deleteUser(id: string) {
   if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
-  const guard = await requireAdmin()
+  const guard = await requireCanManageUser(id)
   if ('error' in guard) return { error: guard.error }
   const supabase = guard.supabase
   const { error } = await supabase.from('profiles').delete().eq('id', id)
@@ -362,7 +373,7 @@ export async function deleteUser(id: string) {
 
 export async function suspendUser(id: string) {
   if (!uuid.safeParse(id).success) return { error: 'Invalid id' }
-  const guard = await requireAdmin()
+  const guard = await requireCanManageUser(id)
   if ('error' in guard) return { error: guard.error }
   const supabase = guard.supabase
   const { error } = await supabase.from('profiles').update({ status: 'suspended' }).eq('id', id)
@@ -669,7 +680,7 @@ export async function searchAction(
   if (user) {
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('active_plan, plan_expires_at')
+      .select('active_plan, plan_expires_at, status')
       .eq('id', user.id)
       .single()
     plan = withEffectivePlan(profileData)?.active_plan || 'free'
