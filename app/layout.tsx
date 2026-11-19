@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/lib/supabase/provider";
 import { SupportNotificationsProvider } from "@/lib/support-notifications";
+import { AssistantBubble } from "@/components/assistant/assistant-bubble";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-black text-white">
         <UserProvider>
           <SupportNotificationsProvider>{children}</SupportNotificationsProvider>
+          <AssistantBubble />
         </UserProvider>
       </body>
     </html>
