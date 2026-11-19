@@ -1,0 +1,121 @@
+[
+ {
+  "id": "g01",
+  "text": "Buongiorno! Come si chiama?",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.9
+ },
+ {
+  "id": "g02",
+  "text": "A, come amore.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g03",
+  "text": "E, come Elena.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g04",
+  "text": "I, come Italia.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g05",
+  "text": "O, come oro.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g06",
+  "text": "U, come uva.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g07",
+  "text": "Acca, come hotel.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g08",
+  "text": "Ci, come ciao. Gi, come gelato.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g09",
+  "text": "Cu, come quadro.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g10",
+  "text": "La erre: Roma.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g11",
+  "text": "La lettera zeta.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g12",
+  "text": "A come Ancona. B come Bologna. R come Roma. S come Savona.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.88
+ },
+ {
+  "id": "g13",
+  "text": "Come si scrive?",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.9
+ },
+ {
+  "id": "o01",
+  "text": "O come Otranto, erre come Roma, esse come Savona, O come Otranto!",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.9
+ },
+ {
+  "id": "g14",
+  "text": "Perfetto, grazie!",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.9
+ },
+ {
+  "id": "g15",
+  "text": "Acca, come hotel.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "o02",
+  "text": "Andiamo!",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.95
+ }
+]

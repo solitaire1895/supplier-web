@@ -1,0 +1,163 @@
+[
+ {
+  "id": "g02_0",
+  "text": "A, come amore.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g02_1",
+  "text": "La a: amore.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g03_0",
+  "text": "E, come Elena.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g03_1",
+  "text": "La e: Elena.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g04_0",
+  "text": "I, come Italia.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g04_1",
+  "text": "La i: Italia.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g05_0",
+  "text": "O, come oro.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g05_1",
+  "text": "La o: oro.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g06_0",
+  "text": "U, come uva.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g06_1",
+  "text": "La u: uva.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g07_0",
+  "text": "Acca, come hotel.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g07_1",
+  "text": "La lettera acca.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g08_0",
+  "text": "Ci, come ciao. Gi, come gelato.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g08_1",
+  "text": "La ci, e la gi.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g09_0",
+  "text": "Cu, come quadro.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g09_1",
+  "text": "La lettera cu.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g10_0",
+  "text": "Erre, come Roma.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g10_1",
+  "text": "La erre: Roma.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g11_0",
+  "text": "Zeta, come zero.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g11_1",
+  "text": "La lettera zeta.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g15_0",
+  "text": "È l'acca!",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g15_1",
+  "text": "La lettera acca!",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "o01_0",
+  "text": "O come Otranto, erre come Roma, esse come Savona, o come Otranto!",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.85
+ }
+]
