@@ -297,7 +297,7 @@ window.render = t => {
   orso.pose(poseOrso(t)); giulia.pose(poseGiulia(t)); placeChar(orso, 'orso', t); placeChar(giulia, 'giulia', t);
   // camera
   const c = camT(t); cam.position.set(c[0], c[1], c[2]); cam.lookAt(c[3], c[4], c[5]); cam.fov = c[6]; cam.updateProjectionMatrix();
-  post.dof.focus = cam.position.distanceTo(sv.set(c[3], c[4], c[5])); post.dof.aper = 3; post.dof.maxCoc = 10;
+  post.dof.focus = cam.position.distanceTo(sv.set(c[3], c[4], c[5])); post.dof.aper = 3; post.dof.maxCoc = QS.has("nodof") ? 0 : 10;
   scene.updateMatrixWorld(); post.composer.render();
   drawHUD(t);
 };
