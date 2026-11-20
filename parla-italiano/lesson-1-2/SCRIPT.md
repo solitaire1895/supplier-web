@@ -88,12 +88,12 @@ Source: *Italien Facile*, Leçon 1.2, adapted for English speakers.
 
 ## 5. Double letters (1:20–1:55)
 
-**PICTURE:** Two paper cards side by side on a mini stage: **papa** and **pappa**. A pop-up Pope and a pop-up baby food bowl.
+**PICTURE:** Two paper cards side by side on a mini stage: **papa** and **pappa**. A pop-up bishop's hat (mitre) and a pop-up baby food bowl.
 
 > **n10 · NARRATOR:** "Now the doubles. In Italian, a double consonant is held longer, with a tiny pause. And it changes the meaning."
 
 **IT (TTS, Giulia):** "Papa. Pappa."
-**SCREEN:** *papa* [PAH-pah] = Pope ⛪ · *pappa* [PAHP-pah] = baby food 🥣
+**SCREEN:** *papa* [PAH-pah] = Pope (shown as a bishop's hat icon) · *pappa* [PAHP-pah] = baby food 🥣
 
 **IT (TTS, Giulia):** "Nono. Nonno."
 **SCREEN:** *nono* [NOH-noh] = ninth 9️⃣ · *nonno* [NOHN-noh] = grandpa 👴
