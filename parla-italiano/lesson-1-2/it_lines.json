@@ -1,0 +1,100 @@
+[
+ {
+  "id": "o01",
+  "text": "Mio nono ha un gatto nero!",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g01",
+  "text": "Casa. Bene. Vino. Sole. Uno.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.8
+ },
+ {
+  "id": "g02",
+  "text": "Notte.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g03",
+  "text": "La casa. L'Italia. Un amico.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g04",
+  "text": "Il tavolo.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g05",
+  "text": "La città. Il caffè. Perché? Di più.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g06",
+  "text": "Il papa è a Roma. La pappa è buona.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g07",
+  "text": "Il nono giorno. Il mio nonno.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g08",
+  "text": "Il gatto, la mamma.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.8
+ },
+ {
+  "id": "o02",
+  "text": "Un caffè, per favore.",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.9
+ },
+ {
+  "id": "g09",
+  "text": "Ecco! Perché è in Italia?",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.9
+ },
+ {
+  "id": "o03",
+  "text": "Per studiare l'italiano! Mio nonno è italiano.",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.9
+ },
+ {
+  "id": "g10",
+  "text": "Il nonno!",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "o04",
+  "text": "Ciao, nonno!",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.9
+ }
+]

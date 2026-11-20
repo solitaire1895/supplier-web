@@ -1,0 +1,58 @@
+[
+ {
+  "id": "p1",
+  "text": "Il papa è a Roma. La pappa è buona.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "p2",
+  "text": "Il papa è a Roma. La pappa è buona.",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "p3",
+  "text": "Papa, pappa.",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.75
+ },
+ {
+  "id": "n1",
+  "text": "Il nono giorno. Il mio nonno.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "n2",
+  "text": "Nono, nonno.",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.75
+ },
+ {
+  "id": "n3",
+  "text": "Il nono giorno. Il mio nonno.",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "o1",
+  "text": "Mio nono ha un gatto nero!",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "o2",
+  "text": "Il mio nono ha un gatto!",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.85
+ }
+]

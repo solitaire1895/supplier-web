@@ -1,0 +1,107 @@
+[
+ {
+  "id": "g03a",
+  "text": "Casa... Italia... amico.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.8
+ },
+ {
+  "id": "g03b",
+  "text": "La casa. L'Italia. Un amico.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g04a",
+  "text": "Il tavolo.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g04b",
+  "text": "Tavolo...",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.75
+ },
+ {
+  "id": "g05a",
+  "text": "La città. Il caffè. Perché? Di più.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g05b",
+  "text": "Città... caffè... perché... più.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.75
+ },
+ {
+  "id": "g06a",
+  "text": "Il papa... la pappa.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.75
+ },
+ {
+  "id": "g06b",
+  "text": "Papa... pappa.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.7
+ },
+ {
+  "id": "g07a",
+  "text": "Nono... nonno.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.7
+ },
+ {
+  "id": "g07b",
+  "text": "Il nono... il nonno.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.75
+ },
+ {
+  "id": "g08a",
+  "text": "Il gatto... la mamma.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.8
+ },
+ {
+  "id": "g08b",
+  "text": "Gatto... mamma.",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.75
+ },
+ {
+  "id": "g10a",
+  "text": "Il nonno!",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "g10b",
+  "text": "Nonno, nonno!",
+  "voice": "if_sara",
+  "lang": "it",
+  "speed": 0.85
+ },
+ {
+  "id": "o01a",
+  "text": "Mio nono ha un gatto.",
+  "voice": "im_nicola",
+  "lang": "it",
+  "speed": 0.85
+ }
+]
